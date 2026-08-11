@@ -680,3 +680,62 @@ A feature is not considered complete until:
 * Documentation is updated when required.
 * No unrelated files are modified.
 * Changes are reviewable.
+
+---
+
+# 22. Supabase Database Change Policy
+
+Antigravity is allowed to modify the NUVI KIDZ development Supabase database.
+
+The development Supabase project is:
+
+Project Reference:
+qgzkodanobcpyiwwdmqs
+
+Allowed development operations include:
+
+- Create tables
+- Alter tables
+- Add columns
+- Modify indexes
+- Create constraints
+- Create RLS policies
+- Create database functions when required
+- Apply migrations
+- Execute development SQL
+
+However, all schema changes must be represented by migration files
+under:
+
+supabase/migrations/
+
+Preferred workflow:
+
+1. Inspect the existing schema.
+2. Understand the requested requirement.
+3. Design the database change.
+4. Create a migration file.
+5. Review the migration.
+6. Apply the migration to the development project.
+7. Verify the resulting schema.
+8. Run relevant tests.
+9. Commit the migration to Git.
+
+Do not make undocumented schema changes.
+
+Do not modify production databases.
+
+Do not execute destructive database operations such as:
+
+- DROP TABLE
+- DROP COLUMN
+- TRUNCATE
+- DELETE without an explicit requirement
+
+without first explaining the impact and receiving explicit approval.
+
+For destructive or irreversible operations, always request human approval before execution.
+
+RLS must be enabled for user-owned application data.
+
+Never disable RLS simply to make an application query work.
