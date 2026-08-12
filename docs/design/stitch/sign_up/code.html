@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Nuvi Kidz - Sign Up</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600&amp;family=Quicksand:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface": "#fff8f0",
+                      "surface-container": "#f5ede1",
+                      "surface-bright": "#fff8f0",
+                      "outline-variant": "#c2c8c2",
+                      "error": "#ba1a1a",
+                      "on-primary": "#ffffff",
+                      "background": "#fff8f0",
+                      "inverse-surface": "#343028",
+                      "surface-container-highest": "#e9e1d6",
+                      "on-error-container": "#93000a",
+                      "secondary-fixed-dim": "#ffb956",
+                      "primary-fixed-dim": "#adceba",
+                      "on-tertiary-container": "#eb8467",
+                      "primary": "#082719",
+                      "tertiary": "#460d00",
+                      "surface-dim": "#e1d9cd",
+                      "secondary": "#835400",
+                      "on-primary-fixed-variant": "#2f4d3d",
+                      "secondary-fixed": "#ffddb5",
+                      "on-tertiary-fixed-variant": "#7b2e17",
+                      "on-primary-container": "#87a894",
+                      "on-background": "#1e1b14",
+                      "surface-container-low": "#fbf3e7",
+                      "inverse-primary": "#adceba",
+                      "on-secondary-fixed-variant": "#633f00",
+                      "tertiary-fixed-dim": "#ffb5a0",
+                      "on-tertiary-fixed": "#3b0900",
+                      "inverse-on-surface": "#f8f0e4",
+                      "surface-container-high": "#efe7db",
+                      "tertiary-fixed": "#ffdbd1",
+                      "outline": "#727973",
+                      "on-surface": "#1e1b14",
+                      "on-error": "#ffffff",
+                      "on-primary-fixed": "#022113",
+                      "surface-container-lowest": "#ffffff",
+                      "primary-fixed": "#c8ebd5",
+                      "primary-container": "#1f3d2e",
+                      "on-surface-variant": "#424844",
+                      "on-secondary": "#ffffff",
+                      "tertiary-container": "#661f09",
+                      "surface-tint": "#466554",
+                      "surface-variant": "#e9e1d6",
+                      "error-container": "#ffdad6",
+                      "secondary-container": "#fdb244",
+                      "on-tertiary": "#ffffff",
+                      "on-secondary-fixed": "#2a1800",
+                      "on-secondary-container": "#6e4600"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "container-max": "1280px",
+                      "gutter": "24px",
+                      "unit": "8px",
+                      "margin-desktop": "40px",
+                      "margin-mobile": "16px"
+              },
+              "fontFamily": {
+                      "headline-xl": [
+                              "Quicksand"
+                      ],
+                      "headline-lg-mobile": [
+                              "Quicksand"
+                      ],
+                      "body-lg": [
+                              "Be Vietnam Pro"
+                      ],
+                      "label-sm": [
+                              "Be Vietnam Pro"
+                      ],
+                      "headline-md": [
+                              "Quicksand"
+                      ],
+                      "body-md": [
+                              "Be Vietnam Pro"
+                      ],
+                      "headline-lg": [
+                              "Quicksand"
+                      ]
+              },
+              "fontSize": {
+                      "headline-xl": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-sm": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "700"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        .custom-shadow {
+            box-shadow: 0 10px 30px -5px rgba(31, 61, 46, 0.08);
+        }
+        
+        .floating-star {
+            animation: float 4s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(5deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
+        }
+
+        .input-focus-ring:focus-within {
+            box-shadow: 0 0 0 2px #fdb244;
+            border-color: #fdb244;
+        }
+        
+        .btn-bounce:hover {
+            transform: translateY(-2px);
+        }
+        .btn-bounce:active {
+            transform: translateY(1px);
+        }
+    </style>
+</head>
+<body class="bg-surface-container-low min-h-screen flex items-center justify-center font-body-md text-on-surface relative overflow-hidden p-margin-mobile md:p-margin-desktop">
+<!-- Decorative Elements -->
+<div class="absolute top-10 left-10 text-primary opacity-20 floating-star hidden md:block">
+<span class="material-symbols-outlined text-4xl">star</span>
+</div>
+<div class="absolute bottom-20 right-20 text-secondary-container opacity-30 floating-star hidden md:block" style="animation-delay: 1s;">
+<span class="material-symbols-outlined text-6xl">favorite</span>
+</div>
+<div class="absolute top-1/4 right-10 text-primary-fixed-dim opacity-40 floating-star hidden md:block" style="animation-delay: 2s;">
+<span class="material-symbols-outlined text-5xl">cruelty_free</span>
+</div>
+<!-- Main Container -->
+<div class="w-full max-w-md bg-surface rounded-3xl custom-shadow p-8 md:p-10 relative z-10 border border-surface-variant">
+<!-- Header -->
+<div class="text-center mb-8">
+<div class="flex justify-center mb-6">
+<img alt="Nuvi Kidz Logo" class="h-24 w-auto object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAo9ll4g6EMqMn1Tkje8DhXlEExmqeGno90kV_3txVmiyp23Frpbj1kftYQrp3bGLOMGye_k6uGI-soUprdgiBTCTvRE_WmeXKbS1N_E3Y2sbrm04-Fjdt6JqRhVyUfcr8uzU9mFl2outCyYnkHDPAxhWVzxvywwMxbolwWbxMK_tsCS15tPJlbWxSbjva37CgbqiGDHv9eqOfUqiLj0doEL0PHPkIE_QSJEqptWL4vNsLVlsupoW0kA_Lpt9GNP1Zygz4"/>
+</div>
+<h1 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary mb-2">Join the NUVI Universe</h1>
+<p class="text-on-surface-variant">Create an account to start your journey.</p>
+</div>
+<!-- Form -->
+<form action="#" class="space-y-5" method="POST">
+<!-- Full Name -->
+<div>
+<label class="block text-label-sm font-label-sm text-primary mb-1 ml-1" for="fullName">Full Name</label>
+<div class="relative rounded-xl border border-outline-variant bg-surface-bright input-focus-ring transition-all duration-200">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-outline">
+<span class="material-symbols-outlined text-xl">person</span>
+</div>
+<input class="block w-full pl-10 pr-3 py-3 border-none bg-transparent rounded-xl text-on-surface placeholder-outline focus:ring-0 sm:text-sm" id="fullName" name="fullName" placeholder="Alex Taylor" type="text"/>
+</div>
+</div>
+<!-- Email -->
+<div>
+<label class="block text-label-sm font-label-sm text-primary mb-1 ml-1" for="email">Email</label>
+<div class="relative rounded-xl border border-outline-variant bg-surface-bright input-focus-ring transition-all duration-200">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-outline">
+<span class="material-symbols-outlined text-xl">mail</span>
+</div>
+<input class="block w-full pl-10 pr-3 py-3 border-none bg-transparent rounded-xl text-on-surface placeholder-outline focus:ring-0 sm:text-sm" id="email" name="email" placeholder="alex@example.com" type="email"/>
+</div>
+</div>
+<!-- Password -->
+<div>
+<label class="block text-label-sm font-label-sm text-primary mb-1 ml-1" for="password">Password</label>
+<div class="relative rounded-xl border border-outline-variant bg-surface-bright input-focus-ring transition-all duration-200">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-outline">
+<span class="material-symbols-outlined text-xl">lock</span>
+</div>
+<input class="block w-full pl-10 pr-3 py-3 border-none bg-transparent rounded-xl text-on-surface placeholder-outline focus:ring-0 sm:text-sm" id="password" name="password" placeholder="••••••••" type="password"/>
+<div class="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer text-outline hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-xl">visibility_off</span>
+</div>
+</div>
+</div>
+<!-- Terms -->
+<div class="flex items-start mt-4">
+<div class="flex items-center h-5">
+<input class="focus:ring-secondary-container h-4 w-4 text-primary border-outline-variant rounded bg-surface-bright" id="terms" name="terms" type="checkbox"/>
+</div>
+<div class="ml-3 text-sm">
+<label class="text-on-surface-variant font-body-md text-sm" for="terms">I agree to the <a class="text-primary underline hover:text-secondary-container transition-colors" href="#">Terms &amp; Conditions</a>.</label>
+</div>
+</div>
+<!-- Submit Button -->
+<button class="w-full flex justify-center py-3 px-4 border border-transparent rounded-full shadow-sm text-label-sm font-label-sm text-on-background bg-secondary-container hover:bg-secondary-fixed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary-container transition-all duration-200 btn-bounce mt-6" type="submit">
+                Create Account
+            </button>
+</form>
+<!-- Divider -->
+<div class="mt-8 mb-6">
+<div class="relative">
+<div class="absolute inset-0 flex items-center">
+<div class="w-full border-t border-surface-variant"></div>
+</div>
+<div class="relative flex justify-center text-sm">
+<span class="px-2 bg-surface text-outline font-label-sm">Or sign up with</span>
+</div>
+</div>
+</div>
+<!-- Social Sign Up -->
+<div class="grid grid-cols-2 gap-4">
+<a class="flex justify-center items-center py-2.5 px-4 border border-outline-variant rounded-xl shadow-sm bg-surface-bright text-on-surface hover:bg-surface-container-high transition-colors duration-200 btn-bounce" href="#">
+<span class="material-symbols-outlined mr-2">code</span>
+<span class="text-label-sm font-label-sm">Google</span>
+</a>
+<a class="flex justify-center items-center py-2.5 px-4 border border-outline-variant rounded-xl shadow-sm bg-surface-bright text-on-surface hover:bg-surface-container-high transition-colors duration-200 btn-bounce" href="#">
+<span class="material-symbols-outlined mr-2">file_download</span>
+<span class="text-label-sm font-label-sm">Apple</span>
+</a>
+</div>
+<!-- Login Link -->
+<div class="mt-8 text-center">
+<p class="text-on-surface-variant font-body-md text-sm">
+                Already have an account? 
+                <a class="text-primary font-label-sm text-label-sm hover:text-secondary-container hover:underline transition-colors ml-1" href="#">Sign In</a>
+</p>
+</div>
+</div>
+</body></html>

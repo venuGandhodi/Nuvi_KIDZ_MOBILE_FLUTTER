@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Nuvi Kidz - Checkout</title>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts: Quicksand & Be Vietnam Pro -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;family=Quicksand:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind Config Injection -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary-container": "#1f3d2e",
+                        "inverse-on-surface": "#f8f0e4",
+                        "on-background": "#1e1b14",
+                        "surface-container-low": "#fbf3e7",
+                        "secondary-container": "#fdb244",
+                        "on-error": "#ffffff",
+                        "surface": "#fff8f0",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary": "#835400",
+                        "on-secondary-fixed-variant": "#633f00",
+                        "surface-dim": "#e1d9cd",
+                        "on-secondary-fixed": "#2a1800",
+                        "surface-tint": "#466554",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-container": "#661f09",
+                        "on-surface-variant": "#424844",
+                        "on-primary-fixed": "#022113",
+                        "tertiary-fixed": "#ffdbd1",
+                        "on-primary": "#ffffff",
+                        "primary-fixed-dim": "#adceba",
+                        "secondary-fixed-dim": "#ffb956",
+                        "inverse-surface": "#343028",
+                        "background": "#fff8f0",
+                        "primary": "#082719",
+                        "outline": "#727973",
+                        "primary-fixed": "#c8ebd5",
+                        "on-tertiary-fixed-variant": "#7b2e17",
+                        "outline-variant": "#c2c8c2",
+                        "on-surface": "#1e1b14",
+                        "surface-container-high": "#efe7db",
+                        "tertiary": "#460d00",
+                        "on-primary-container": "#87a894",
+                        "tertiary-fixed-dim": "#ffb5a0",
+                        "error": "#ba1a1a",
+                        "on-primary-fixed-variant": "#2f4d3d",
+                        "on-error-container": "#93000a",
+                        "surface-container-highest": "#e9e1d6",
+                        "secondary-fixed": "#ffddb5",
+                        "surface-bright": "#fff8f0",
+                        "on-tertiary-fixed": "#3b0900",
+                        "error-container": "#ffdad6",
+                        "on-tertiary-container": "#eb8467",
+                        "surface-variant": "#e9e1d6",
+                        "surface-container": "#f5ede1",
+                        "inverse-primary": "#adceba",
+                        "on-secondary-container": "#6e4600"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1.25rem",
+                        "full": "9999px"
+                    },
+                    spacing: {
+                        "margin-desktop": "40px",
+                        "margin-mobile": "16px",
+                        "unit": "8px",
+                        "gutter": "24px",
+                        "container-max": "1280px"
+                    },
+                    fontFamily: {
+                        "headline-md": ["Quicksand"],
+                        "headline-lg": ["Quicksand"],
+                        "body-lg": ["Be Vietnam Pro"],
+                        "headline-xl": ["Quicksand"],
+                        "headline-lg-mobile": ["Quicksand"],
+                        "label-sm": ["Be Vietnam Pro"],
+                        "body-md": ["Be Vietnam Pro"]
+                    },
+                    fontSize: {
+                        "headline-md": ["24px", { lineHeight: "32px", fontWeight: "600" }],
+                        "headline-lg": ["32px", { lineHeight: "40px", fontWeight: "700" }],
+                        "body-lg": ["18px", { lineHeight: "28px", fontWeight: "400" }],
+                        "headline-xl": ["48px", { lineHeight: "56px", letterSpacing: "-0.02em", fontWeight: "700" }],
+                        "headline-lg-mobile": ["28px", { lineHeight: "36px", fontWeight: "700" }],
+                        "label-sm": ["14px", { lineHeight: "20px", letterSpacing: "0.05em", fontWeight: "600" }],
+                        "body-md": ["16px", { lineHeight: "24px", fontWeight: "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        /* Custom base styles ensuring typography classes inherit correctly if needed */
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background-color: #fff8f0; /* bg-background */
+            color: #1e1b14; /* text-on-background */
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        /* Ambient glow for elevated cards based on style guidance */
+        .ambient-glow {
+            box-shadow: 0 12px 36px -12px rgba(31, 61, 46, 0.08);
+        }
+
+        /* Hide scrollbar for clean horizontal scrolling areas */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen flex flex-col">
+<!-- TopAppBar from JSON -->
+<header class="bg-surface dark:bg-inverse-surface docked full-width top-0 sticky z-50 flex justify-between items-center w-full px-margin-mobile py-unit max-w-container-max mx-auto border-b border-surface-container-highest md:border-none">
+<button class="text-primary dark:text-inverse-primary hover:bg-surface-container-low dark:hover:bg-primary-container transition-colors duration-200 p-2 rounded-full scale-95 duration-100 ease-in-out">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<h1 class="text-headline-md-mobile font-headline-md-mobile md:text-headline-md md:font-headline-md text-primary dark:text-inverse-primary tracking-tight">Nuvi Kidz</h1>
+<button class="text-primary dark:text-inverse-primary hover:bg-surface-container-low dark:hover:bg-primary-container transition-colors duration-200 p-2 rounded-full">
+<span class="material-symbols-outlined" data-icon="shopping_cart">shopping_cart</span>
+</button>
+</header>
+<!-- Main Checkout Flow -->
+<main class="flex-grow w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-8 md:py-12">
+<div class="mb-8">
+<h2 class="text-headline-lg font-headline-lg text-primary">Checkout</h2>
+<p class="text-body-md font-body-md text-on-surface-variant mt-2">Almost there! Let's get these tiny styles ready.</p>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter items-start">
+<!-- Left Column: Flow Details -->
+<div class="lg:col-span-7 xl:col-span-8 space-y-10">
+<!-- 1. Cart Items -->
+<section class="bg-surface-container-lowest rounded-2xl p-6 ambient-glow border border-surface-variant">
+<div class="flex items-center justify-between mb-6">
+<h3 class="text-headline-md font-headline-md text-primary flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary-container" data-icon="shopping_bag" style="font-variation-settings: 'FILL' 1;">shopping_bag</span>
+                            Your Bag
+                        </h3>
+<span class="text-label-sm font-label-sm text-on-surface-variant bg-surface-container px-3 py-1 rounded-full">2 Items</span>
+</div>
+<div class="space-y-6">
+<!-- Item 1 -->
+<div class="flex gap-4 items-start relative group">
+<div class="w-24 h-24 md:w-32 md:h-32 flex-shrink-0 bg-surface-container rounded-xl overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A soft, high-key studio photograph of a premium organic cotton baby romper in a muted sage green color. The garment is laid flat against a warm cream background, highlighting its soft texture and tactile wooden buttons. The lighting is gentle and natural, evoking a modern minimalist, storybook aesthetic typical of high-end kids' fashion." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA4YcJAXl68abbwhiW4eNdqaDB30ctNA8J7ZtKUybe3YXu7JDkn2IJyhr4nVOsGZ6QMsPZelzw-0jj6QbUQielSW1XbDSEcuxTJc1mhm16rkoV-Uz92SQDhiKQ-9CJch-5si8xvW6U6qPYqf0-D1R4hGWrNM7mSrKeoqGWCi4IeT9U0QyI50TzcuZx-x7CmeJEgC4NlRUDYeioMyDCNAhtPeBNVzQglzv-eY6InaQAdF7uRkZKD3bvkgQ"/>
+</div>
+<div class="flex-grow">
+<div class="flex justify-between items-start">
+<div>
+<h4 class="text-body-lg font-body-lg text-on-surface font-semibold">Organic Cotton Romper</h4>
+<p class="text-label-sm font-label-sm text-on-surface-variant mt-1">Sage Green • 12-18M</p>
+</div>
+<button class="text-outline hover:text-error transition-colors p-1 rounded-full hover:bg-error-container/20">
+<span class="material-symbols-outlined text-[20px]" data-icon="close">close</span>
+</button>
+</div>
+<div class="flex justify-between items-end mt-4">
+<div class="flex items-center bg-surface-container rounded-full border border-outline-variant p-1">
+<button class="w-8 h-8 flex items-center justify-center text-on-surface hover:bg-surface-container-high rounded-full transition-colors">-</button>
+<span class="text-body-md font-body-md font-medium w-8 text-center">1</span>
+<button class="w-8 h-8 flex items-center justify-center text-on-surface hover:bg-surface-container-high rounded-full transition-colors">+</button>
+</div>
+<span class="text-body-lg font-body-lg text-tertiary-container font-semibold">$34.00</span>
+</div>
+</div>
+</div>
+<hr class="border-surface-container-highest"/>
+<!-- Item 2 -->
+<div class="flex gap-4 items-start relative group">
+<div class="w-24 h-24 md:w-32 md:h-32 flex-shrink-0 bg-surface-container rounded-xl overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A beautifully lit studio shot of tiny, soft knit baby booties in a warm mustard yellow color. The booties are placed on a softly textured, light earthy cream surface. The image emphasizes the premium, tactile quality of the knit fabric and rounded, playful shapes, aligning with a modern, earthy children's brand aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAmwf_sVsk7G6tNWTtRnKWV61USPee-j0c8eGxIdAtV_qvlRuG6wHIjvnhdOEDnR2oWkZKKWFNeV9TyGLhVn3dQtag9tI3TRsDl6rcEOqui2YDupCuLC0tvc3v2fawBoNJXdzirH2JYD0NytGEqI3hnDFuPqhgsLjR7acCzadiNnX-wX_c0nhCB3h1V0gTm7lrnbu8VDtCtr3COCJcYlcJipVxwKLSAJhQarQ5O6vBqdzZF7ED_f88_4A"/>
+</div>
+<div class="flex-grow">
+<div class="flex justify-between items-start">
+<div>
+<h4 class="text-body-lg font-body-lg text-on-surface font-semibold">Chunky Knit Booties</h4>
+<p class="text-label-sm font-label-sm text-on-surface-variant mt-1">Mustard • 6-12M</p>
+</div>
+<button class="text-outline hover:text-error transition-colors p-1 rounded-full hover:bg-error-container/20">
+<span class="material-symbols-outlined text-[20px]" data-icon="close">close</span>
+</button>
+</div>
+<div class="flex justify-between items-end mt-4">
+<div class="flex items-center bg-surface-container rounded-full border border-outline-variant p-1">
+<button class="w-8 h-8 flex items-center justify-center text-on-surface hover:bg-surface-container-high rounded-full transition-colors">-</button>
+<span class="text-body-md font-body-md font-medium w-8 text-center">1</span>
+<button class="w-8 h-8 flex items-center justify-center text-on-surface hover:bg-surface-container-high rounded-full transition-colors">+</button>
+</div>
+<span class="text-body-lg font-body-lg text-tertiary-container font-semibold">$22.00</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- 2. Shipping details -->
+<section class="bg-surface-container-lowest rounded-2xl p-6 ambient-glow border border-surface-variant">
+<h3 class="text-headline-md font-headline-md text-primary mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-fixed-dim" data-icon="local_shipping" style="font-variation-settings: 'FILL' 1;">local_shipping</span>
+                        Delivery Details
+                    </h3>
+<form class="space-y-5">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+<div>
+<label class="block text-label-sm font-label-sm text-on-surface-variant mb-1">First Name</label>
+<input class="w-full bg-surface border border-outline-variant rounded-lg px-4 py-3 text-body-md font-body-md focus:outline-none focus:border-secondary-container focus:ring-1 focus:ring-secondary-container transition-shadow" placeholder="Jane" type="text"/>
+</div>
+<div>
+<label class="block text-label-sm font-label-sm text-on-surface-variant mb-1">Last Name</label>
+<input class="w-full bg-surface border border-outline-variant rounded-lg px-4 py-3 text-body-md font-body-md focus:outline-none focus:border-secondary-container focus:ring-1 focus:ring-secondary-container transition-shadow" placeholder="Doe" type="text"/>
+</div>
+</div>
+<div>
+<label class="block text-label-sm font-label-sm text-on-surface-variant mb-1">Address</label>
+<input class="w-full bg-surface border border-outline-variant rounded-lg px-4 py-3 text-body-md font-body-md focus:outline-none focus:border-secondary-container focus:ring-1 focus:ring-secondary-container transition-shadow" placeholder="123 Playful Lane" type="text"/>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-3 gap-5">
+<div class="col-span-2 md:col-span-1">
+<label class="block text-label-sm font-label-sm text-on-surface-variant mb-1">City</label>
+<input class="w-full bg-surface border border-outline-variant rounded-lg px-4 py-3 text-body-md font-body-md focus:outline-none focus:border-secondary-container focus:ring-1 focus:ring-secondary-container transition-shadow" placeholder="Smileville" type="text"/>
+</div>
+<div>
+<label class="block text-label-sm font-label-sm text-on-surface-variant mb-1">State</label>
+<select class="w-full bg-surface border border-outline-variant rounded-lg px-4 py-3 text-body-md font-body-md focus:outline-none focus:border-secondary-container focus:ring-1 focus:ring-secondary-container transition-shadow appearance-none">
+<option>CA</option>
+<option>NY</option>
+<option>TX</option>
+</select>
+</div>
+<div>
+<label class="block text-label-sm font-label-sm text-on-surface-variant mb-1">Zip Code</label>
+<input class="w-full bg-surface border border-outline-variant rounded-lg px-4 py-3 text-body-md font-body-md focus:outline-none focus:border-secondary-container focus:ring-1 focus:ring-secondary-container transition-shadow" placeholder="90210" type="text"/>
+</div>
+</div>
+</form>
+<!-- Shipping Method -->
+<div class="mt-8">
+<label class="block text-label-sm font-label-sm text-on-surface-variant mb-3">Shipping Method</label>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<label class="relative flex items-start cursor-pointer group">
+<input checked="" class="peer sr-only" name="shipping" type="radio"/>
+<div class="w-full bg-surface border-2 border-outline-variant rounded-xl p-4 peer-checked:border-primary peer-checked:bg-primary-fixed/20 transition-all">
+<div class="flex justify-between items-center mb-1">
+<span class="text-body-md font-body-md font-semibold text-primary">Standard</span>
+<span class="text-body-md font-body-md text-tertiary-container">$5.00</span>
+</div>
+<p class="text-label-sm font-label-sm text-on-surface-variant font-normal">3-5 Business Days</p>
+</div>
+</label>
+<label class="relative flex items-start cursor-pointer group">
+<input class="peer sr-only" name="shipping" type="radio"/>
+<div class="w-full bg-surface border-2 border-outline-variant rounded-xl p-4 peer-checked:border-primary peer-checked:bg-primary-fixed/20 transition-all">
+<div class="flex justify-between items-center mb-1">
+<span class="text-body-md font-body-md font-semibold text-primary">Express</span>
+<span class="text-body-md font-body-md text-tertiary-container">$15.00</span>
+</div>
+<p class="text-label-sm font-label-sm text-on-surface-variant font-normal">1-2 Business Days</p>
+</div>
+</label>
+</div>
+</div>
+</section>
+<!-- 3. Payment -->
+<section class="bg-surface-container-lowest rounded-2xl p-6 ambient-glow border border-surface-variant">
+<h3 class="text-headline-md font-headline-md text-primary mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary" data-icon="payments" style="font-variation-settings: 'FILL' 1;">payments</span>
+                        Payment
+                    </h3>
+<div class="space-y-4">
+<!-- Credit Card Option -->
+<label class="relative block cursor-pointer">
+<input checked="" class="peer sr-only" name="payment" type="radio"/>
+<div class="bg-surface border-2 border-outline-variant rounded-xl p-4 peer-checked:border-primary peer-checked:bg-primary-fixed/10 transition-all">
+<div class="flex items-center gap-3 mb-4">
+<div class="w-5 h-5 rounded-full border-2 border-outline peer-checked:border-primary flex items-center justify-center">
+<div class="w-2.5 h-2.5 rounded-full bg-primary opacity-0 transition-opacity"></div>
+</div>
+<span class="text-body-md font-body-md font-semibold text-primary flex-grow">Credit Card</span>
+<div class="flex gap-2 text-primary-container/60">
+<span class="material-symbols-outlined" data-icon="credit_card">credit_card</span>
+</div>
+</div>
+<!-- Card Details Form (Simplified) -->
+<div class="space-y-3 pl-8">
+<input class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-2 text-body-md font-body-md focus:border-secondary-container focus:ring-1 focus:ring-secondary-container" placeholder="Card Number" type="text"/>
+<div class="grid grid-cols-2 gap-3">
+<input class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-2 text-body-md font-body-md focus:border-secondary-container focus:ring-1 focus:ring-secondary-container" placeholder="MM/YY" type="text"/>
+<input class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-2 text-body-md font-body-md focus:border-secondary-container focus:ring-1 focus:ring-secondary-container" placeholder="CVC" type="text"/>
+</div>
+</div>
+</div>
+</label>
+<!-- GPay Option -->
+<label class="relative block cursor-pointer">
+<input class="peer sr-only" name="payment" type="radio"/>
+<div class="bg-surface border border-outline-variant rounded-xl p-4 peer-checked:border-primary peer-checked:border-2 transition-all flex items-center gap-3 hover:bg-surface-container-low">
+<div class="w-5 h-5 rounded-full border-2 border-outline flex items-center justify-center"></div>
+<span class="text-body-md font-body-md font-medium text-on-surface flex-grow">Google Pay</span>
+<span class="material-symbols-outlined text-primary" data-icon="contactless">contactless</span>
+</div>
+</label>
+<!-- UPI Option -->
+<label class="relative block cursor-pointer">
+<input class="peer sr-only" name="payment" type="radio"/>
+<div class="bg-surface border border-outline-variant rounded-xl p-4 peer-checked:border-primary peer-checked:border-2 transition-all flex items-center gap-3 hover:bg-surface-container-low">
+<div class="w-5 h-5 rounded-full border-2 border-outline flex items-center justify-center"></div>
+<span class="text-body-md font-body-md font-medium text-on-surface flex-grow">UPI ID</span>
+<span class="material-symbols-outlined text-primary" data-icon="qr_code_scanner">qr_code_scanner</span>
+</div>
+</label>
+</div>
+</section>
+</div>
+<!-- Right Column: Order Summary (Sticky) -->
+<div class="lg:col-span-5 xl:col-span-4 mt-8 lg:mt-0 relative">
+<div class="sticky top-24 bg-surface-container rounded-2xl p-6 md:p-8 ambient-glow">
+<h3 class="text-headline-md font-headline-md text-primary mb-6">Summary</h3>
+<div class="space-y-4 text-body-md font-body-md text-on-surface-variant">
+<div class="flex justify-between">
+<span>Subtotal</span>
+<span class="font-medium text-on-surface">$56.00</span>
+</div>
+<div class="flex justify-between">
+<span>Shipping (Standard)</span>
+<span class="font-medium text-on-surface">$5.00</span>
+</div>
+<div class="flex justify-between">
+<span>Estimated Tax</span>
+<span class="font-medium text-on-surface">$4.48</span>
+</div>
+</div>
+<hr class="border-outline-variant/30 my-6"/>
+<div class="flex justify-between items-center mb-8">
+<span class="text-body-lg font-body-lg font-semibold text-primary">Total</span>
+<span class="text-headline-md font-headline-md text-tertiary-container">$65.48</span>
+</div>
+<button class="w-full bg-secondary-container hover:bg-secondary-fixed text-on-secondary-container font-label-sm text-label-sm uppercase py-4 rounded-full transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg flex items-center justify-center gap-2">
+                        Place Order
+                        <span class="material-symbols-outlined text-[18px]" data-icon="arrow_forward">arrow_forward</span>
+</button>
+<div class="mt-6 flex items-center justify-center gap-2 text-label-sm font-label-sm text-on-surface-variant/70">
+<span class="material-symbols-outlined text-[16px]" data-icon="lock">lock</span>
+                        Secure Encrypted Checkout
+                    </div>
+<!-- Decorative playful element -->
+<div class="absolute -top-4 -right-4 text-secondary-container opacity-50 rotate-12 pointer-events-none">
+<span class="material-symbols-outlined" data-icon="stars" style="font-size: 48px; font-variation-settings: 'FILL' 1;">stars</span>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Inline script to handle radio button visual logic if needed (kept minimal as CSS handles most) -->
+<script>
+        document.querySelectorAll('input[name="payment"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                // Remove filled dots from all
+                document.querySelectorAll('input[name="payment"] + div .rounded-full > div').forEach(dot => {
+                    dot.classList.remove('opacity-100');
+                    dot.classList.add('opacity-0');
+                });
+                // Add filled dot to selected (if it has one - only credit card in this simplified UI for demo)
+                const selectedDot = e.target.nextElementSibling.querySelector('.rounded-full > div');
+                if(selectedDot) {
+                    selectedDot.classList.remove('opacity-0');
+                    selectedDot.classList.add('opacity-100');
+                }
+            });
+        });
+    </script>
+</body></html>

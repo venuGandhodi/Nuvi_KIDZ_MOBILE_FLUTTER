@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Nuvi Kidz - Home</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&amp;family=Be+Vietnam+Pro:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-container": "#1f3d2e",
+                        "inverse-on-surface": "#f8f0e4",
+                        "on-background": "#1e1b14",
+                        "surface-container-low": "#fbf3e7",
+                        "secondary-container": "#fdb244",
+                        "on-error": "#ffffff",
+                        "surface": "#fff8f0",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary": "#835400",
+                        "on-secondary-fixed-variant": "#633f00",
+                        "surface-dim": "#e1d9cd",
+                        "on-secondary-fixed": "#2a1800",
+                        "surface-tint": "#466554",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-container": "#661f09",
+                        "on-surface-variant": "#424844",
+                        "on-primary-fixed": "#022113",
+                        "tertiary-fixed": "#ffdbd1",
+                        "on-primary": "#ffffff",
+                        "primary-fixed-dim": "#adceba",
+                        "secondary-fixed-dim": "#ffb956",
+                        "inverse-surface": "#343028",
+                        "background": "#fff8f0",
+                        "primary": "#082719",
+                        "outline": "#727973",
+                        "primary-fixed": "#c8ebd5",
+                        "on-tertiary-fixed-variant": "#7b2e17",
+                        "outline-variant": "#c2c8c2",
+                        "on-surface": "#1e1b14",
+                        "surface-container-high": "#efe7db",
+                        "tertiary": "#460d00",
+                        "on-primary-container": "#87a894",
+                        "tertiary-fixed-dim": "#ffb5a0",
+                        "error": "#ba1a1a",
+                        "on-primary-fixed-variant": "#2f4d3d",
+                        "on-error-container": "#93000a",
+                        "surface-container-highest": "#e9e1d6",
+                        "secondary-fixed": "#ffddb5",
+                        "surface-bright": "#fff8f0",
+                        "on-tertiary-fixed": "#3b0900",
+                        "error-container": "#ffdad6",
+                        "on-tertiary-container": "#eb8467",
+                        "surface-variant": "#e9e1d6",
+                        "surface-container": "#f5ede1",
+                        "inverse-primary": "#adceba",
+                        "on-secondary-container": "#6e4600"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-desktop": "40px",
+                        "margin-mobile": "16px",
+                        "unit": "8px",
+                        "gutter": "24px",
+                        "container-max": "1280px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Quicksand"],
+                        "headline-lg": ["Quicksand"],
+                        "body-lg": ["Be Vietnam Pro"],
+                        "headline-xl": ["Quicksand"],
+                        "headline-lg-mobile": ["Quicksand"],
+                        "label-sm": ["Be Vietnam Pro"],
+                        "body-md": ["Be Vietnam Pro"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "headline-xl": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "700"}],
+                        "label-sm": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            background-color: #fff8f0; /* surface */
+            color: #1e1b14; /* on-surface */
+            font-family: 'Be Vietnam Pro', sans-serif;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Quicksand', sans-serif;
+        }
+        .hide-scroll::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scroll {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .soft-shadow {
+            box-shadow: 0 10px 25px -5px rgba(31, 61, 46, 0.08); /* primary-container tinted shadow */
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface antialiased flex flex-col min-h-screen">
+<!-- TopAppBar -->
+<header class="bg-surface dark:bg-inverse-surface docked full-width top-0 sticky z-50 flat no-shadows">
+<div class="flex justify-between items-center w-full px-margin-mobile py-unit max-w-container-max mx-auto md:px-margin-desktop">
+<button class="md:hidden text-on-surface-variant dark:text-outline hover:bg-surface-container-low dark:hover:bg-primary-container transition-colors duration-200 p-2 rounded-full active:scale-95 duration-100 ease-in-out">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<div class="hidden md:flex space-x-6">
+<a class="text-primary dark:text-inverse-primary font-bold text-label-sm font-label-sm uppercase hover:bg-surface-container-low dark:hover:bg-primary-container transition-colors duration-200 px-3 py-2 rounded-full" href="#">Home</a>
+<a class="text-on-surface-variant dark:text-outline text-label-sm font-label-sm uppercase hover:bg-surface-container-low dark:hover:bg-primary-container transition-colors duration-200 px-3 py-2 rounded-full" href="#">Shop</a>
+<a class="text-on-surface-variant dark:text-outline text-label-sm font-label-sm uppercase hover:bg-surface-container-low dark:hover:bg-primary-container transition-colors duration-200 px-3 py-2 rounded-full" href="#">Categories</a>
+</div>
+<div class="flex-shrink-0">
+<img alt="Nuvi Kidz Logo" class="h-8 md:h-12 object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAgutXDRlqqr1FptpOr0dyTd9vWnf1yb_YF5bzNHZvANhhfr1Y18Lk8hcp53srDsAbSK7J50B2llRI8yrSx6CWduEoqF-jqWiWwdpCnkQcZaKVWGjb4OmHO1jAINfEhmsl_nk8sFj11z6W5IM0E90hTZmuwt2OBVgsUrwd8wiweGAGs30rfHT22d6noBBhpkW2fblXcyXtjyypuzm7a1e6MYMJCTb51XNQ2NqraD48JJsjLt92y9xJDaYY373cbKc6yIlw"/>
+</div>
+<div class="flex items-center space-x-2 md:space-x-4">
+<button class="hidden md:block text-on-surface-variant dark:text-outline hover:bg-surface-container-low dark:hover:bg-primary-container transition-colors duration-200 p-2 rounded-full active:scale-95 duration-100 ease-in-out">
+<span class="material-symbols-outlined">search</span>
+</button>
+<button class="hidden md:block text-on-surface-variant dark:text-outline hover:bg-surface-container-low dark:hover:bg-primary-container transition-colors duration-200 p-2 rounded-full active:scale-95 duration-100 ease-in-out">
+<span class="material-symbols-outlined">person</span>
+</button>
+<button class="text-on-surface-variant dark:text-outline hover:bg-surface-container-low dark:hover:bg-primary-container transition-colors duration-200 p-2 rounded-full active:scale-95 duration-100 ease-in-out relative">
+<span class="material-symbols-outlined">shopping_cart</span>
+<span class="absolute top-0 right-0 bg-secondary-container text-on-secondary-container text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">2</span>
+</button>
+</div>
+</div>
+</header>
+<main class="flex-grow pb-24 md:pb-12">
+<!-- Hero Carousel Placeholder -->
+<section class="relative w-full h-[60vh] md:h-[80vh] bg-surface-container-high overflow-hidden">
+<div class="w-full h-full bg-cover bg-center absolute inset-0" data-alt="A joyful child wearing a cozy, ethically-made mustard yellow sweater and forest green overalls, playing outdoors in an autumn setting with soft, warm sunlight filtering through trees. Premium photography, bright and cheerful mood, modern light-mode aesthetic, showcasing high-quality children's apparel." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAFpju392Q1xn2AJbOH6i84veMzV8CIixbhDvSfev46-u4_JZayJQIFnXhrHEVwvacS8R3Yqz5xKPu96JKK13KMhQKxFxLkLnJXz9NyUwcIZ4wn0co3f1eqH4Qpm3q-U4Ugpoqku-8t-1F7pb_aL95IXewiYYQ8_64qWmtarZhwe1gnvFEtqcpH2u82uIp_phTTft_zPdY8hPZjpq2y0BYUg1FsGCMEoLThIKZ_Q5E5vMJdLVJRJbMjsQ')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/60 to-transparent flex flex-col justify-end p-margin-mobile md:p-margin-desktop max-w-container-max mx-auto w-full">
+<h1 class="text-on-primary font-headline-xl text-headline-lg-mobile md:text-headline-xl mb-4">Autumn Adventures<br/>Await</h1>
+<p class="text-on-primary font-body-lg text-body-md md:text-body-lg max-w-md mb-6">Discover our new collection of cozy, organic cotton essentials designed for little explorers.</p>
+<div class="flex space-x-4">
+<button class="bg-secondary-container text-on-secondary-container px-6 py-3 rounded-full font-label-sm text-label-sm hover:scale-105 transition-transform duration-200 ease-out shadow-sm">Shop the Collection</button>
+</div>
+</div>
+</section>
+<!-- Categories & Age Scroll -->
+<section class="py-12 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+<div class="flex flex-col md:flex-row gap-12">
+<!-- Shop Tiny Styles -->
+<div class="w-full md:w-1/2">
+<h2 class="text-headline-lg-mobile md:text-headline-md font-headline-lg-mobile md:font-headline-md text-primary mb-6 flex items-center">
+                        Shop tiny styles
+                        <span class="material-symbols-outlined ml-2 text-secondary-container text-xl">star</span>
+</h2>
+<div class="flex overflow-x-auto hide-scroll space-x-6 pb-4">
+<div class="flex flex-col items-center flex-shrink-0 cursor-pointer group">
+<div class="w-20 h-20 md:w-24 md:h-24 rounded-full bg-surface-container-high overflow-hidden mb-3 border-2 border-transparent group-hover:border-secondary-container transition-colors duration-300">
+<img class="w-full h-full object-cover" data-alt="A stylish baby girl wearing a floral patterned organic cotton dress in soft pastel colors, sitting in a bright, modern nursery setting with soft natural lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBHEOpEgbz_wHgxUxOQHvE-0UgXW1Rg5FblJilz3mXzfN8SHYEBK1qj8B0MOf0_uqyjRbOKDMP0yho_gVnQ7_5tND0Pd4W3D7RDBfUXLi3zHOQ8OXACUiK1WvGIAhpi9UA-KqVUcYDuosMD2ZWS_oWJ7doMLFurSxBdhzOT-YK4cg4FzBqsIj7777trxhUZKSXdfKbeB0CSl8ydJlnGNQSxnp0BZIUIFRuu9pZpoDRXtfuUxs7zwKJ05w"/>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant group-hover:text-primary transition-colors">Girls</span>
+</div>
+<div class="flex flex-col items-center flex-shrink-0 cursor-pointer group">
+<div class="w-20 h-20 md:w-24 md:h-24 rounded-full bg-surface-container-high overflow-hidden mb-3 border-2 border-transparent group-hover:border-secondary-container transition-colors duration-300">
+<img class="w-full h-full object-cover" data-alt="A trendy toddler boy wearing a soft, earthy-toned linen shirt and comfortable trousers, playing with wooden toys in a bright, minimalist playroom." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAckyM6Tg65_MvBPntWmJz3WidK1xsIwuN4aqpAGOwhxzQYhUxrTfmXzvm2uGNyBRgGNKAy8hMtPiC2PATH29IWUyOSZHfL-jj5vvpXovdUx1zOt1uUyQHWAMgUKcTkXkDxMpb5JezUlPxmF_i7rvf6nViII0jaDito0aOuOKlQt_XsM5pUi_jlIEPtTPCZ0X316M3_YCLDaA4P2hee1OGaSL6_0Lz2kveRoZ9xGy14eEzW07620152Xw"/>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant group-hover:text-primary transition-colors">Boys</span>
+</div>
+<div class="flex flex-col items-center flex-shrink-0 cursor-pointer group">
+<div class="w-20 h-20 md:w-24 md:h-24 rounded-full bg-surface-container-high overflow-hidden mb-3 border-2 border-transparent group-hover:border-secondary-container transition-colors duration-300">
+<img class="w-full h-full object-cover" data-alt="A newborn baby wrapped in a cozy, cream-colored organic cotton swaddle blanket, sleeping peacefully on a soft textured rug with warm, diffused light." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCzNIhEQx2UML_N_ZGCjEyI6u6492OcdCZdv1igR3bEvXrxgN026OmBZyoQCpkIIXWiqTsJqV9zbRaDMOJAifgoB36fiGO5l-_M8e_eJA1WW-h6dOhhFjdHB3o2rv3Or8i7z5ex3emoga8oZi9jVkWugnaBhDTsLgf05juEjndWT4b-WVc6UVr7Nbj4qY0nJpyLhB_JkFJmGti2ykpAK2jpl9jrNMbUDrR0jHJMo4-wCKwn0LZptlVH3g"/>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant group-hover:text-primary transition-colors">Baby</span>
+</div>
+<div class="flex flex-col items-center flex-shrink-0 cursor-pointer group">
+<div class="w-20 h-20 md:w-24 md:h-24 rounded-full bg-surface-container-high overflow-hidden mb-3 border-2 border-transparent group-hover:border-secondary-container transition-colors duration-300">
+<img class="w-full h-full object-cover" data-alt="A pair of miniature, stylish toddler shoes made of soft, ethically sourced leather in a mustard yellow tone, placed on a light wooden surface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDpMtuBbxQMRPGs0TXtQ0HHM_hYTFCMGu3sly2d3mrvit72RaJ4j9wSA3dY6QyGFqGvV6UyPVqoMu4I3Wdy7WbNTsl7Jc6hUeY4jFgHlTFsZ_QJonyobLYaU210XJPO_80YHyiJh8WWAtlgP84NTERahfpXMF1ryjZE3QwaaGkEqdvYDcK5bh9vTlSiSNeQ8co4BJdxkQPHE4H1Cz6y9tZIv6lg_Qomj1kTjZDENOzkl24B1vGrqwZ_Ww"/>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant group-hover:text-primary transition-colors">Footwear</span>
+</div>
+</div>
+</div>
+<!-- Shop by Age -->
+<div class="w-full md:w-1/2">
+<h2 class="text-headline-lg-mobile md:text-headline-md font-headline-lg-mobile md:font-headline-md text-primary mb-6 flex items-center">
+                        Shop by age
+                        <span class="material-symbols-outlined ml-2 text-primary-fixed-dim text-xl">favorite</span>
+</h2>
+<div class="flex flex-wrap gap-4">
+<button class="px-6 py-3 rounded-full border border-outline-variant bg-surface-container-lowest text-on-surface font-label-sm text-label-sm hover:bg-surface-container-low hover:border-primary-container transition-all">0-3m</button>
+<button class="px-6 py-3 rounded-full border border-outline-variant bg-surface-container-lowest text-on-surface font-label-sm text-label-sm hover:bg-surface-container-low hover:border-primary-container transition-all">3-6m</button>
+<button class="px-6 py-3 rounded-full border border-outline-variant bg-surface-container-lowest text-on-surface font-label-sm text-label-sm hover:bg-surface-container-low hover:border-primary-container transition-all">6-12m</button>
+<button class="px-6 py-3 rounded-full border border-outline-variant bg-surface-container-lowest text-on-surface font-label-sm text-label-sm hover:bg-surface-container-low hover:border-primary-container transition-all">1-2y</button>
+<button class="px-6 py-3 rounded-full border border-outline-variant bg-surface-container-lowest text-on-surface font-label-sm text-label-sm hover:bg-surface-container-low hover:border-primary-container transition-all">3-5y</button>
+<button class="px-6 py-3 rounded-full border border-outline-variant bg-surface-container-lowest text-on-surface font-label-sm text-label-sm hover:bg-surface-container-low hover:border-primary-container transition-all">6-8y</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Bestsellers -->
+<section class="py-12 bg-surface-container-lowest">
+<div class="px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+<div class="flex justify-between items-end mb-8">
+<h2 class="text-headline-lg-mobile md:text-headline-lg font-headline-lg-mobile md:font-headline-lg text-primary">Bestsellers</h2>
+<a class="text-primary font-label-sm text-label-sm underline hover:text-primary-container transition-colors" href="#">View All</a>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-gutter">
+<!-- Product Card 1 -->
+<div class="group flex flex-col relative bg-surface rounded-xl overflow-hidden border border-surface-container-highest hover:soft-shadow transition-shadow duration-300">
+<div class="relative aspect-[4/5] bg-surface-container-low overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A flat lay photograph of a cute, organic cotton baby romper in a soft forest green color with a subtle elephant print. Premium soft lighting, modern light-mode aesthetic, warm cream background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBjOlTJOb3wyG119gfbl5Ws6ocbLMF5CgPcEEzQ4q8e7eniedbbrxidQxs_fDwT1KDOsBcid11yTaTrYqVxIZFMf8cWCbXFdZ1t-GQMu1QeEKNjOcM6V8PIqdUyuOmpdrCAzsMMvnSS3n3o7-3BZFS3uhpeYayd5YsO-YFzQMev60z2Ps5fHNKttLiGJSsrkvVqutS5eEWte5AyGcdel1SMRZfPnc83wOtQ3Mi1bppNb4b0MLQU3xBhVg"/>
+<button class="absolute top-3 right-3 p-2 bg-surface/80 backdrop-blur-sm rounded-full text-outline hover:text-tertiary-container transition-colors">
+<span class="material-symbols-outlined text-[20px]">favorite</span>
+</button>
+<span class="absolute top-3 left-3 bg-secondary-container text-on-secondary-container px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider">New</span>
+</div>
+<div class="p-4 flex flex-col flex-grow">
+<div class="flex items-center space-x-1 mb-1">
+<span class="material-symbols-outlined text-secondary-container text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-secondary-container text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-secondary-container text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-secondary-container text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-secondary-container text-[14px]" style="font-variation-settings: 'FILL' 1;">star_half</span>
+<span class="text-[12px] text-outline ml-1">(42)</span>
+</div>
+<h3 class="font-body-md text-body-md text-on-surface leading-tight mb-2 flex-grow">Forest Elephant Romper</h3>
+<p class="font-label-sm text-label-sm text-tertiary-container">$34.00</p>
+</div>
+</div>
+<!-- Product Card 2 -->
+<div class="group flex flex-col relative bg-surface rounded-xl overflow-hidden border border-surface-container-highest hover:soft-shadow transition-shadow duration-300">
+<div class="relative aspect-[4/5] bg-surface-container-low overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A soft, knitted baby cardigan in a warm mustard yellow tone, neatly folded on a textured cream surface. The lighting is soft and diffused, creating a premium and cozy aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB4zQAJpgatVxwXkHv4KuLaaIrFTuLlu49Impjv5KZ2wtZuicBmkCjhCK2XSm5rL2731b0-RNnlzKedXH3Jlb0AWUkVSHcYyIKkFic8-8vKpZWmpR7dHWdQkyzhhlwP5_l4YNPdD12wmbgwgI0CW8X6FUljkYX-ezlZjQWtnGxXskF8MCthcfcF5TCzxHLVn3YWS94KbUHurkeltDe7RCOagVieR4B9NmqJOSvIZkH02KDph0DV6-r2Zg"/>
+<button class="absolute top-3 right-3 p-2 bg-surface/80 backdrop-blur-sm rounded-full text-outline hover:text-tertiary-container transition-colors">
+<span class="material-symbols-outlined text-[20px]">favorite</span>
+</button>
+</div>
+<div class="p-4 flex flex-col flex-grow">
+<div class="flex items-center space-x-1 mb-1">
+<span class="material-symbols-outlined text-secondary-container text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-secondary-container text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-secondary-container text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-secondary-container text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-secondary-container text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-[12px] text-outline ml-1">(18)</span>
+</div>
+<h3 class="font-body-md text-body-md text-on-surface leading-tight mb-2 flex-grow">Chunky Knit Cardigan</h3>
+<p class="font-label-sm text-label-sm text-tertiary-container">$45.00</p>
+</div>
+</div>
+<!-- Product Card 3 -->
+<div class="group flex flex-col relative bg-surface rounded-xl overflow-hidden border border-surface-container-highest hover:soft-shadow transition-shadow duration-300 hidden md:flex">
+<div class="relative aspect-[4/5] bg-surface-container-low overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A pair of toddler denim overalls with adjustable straps, styled with a simple white organic cotton t-shirt. Photographed on a clean, light surface with natural sunlight and soft shadows." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDUjYja6okPAB5c7YLGAFFPWPcvvoKHROb36epNO5tVMcb69H0SfuvaOVz8zgigWufm7ozgAL6ec5OPwId2gW5syhKJqPKh7z-xOyth0m8rJSUWsc0MCIFHTzG9Tzo0vPiEywSjmrmVvayK9RrH9nO0xw2cqJWvedto2w3vehg4Dd8T5o593u-rWp_nafgGwC8Zf7cIeA3QSJbrseTf78qHnmoNykBLWHrChQ7ZAoBX4Rrpf0fl5oWrhQ"/>
+<button class="absolute top-3 right-3 p-2 bg-surface/80 backdrop-blur-sm rounded-full text-outline hover:text-tertiary-container transition-colors">
+<span class="material-symbols-outlined text-[20px]">favorite</span>
+</button>
+</div>
+<div class="p-4 flex flex-col flex-grow">
+<div class="flex items-center space-x-1 mb-1">
+<span class="material-symbols-outlined text-secondary-container text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-secondary-container text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-secondary-container text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-secondary-container text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-outline text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-[12px] text-outline ml-1">(9)</span>
+</div>
+<h3 class="font-body-md text-body-md text-on-surface leading-tight mb-2 flex-grow">Classic Denim Overalls</h3>
+<p class="font-label-sm text-label-sm text-tertiary-container">$52.00</p>
+</div>
+</div>
+<!-- Product Card 4 -->
+<div class="group flex flex-col relative bg-surface rounded-xl overflow-hidden border border-surface-container-highest hover:soft-shadow transition-shadow duration-300 hidden md:flex">
+<div class="relative aspect-[4/5] bg-surface-container-low overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A set of three soft, ribbed baby beanies in earthy tones: mustard, forest green, and terracotta. They are neatly arranged on a white background, highlighting their premium texture." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD3L0C_lxMUCPUqjt8hnij-59MihlE_go6teP-p1uc4yQsCkUoW2WuuJTt-KMZ9aOxLLp4NZjJeosaAufoAZkIQ06piIhZFoFRquIFsG8ecngMt40Vm-jwNUzBIrkjwJ8EDHqumrKpCgfKbFHo6kwLM4RigNL8hTClPty9YGewICFs9W1KN11PaP0rZsDBfJeX3RE6YYkepPe-2o8MIvkxvTeE5hE_Y4ozLs6NBK4v_dNAKvrb4ppqgqg"/>
+<button class="absolute top-3 right-3 p-2 bg-surface/80 backdrop-blur-sm rounded-full text-outline hover:text-tertiary-container transition-colors">
+<span class="material-symbols-outlined text-[20px]">favorite</span>
+</button>
+</div>
+<div class="p-4 flex flex-col flex-grow">
+<div class="flex items-center space-x-1 mb-1">
+<span class="material-symbols-outlined text-secondary-container text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-secondary-container text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-secondary-container text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-secondary-container text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-secondary-container text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-[12px] text-outline ml-1">(56)</span>
+</div>
+<h3 class="font-body-md text-body-md text-on-surface leading-tight mb-2 flex-grow">Ribbed Beanie Set (3-Pack)</h3>
+<p class="font-label-sm text-label-sm text-tertiary-container">$28.00</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-2 pb-4 pt-2 bg-surface dark:bg-inverse-surface border-t border-surface-container-highest dark:border-outline-variant shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] rounded-t-xl">
+<a class="flex flex-col items-center justify-center bg-secondary-container dark:bg-secondary text-on-secondary-container dark:text-on-secondary rounded-full px-4 py-1 hover:bg-surface-container-high dark:hover:bg-primary-container transition-all active:scale-90 duration-150 bounce-effect" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="text-label-sm font-label-sm text-[10px] mt-1">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline px-4 py-1 hover:bg-surface-container-high dark:hover:bg-primary-container transition-all" href="#">
+<span class="material-symbols-outlined">shopping_bag</span>
+<span class="text-label-sm font-label-sm text-[10px] mt-1">Shop</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline px-4 py-1 hover:bg-surface-container-high dark:hover:bg-primary-container transition-all" href="#">
+<span class="material-symbols-outlined">search</span>
+<span class="text-label-sm font-label-sm text-[10px] mt-1">Search</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline px-4 py-1 hover:bg-surface-container-high dark:hover:bg-primary-container transition-all" href="#">
+<span class="material-symbols-outlined">favorite</span>
+<span class="text-label-sm font-label-sm text-[10px] mt-1">Wishlist</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline px-4 py-1 hover:bg-surface-container-high dark:hover:bg-primary-container transition-all" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="text-label-sm font-label-sm text-[10px] mt-1">Account</span>
+</a>
+</nav>
+</body></html>
