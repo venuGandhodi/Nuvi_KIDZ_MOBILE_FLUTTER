@@ -1,3 +1,5 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as supabase;
 import '../domain/auth_exception.dart';
 
@@ -40,5 +42,82 @@ class AuthRepository {
 
   Future<void> signOut() async {
     await _supabase.auth.signOut();
+  }
+
+  Future<bool> signInWithGoogle({GoogleSignIn? googleSignInOverride}) async {
+    try {
+      final iosClientId = dotenv.env['GOOGLE_IOS_CLIENT_ID'];
+      final webClientId = dotenv.env['GOOGLE_WEB_CLIENT_ID'];
+
+      final googleSignIn =
+          googleSignInOverride ??
+          GoogleSignIn(
+            clientId: (iosClientId != null && iosClientId.isNotEmpty)
+                ? iosClientId
+                : null,
+            serverClientId: (webClientId != null && webClientId.isNotEmpty)
+                ? webClientId
+                : null,
+          );
+
+      final googleUser = await googleSignIn.signIn();
+      if (googleUser == null) {
+        // User cancelled Google Sign-In
+        return false;
+      }
+
+      final googleAuth = await googleUser.authentication;
+      final idToken = googleAuth.idToken;
+      final accessToken = googleAuth.accessToken;
+
+      if (idToken == null || idToken.isEmpty) {
+        throw AuthException('Failed to obtain Google ID token.');
+      }
+
+      await _supabase.auth.signInWithIdToken(
+        provider: supabase.OAuthProvider.google,
+        idToken: idToken,
+        accessToken: accessToken,
+      );
+
+      return true;
+    } on supabase.AuthException catch (e) {
+      throw AuthException(e.message);
+    } on AuthException {
+      rethrow;
+    } catch (e) {
+      throw AuthException(
+        'An unexpected error occurred during Google sign in.',
+      );
+    }
+  }
+
+  Future<void> sendPasswordResetEmail(String email) async {
+    try {
+      await _supabase.auth.resetPasswordForEmail(
+        email,
+        redirectTo: 'io.supabase.nuvikidz://login-callback/',
+      );
+    } on supabase.AuthException catch (e) {
+      throw AuthException(e.message);
+    } catch (e) {
+      throw AuthException(
+        'An unexpected error occurred during password reset request.',
+      );
+    }
+  }
+
+  Future<void> updatePassword(String newPassword) async {
+    try {
+      await _supabase.auth.updateUser(
+        supabase.UserAttributes(password: newPassword),
+      );
+    } on supabase.AuthException catch (e) {
+      throw AuthException(e.message);
+    } catch (e) {
+      throw AuthException(
+        'An unexpected error occurred during password update.',
+      );
+    }
   }
 }

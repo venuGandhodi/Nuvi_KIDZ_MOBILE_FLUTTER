@@ -93,6 +93,24 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: NuviSpacing.md),
+                Center(
+                  child: Container(
+                    width: 80,
+                    height: 80,
+                    decoration: const BoxDecoration(
+                      color: NuviColors.secondary,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(10),
+                      child: Image.asset(
+                        'assets/images/brand/nuvi_kidz_logo.png',
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: NuviSpacing.lg),
                 Text(
                   'Create Account',
                   style: NuviTypography.textTheme.displayMedium,
@@ -217,7 +235,27 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                   isLoading: isLoading,
                   onPressed: _onSignUp,
                 ),
-                const SizedBox(height: NuviSpacing.xl),
+                const SizedBox(height: NuviSpacing.xxl),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Already have an account? ',
+                      style: NuviTypography.textTheme.bodyMedium,
+                    ),
+                    GestureDetector(
+                      onTap: isLoading ? null : () => context.go('/sign-in'),
+                      child: Text(
+                        'Sign In',
+                        style: NuviTypography.textTheme.labelLarge?.copyWith(
+                          color: NuviColors.primary,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: NuviSpacing.md),
               ],
             ),
           ),

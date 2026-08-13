@@ -41,6 +41,16 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     }
   }
 
+  void _onGoogleSignIn() async {
+    final success = await ref
+        .read(authControllerProvider.notifier)
+        .signInWithGoogle();
+
+    if (success && mounted) {
+      // Success handling handled by authState changes in router
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
@@ -80,11 +90,13 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                       color: NuviColors.secondary,
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(
-                      Icons.cruelty_free,
-                      size: 40,
-                      color: NuviColors.onSecondary,
-                    ), // Elephant mascot placeholder
+                    child: Padding(
+                      padding: const EdgeInsets.all(10),
+                      child: Image.asset(
+                        'assets/images/brand/nuvi_kidz_logo.png',
+                        fit: BoxFit.contain,
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(height: NuviSpacing.xl),
@@ -139,7 +151,9 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
-                    onPressed: isLoading ? null : () {},
+                    onPressed: isLoading
+                        ? null
+                        : () => context.go('/forgot-password'),
                     child: Text(
                       'Forgot Password?',
                       style: NuviTypography.textTheme.labelLarge?.copyWith(
@@ -176,13 +190,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                 NuviButton.social(
                   text: 'Continue with Google',
                   icon: const Icon(Icons.g_mobiledata, size: 24),
-                  onPressed: isLoading ? null : () {},
-                ),
-                const SizedBox(height: NuviSpacing.md),
-                NuviButton.social(
-                  text: 'Continue with Apple',
-                  icon: const Icon(Icons.apple, size: 24),
-                  onPressed: isLoading ? null : () {},
+                  onPressed: isLoading ? null : _onGoogleSignIn,
                 ),
                 const SizedBox(height: NuviSpacing.xxl),
                 Row(
