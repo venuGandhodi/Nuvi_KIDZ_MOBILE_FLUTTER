@@ -12,6 +12,8 @@ class NuviProductCard extends StatelessWidget {
   final double rating;
   final bool isFavorite;
   final String? badgeText; // e.g. "NEW", "SALE"
+  final String? imageUrl;
+  final List<Color>? colorSwatches;
   final VoidCallback? onFavoriteToggle;
   final VoidCallback? onTap;
 
@@ -23,6 +25,8 @@ class NuviProductCard extends StatelessWidget {
     this.rating = 0.0,
     this.isFavorite = false,
     this.badgeText,
+    this.imageUrl,
+    this.colorSwatches,
     this.onFavoriteToggle,
     this.onTap,
   });
@@ -49,10 +53,27 @@ class NuviProductCard extends StatelessWidget {
                       ),
                     ),
                     width: double.infinity,
-                    child: const Icon(
-                      Icons.image_outlined,
-                      color: NuviColors.border,
-                      size: 48,
+                    child: ClipRRect(
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(NuviRadii.card),
+                        topRight: Radius.circular(NuviRadii.card),
+                      ),
+                      child: imageUrl != null
+                          ? Image.network(
+                              imageUrl!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const Icon(
+                                    Icons.image_outlined,
+                                    color: NuviColors.border,
+                                    size: 48,
+                                  ),
+                            )
+                          : const Icon(
+                              Icons.image_outlined,
+                              color: NuviColors.border,
+                              size: 48,
+                            ),
                     ),
                   ),
                   if (badgeText != null)
@@ -142,6 +163,26 @@ class NuviProductCard extends StatelessWidget {
                       ],
                     ],
                   ),
+                  if (colorSwatches != null && colorSwatches!.isNotEmpty) ...[
+                    const SizedBox(height: NuviSpacing.xs),
+                    Row(
+                      children: colorSwatches!.map((color) {
+                        return Container(
+                          width: 12,
+                          height: 12,
+                          margin: const EdgeInsets.only(right: 4),
+                          decoration: BoxDecoration(
+                            color: color,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: NuviColors.border,
+                              width: 1,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
                 ],
               ),
             ),

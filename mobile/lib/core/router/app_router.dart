@@ -10,6 +10,11 @@ import '../../features/auth/presentation/sign_up_screen.dart';
 import '../../features/auth/presentation/forgot_password_screen.dart';
 import '../../features/auth/presentation/reset_password_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
+import '../../features/category/presentation/category_listing_screen.dart';
+import '../../features/product/presentation/product_detail_screen.dart';
+import '../../features/cart/presentation/cart_screen.dart';
+import '../../features/checkout/presentation/checkout_screen.dart';
+import '../../features/checkout/presentation/order_confirmation_screen.dart';
 
 // ---------------------------------------------------------------------------
 // RouterNotifier
@@ -131,8 +136,30 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/reset-password',
         builder: (context, state) => const ResetPasswordScreen(),
       ),
-      // PHASE 1 PLACEHOLDER — replace with full home route when implemented.
       GoRoute(path: '/home', builder: (context, state) => const HomeScreen()),
+      GoRoute(
+        path: '/category/:categoryId',
+        builder: (context, state) {
+          final id = state.pathParameters['categoryId'] ?? 'toddler';
+          return CategoryListingScreen(categoryId: id);
+        },
+      ),
+      GoRoute(
+        path: '/product/:productId',
+        builder: (context, state) {
+          final id = state.pathParameters['productId'] ?? 'prod_dream_romper';
+          return ProductDetailScreen(productId: id);
+        },
+      ),
+      GoRoute(path: '/cart', builder: (context, state) => const CartScreen()),
+      GoRoute(
+        path: '/checkout',
+        builder: (context, state) => const CheckoutScreen(),
+      ),
+      GoRoute(
+        path: '/order-confirmation',
+        builder: (context, state) => const OrderConfirmationScreen(),
+      ),
     ],
   );
 });

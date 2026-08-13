@@ -12,6 +12,7 @@ class NuviInputField extends StatefulWidget {
   final bool obscureText;
   final String? errorText;
   final bool enabled;
+  final String? initialValue;
   final TextEditingController? controller;
   final ValueChanged<String>? onChanged;
   final TextInputType keyboardType;
@@ -28,6 +29,7 @@ class NuviInputField extends StatefulWidget {
     this.obscureText = false,
     this.errorText,
     this.enabled = true,
+    this.initialValue,
     this.controller,
     this.onChanged,
     this.keyboardType = TextInputType.text,
@@ -44,12 +46,15 @@ class _NuviInputFieldState extends State<NuviInputField> {
   late FocusNode _focusNode;
   bool _isFocused = false;
   late bool _obscureText;
+  late TextEditingController _effectiveController;
 
   @override
   void initState() {
     super.initState();
     _focusNode = FocusNode();
     _obscureText = widget.obscureText;
+    _effectiveController =
+        widget.controller ?? TextEditingController(text: widget.initialValue);
     _focusNode.addListener(() {
       setState(() {
         _isFocused = _focusNode.hasFocus;
@@ -103,7 +108,7 @@ class _NuviInputFieldState extends State<NuviInputField> {
                 : null,
           ),
           child: TextFormField(
-            controller: widget.controller,
+            controller: _effectiveController,
             focusNode: _focusNode,
             enabled: widget.enabled,
             obscureText: _obscureText,
