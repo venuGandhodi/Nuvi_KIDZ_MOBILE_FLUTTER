@@ -161,14 +161,34 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                   // Price & Rating Row
                   Row(
                     children: [
-                      Text(
-                        priceStr,
-                        style: NuviTypography.textTheme.headlineMedium
-                            ?.copyWith(
-                              color: NuviColors.accent,
-                              fontWeight: FontWeight.bold,
-                            ),
-                      ),
+                      if (product.compareAtPrice != null &&
+                          product.salePrice != null) ...[
+                        Text(
+                          product.salePrice!,
+                          style: NuviTypography.textTheme.headlineMedium
+                              ?.copyWith(
+                                color: NuviColors.accent,
+                                fontWeight: FontWeight.bold,
+                              ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          product.compareAtPrice!,
+                          style: NuviTypography.textTheme.bodyMedium?.copyWith(
+                            color: NuviColors.onSurface.withValues(alpha: 0.5),
+                            decoration: TextDecoration.lineThrough,
+                          ),
+                        ),
+                      ] else ...[
+                        Text(
+                          state.selectedVariant?.formattedPrice ?? priceStr,
+                          style: NuviTypography.textTheme.headlineMedium
+                              ?.copyWith(
+                                color: NuviColors.accent,
+                                fontWeight: FontWeight.bold,
+                              ),
+                        ),
+                      ],
                       const SizedBox(width: NuviSpacing.md),
                       const Icon(
                         Icons.star,
@@ -330,14 +350,18 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
           ],
         ),
         child: NuviButton(
-          text: state.addedToCartSuccess
+          text: !state.isSelectedVariantAvailable
+              ? 'Out of Stock'
+              : state.addedToCartSuccess
               ? 'Added to Cart ✓'
-              : 'Add to Cart - $priceStr',
+              : 'Add to Cart - ${state.selectedVariant?.formattedPrice ?? priceStr}',
           type: NuviButtonType.primary,
           isLoading: state.isAddingToCart,
-          onPressed: () {
-            notifier.addToCart();
-          },
+          onPressed: !state.isSelectedVariantAvailable
+              ? () {}
+              : () {
+                  notifier.addToCart();
+                },
         ),
       ),
     );

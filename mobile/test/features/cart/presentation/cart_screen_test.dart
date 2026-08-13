@@ -2,21 +2,44 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nuvi_kidz/features/cart/data/cart_repository.dart';
 import 'package:nuvi_kidz/features/cart/data/mock_cart_data.dart';
+import 'package:nuvi_kidz/features/cart/data/shopify_cart_storage.dart';
 import 'package:nuvi_kidz/features/cart/presentation/cart_controller.dart';
 import 'package:nuvi_kidz/features/cart/presentation/cart_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../helpers/mock_http_overrides.dart';
+
+class FakeStorageForScreenTest extends ShopifyCartStorage {
+  @override
+  Future<String?> getCartId() async => null;
+}
+
+class PopulatedCartController extends CartController {
+  @override
+  CartState build() {
+    return CartState(
+      items: MockCartData.sampleCartItems,
+      totalQuantity: 2,
+      subtotalAmount: 68.0,
+      totalAmount: 68.0,
+      isLoading: false,
+    );
+  }
+}
 
 void main() {
   setUpAll(() {
     HttpOverrides.global = TestHttpOverrides();
+    SharedPreferences.setMockInitialValues({});
   });
 
   Widget buildTestWidget({dynamic overrides}) {
     return ProviderScope(
-      overrides: overrides ?? const [],
+      overrides: [
+        shopifyCartStorageProvider.overrideWithValue(FakeStorageForScreenTest()),
+        if (overrides != null) ...overrides,
+      ],
       child: const MaterialApp(home: CartScreen()),
     );
   }
@@ -33,14 +56,12 @@ void main() {
     testWidgets(
       'renders cart items, quantity controls, and summary card when populated',
       (tester) async {
-        final populatedRepo = MockCartRepository(
-          initialItems: MockCartData.sampleCartItems,
-        );
-
         await tester.pumpWidget(
           buildTestWidget(
             overrides: [
-              cartRepositoryProvider.overrideWithValue(populatedRepo),
+              cartControllerProvider.overrideWith(
+                () => PopulatedCartController(),
+              ),
             ],
           ),
         );

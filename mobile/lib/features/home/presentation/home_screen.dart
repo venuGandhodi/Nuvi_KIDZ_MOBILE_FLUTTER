@@ -91,10 +91,13 @@ class HomeScreen extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               HeroBannerSection(
-                imageUrl:
-                    'https://lh3.googleusercontent.com/aida-public/AB6AXuAFpju392Q1xn2AJbOH6i84veMzV8CIixbhDvSfev46-u4_JZayJQIFnXhrHEVwvacS8R3Yqz5xKPu96JKK13KMhQKxFxLkLnJXz9NyUwcIZ4wn0co3f1eqH4Qpm3q-U4Ugpoqku-8t-1F7pb_aL95IXewiYYQ8_64qWmtarZhwe1gnvFEtqcpH2u82uIp_phTTft_zPdY8hPZjpq2y0BYUg1FsGCMEoLThIKZ_Q5E5vMJdLVJRJbMjsQ',
+                hero: homeState.hero,
                 onShopCollectionPressed: () {
-                  context.push('/category/toddler');
+                  final handle =
+                      homeState.hero?.collectionHandle.isNotEmpty == true
+                      ? homeState.hero!.collectionHandle
+                      : 'new-arrivals';
+                  context.push('/category/$handle');
                 },
               ),
               const SizedBox(height: NuviSpacing.xl),
@@ -121,7 +124,7 @@ class HomeScreen extends ConsumerWidget {
                   context.push('/product/${product.id}');
                 },
                 onViewAllTap: () {
-                  context.push('/category/toddler');
+                  context.push('/category/most-selling-items');
                 },
               ),
             ],

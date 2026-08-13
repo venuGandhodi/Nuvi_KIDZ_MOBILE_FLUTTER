@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/theme/nuvi_colors.dart';
 import '../../../core/theme/nuvi_radii.dart';
@@ -124,8 +125,22 @@ class CartScreen extends ConsumerWidget {
                     shipping: cartState.shippingCost,
                     tax: cartState.estimatedTax,
                     total: cartState.grandTotal,
-                    onCheckout: () {
-                      context.push('/checkout');
+                    currencyCode: cartState.currencyCode,
+                    onCheckout: () async {
+                      if (cartState.checkoutUrl != null &&
+                          cartState.checkoutUrl!.isNotEmpty) {
+                        final uri = Uri.tryParse(cartState.checkoutUrl!);
+                        if (uri != null && await canLaunchUrl(uri)) {
+                          await launchUrl(
+                            uri,
+                            mode: LaunchMode.externalApplication,
+                          );
+                          return;
+                        }
+                      }
+                      if (context.mounted) {
+                        context.push('/checkout');
+                      }
                     },
                   ),
                 ],

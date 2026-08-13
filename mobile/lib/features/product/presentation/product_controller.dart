@@ -1,11 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../home/domain/product.dart';
 import '../../cart/presentation/cart_controller.dart';
+import '../../home/domain/product.dart';
 import '../data/product_repository.dart';
+import '../data/shopify_product_repository.dart';
 import '../domain/product_color.dart';
+import '../domain/product_variant.dart';
 
 final productRepositoryProvider = Provider<ProductRepository>((ref) {
-  return MockProductRepository();
+  return ShopifyProductRepository();
 });
 
 class ProductDetailState {
@@ -14,6 +16,7 @@ class ProductDetailState {
   final int selectedImageIndex;
   final ProductColor? selectedColor;
   final String? selectedSize;
+  final ProductVariant? selectedVariant;
   final int quantity;
   final bool isFavorite;
   final bool isLoading;
@@ -27,6 +30,7 @@ class ProductDetailState {
     this.selectedImageIndex = 0,
     this.selectedColor,
     this.selectedSize,
+    this.selectedVariant,
     this.quantity = 1,
     this.isFavorite = false,
     this.isLoading = false,
@@ -35,12 +39,16 @@ class ProductDetailState {
     this.errorMessage,
   });
 
+  bool get isSelectedVariantAvailable =>
+      selectedVariant == null || selectedVariant!.availableForSale;
+
   ProductDetailState copyWith({
     Product? product,
     List<Product>? relatedProducts,
     int? selectedImageIndex,
     ProductColor? selectedColor,
     String? selectedSize,
+    ProductVariant? selectedVariant,
     int? quantity,
     bool? isFavorite,
     bool? isLoading,
@@ -54,6 +62,7 @@ class ProductDetailState {
       selectedImageIndex: selectedImageIndex ?? this.selectedImageIndex,
       selectedColor: selectedColor ?? this.selectedColor,
       selectedSize: selectedSize ?? this.selectedSize,
+      selectedVariant: selectedVariant ?? this.selectedVariant,
       quantity: quantity ?? this.quantity,
       isFavorite: isFavorite ?? this.isFavorite,
       isLoading: isLoading ?? this.isLoading,
@@ -88,11 +97,14 @@ class ProductController extends Notifier<ProductDetailState> {
           ? product.availableSizes!.first
           : null;
 
+      final variant = _findVariant(product, firstColor?.name, firstSize);
+
       state = state.copyWith(
         product: product,
         relatedProducts: related,
         selectedColor: firstColor,
         selectedSize: firstSize,
+        selectedVariant: variant,
         isFavorite: product?.isFavorite ?? false,
         isLoading: false,
       );
@@ -109,11 +121,42 @@ class ProductController extends Notifier<ProductDetailState> {
   }
 
   void selectColor(ProductColor color) {
-    state = state.copyWith(selectedColor: color);
+    final variant = _findVariant(state.product, color.name, state.selectedSize);
+    state = state.copyWith(selectedColor: color, selectedVariant: variant);
   }
 
   void selectSize(String size) {
-    state = state.copyWith(selectedSize: size);
+    final variant = _findVariant(
+      state.product,
+      state.selectedColor?.name,
+      size,
+    );
+    state = state.copyWith(selectedSize: size, selectedVariant: variant);
+  }
+
+  ProductVariant? _findVariant(
+    Product? product,
+    String? colorName,
+    String? size,
+  ) {
+    if (product?.variants == null || product!.variants!.isEmpty) return null;
+    final variants = product.variants!;
+
+    for (final v in variants) {
+      bool colorMatch =
+          colorName == null ||
+          v.color == null ||
+          v.color!.toLowerCase() == colorName.toLowerCase();
+      bool sizeMatch =
+          size == null ||
+          v.size == null ||
+          v.size!.toLowerCase() == size.toLowerCase();
+      if (colorMatch && sizeMatch) {
+        return v;
+      }
+    }
+
+    return variants.first;
   }
 
   void toggleFavorite() {
@@ -134,6 +177,13 @@ class ProductController extends Notifier<ProductDetailState> {
       return false;
     }
 
+    if (!state.isSelectedVariantAvailable) {
+      state = state.copyWith(
+        errorMessage: 'Selected variant is currently unavailable.',
+      );
+      return false;
+    }
+
     state = state.copyWith(
       isAddingToCart: true,
       addedToCartSuccess: false,
@@ -141,6 +191,9 @@ class ProductController extends Notifier<ProductDetailState> {
     );
 
     if (state.product != null) {
+      // Use variant unit price if available
+      final unitPrice = state.selectedVariant?.priceAmount;
+
       await ref
           .read(cartControllerProvider.notifier)
           .addItem(
@@ -148,6 +201,8 @@ class ProductController extends Notifier<ProductDetailState> {
             selectedColor: state.selectedColor,
             selectedSize: state.selectedSize,
             quantity: state.quantity,
+            unitPrice: unitPrice,
+            shopifyVariantId: state.selectedVariant?.id,
           );
     }
 

@@ -3,10 +3,19 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:nuvi_kidz/features/home/data/home_repository.dart';
 import 'package:nuvi_kidz/features/home/domain/age_filter.dart';
 import 'package:nuvi_kidz/features/home/domain/category.dart';
+import 'package:nuvi_kidz/features/home/domain/home_hero.dart';
 import 'package:nuvi_kidz/features/home/domain/product.dart';
 import 'package:nuvi_kidz/features/home/presentation/home_controller.dart';
 
 class FakeHomeRepository implements HomeRepository {
+  @override
+  Future<HomeHero?> getHero() async => const HomeHero(
+    id: 'hero_1',
+    title: 'Hero Title',
+    description: 'Hero Description',
+    collectionHandle: 'new-arrivals',
+  );
+
   @override
   Future<List<Category>> getCategories() async => [
     const Category(id: 'cat_1', name: 'Girls'),
@@ -19,7 +28,7 @@ class FakeHomeRepository implements HomeRepository {
 
   @override
   Future<List<Product>> getBestSellers() async => [
-    const Product(id: 'prod_1', title: 'Test Product', price: '\$10.00'),
+    const Product(id: 'prod_1', title: 'Test Product', price: '₹799'),
   ];
 }
 
@@ -39,6 +48,8 @@ void main() {
 
       final state = container.read(homeControllerProvider);
       expect(state.isLoading, isFalse);
+      expect(state.hero, isNotNull);
+      expect(state.hero!.title, equals('Hero Title'));
       expect(state.categories.length, 1);
       expect(state.bestSellers.length, 1);
 

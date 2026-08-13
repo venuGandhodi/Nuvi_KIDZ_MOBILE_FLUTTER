@@ -4,19 +4,33 @@ import '../../../../core/theme/nuvi_decorations.dart';
 import '../../../../core/theme/nuvi_radii.dart';
 import '../../../../core/theme/nuvi_spacing.dart';
 import '../../../../core/theme/nuvi_typography.dart';
+import '../../domain/home_hero.dart';
 
 class HeroBannerSection extends StatelessWidget {
+  final HomeHero? hero;
   final String? imageUrl;
   final VoidCallback? onShopCollectionPressed;
 
   const HeroBannerSection({
     super.key,
+    this.hero,
     this.imageUrl,
     this.onShopCollectionPressed,
   });
 
   @override
   Widget build(BuildContext context) {
+    final displayImageUrl =
+        hero?.imageUrl ??
+        imageUrl ??
+        'https://lh3.googleusercontent.com/aida-public/AB6AXuAFpju392Q1xn2AJbOH6i84veMzV8CIixbhDvSfev46-u4_JZayJQIFnXhrHEVwvacS8R3Yqz5xKPu96JKK13KMhQKxFxLkLnJXz9NyUwcIZ4wn0co3f1eqH4Qpm3q-U4Ugpoqku-8t-1F7pb_aL95IXewiYYQ8_64qWmtarZhwe1gnvFEtqcpH2u82uIp_phTTft_zPdY8hPZjpq2y0BYUg1FsGCMEoLThIKZ_Q5E5vMJdLVJRJbMjsQ';
+
+    final title = hero?.title ?? 'Autumn Adventures\nAwait';
+    final description =
+        hero?.description ??
+        'Discover our new collection of cozy, organic cotton essentials designed for little explorers.';
+    final buttonText = hero?.buttonText ?? 'Shop the Collection';
+
     return Container(
       width: double.infinity,
       height: 410,
@@ -34,15 +48,14 @@ class HeroBannerSection extends StatelessWidget {
         child: Stack(
           children: [
             // Background Image with fallback
-            if (imageUrl != null)
-              Positioned.fill(
-                child: Image.network(
-                  imageUrl!,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) =>
-                      Container(color: NuviColors.primaryContainer),
-                ),
+            Positioned.fill(
+              child: Image.network(
+                displayImageUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) =>
+                    Container(color: NuviColors.primaryContainer),
               ),
+            ),
             // Gradient overlay
             Positioned.fill(
               child: Container(
@@ -66,7 +79,7 @@ class HeroBannerSection extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Autumn Adventures\nAwait',
+                    title,
                     style: NuviTypography.textTheme.displayMedium?.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -75,7 +88,7 @@ class HeroBannerSection extends StatelessWidget {
                   ),
                   const SizedBox(height: NuviSpacing.sm),
                   Text(
-                    'Discover our new collection of cozy, organic cotton essentials designed for little explorers.',
+                    description,
                     style: NuviTypography.textTheme.bodyMedium?.copyWith(
                       color: Colors.white.withValues(alpha: 0.95),
                       height: 1.35,
@@ -98,7 +111,7 @@ class HeroBannerSection extends StatelessWidget {
                       ),
                     ),
                     child: Text(
-                      'Shop the Collection',
+                      buttonText,
                       style: NuviTypography.textTheme.labelLarge?.copyWith(
                         color: NuviColors.primary,
                         fontWeight: FontWeight.bold,

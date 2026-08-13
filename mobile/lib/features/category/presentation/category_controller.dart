@@ -1,11 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../home/domain/product.dart';
 import '../data/category_repository.dart';
+import '../data/shopify_category_repository.dart';
 import '../domain/category_detail.dart';
 import '../domain/category_filter.dart';
 
 final categoryRepositoryProvider = Provider<CategoryRepository>((ref) {
-  return MockCategoryRepository();
+  return ShopifyCategoryRepository();
 });
 
 class CategoryState {

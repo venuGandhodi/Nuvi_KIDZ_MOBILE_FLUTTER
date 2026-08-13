@@ -169,7 +169,7 @@ class CartItemRow extends StatelessWidget {
 
                     // Price Display
                     Text(
-                      '\$${item.lineTotal.toStringAsFixed(2)}',
+                      item.formattedLineTotal,
                       style: NuviTypography.textTheme.bodyLarge?.copyWith(
                         color: NuviColors.accent,
                         fontWeight: FontWeight.bold,

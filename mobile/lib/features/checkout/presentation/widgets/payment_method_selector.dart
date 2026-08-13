@@ -160,8 +160,9 @@ class PaymentMethodSelector extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color:
-                          isSelected ? NuviColors.primary : NuviColors.border,
+                      color: isSelected
+                          ? NuviColors.primary
+                          : NuviColors.border,
                       width: 2,
                     ),
                   ),

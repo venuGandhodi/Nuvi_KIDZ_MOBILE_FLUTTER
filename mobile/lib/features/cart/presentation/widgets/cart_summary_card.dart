@@ -10,6 +10,7 @@ class CartSummaryCard extends StatelessWidget {
   final double shipping;
   final double tax;
   final double total;
+  final String currencyCode;
   final VoidCallback onCheckout;
 
   const CartSummaryCard({
@@ -18,8 +19,16 @@ class CartSummaryCard extends StatelessWidget {
     required this.shipping,
     required this.tax,
     required this.total,
+    this.currencyCode = 'INR',
     required this.onCheckout,
   });
+
+  String _format(double val) {
+    final formatted = val.toStringAsFixed(
+      val.truncateToDouble() == val ? 0 : 2,
+    );
+    return currencyCode == 'INR' ? '₹$formatted' : '$currencyCode $formatted';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,23 +52,20 @@ class CartSummaryCard extends StatelessWidget {
           const SizedBox(height: NuviSpacing.md),
 
           // Subtotal
-          _buildSummaryRow(
-            label: 'Subtotal',
-            value: '\$${subtotal.toStringAsFixed(2)}',
-          ),
+          _buildSummaryRow(label: 'Subtotal', value: _format(subtotal)),
           const SizedBox(height: NuviSpacing.xs),
 
           // Shipping
           _buildSummaryRow(
             label: 'Shipping (Standard)',
-            value: shipping > 0 ? '\$${shipping.toStringAsFixed(2)}' : 'Free',
+            value: shipping > 0 ? _format(shipping) : 'Free',
           ),
           const SizedBox(height: NuviSpacing.xs),
 
           // Estimated Tax
           _buildSummaryRow(
             label: 'Estimated Tax',
-            value: '\$${tax.toStringAsFixed(2)}',
+            value: tax > 0 ? _format(tax) : 'Calculated at checkout',
           ),
           const SizedBox(height: NuviSpacing.md),
 
@@ -78,7 +84,7 @@ class CartSummaryCard extends StatelessWidget {
                 ),
               ),
               Text(
-                '\$${total.toStringAsFixed(2)}',
+                _format(total),
                 style: NuviTypography.textTheme.headlineMedium?.copyWith(
                   color: NuviColors.accent,
                   fontWeight: FontWeight.bold,

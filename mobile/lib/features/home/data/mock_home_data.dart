@@ -1,30 +1,47 @@
-import '../domain/category.dart';
-import '../domain/product.dart';
 import '../domain/age_filter.dart';
+import '../domain/category.dart';
+import '../domain/home_hero.dart';
+import '../domain/product.dart';
 
 class MockHomeData {
+  static const HomeHero defaultHero = HomeHero(
+    id: 'hero_autumn_adventures',
+    title: 'Autumn Adventures\nAwait',
+    description:
+        'Discover our new collection of cozy, organic cotton essentials designed for little explorers.',
+    imageUrl:
+        'https://lh3.googleusercontent.com/aida-public/AB6AXuAFpju392Q1xn2AJbOH6i84veMzV8CIixbhDvSfev46-u4_JZayJQIFnXhrHEVwvacS8R3Yqz5xKPu96JKK13KMhQKxFxLkLnJXz9NyUwcIZ4wn0co3f1eqH4Qpm3q-U4Ugpoqku-8t-1F7pb_aL95IXewiYYQ8_64qWmtarZhwe1gnvFEtqcpH2u82uIp_phTTft_zPdY8hPZjpq2y0BYUg1FsGCMEoLThIKZ_Q5E5vMJdLVJRJbMjsQ',
+    buttonText: 'Shop the Collection',
+    collectionHandle: 'new-arrivals',
+    isActive: true,
+  );
+
   static const List<Category> categories = [
     Category(
       id: 'cat_girls',
       name: 'Girls',
+      handle: 'girls-clothing',
       imageUrl:
           'https://lh3.googleusercontent.com/aida-public/AB6AXuBHEOpEgbz_wHgxUxOQHvE-0UgXW1Rg5FblJilz3mXzfN8SHYEBK1qj8B0MOf0_uqyjRbOKDMP0yho_gVnQ7_5tND0Pd4W3D7RDBfUXLi3zHOQ8OXACUiK1WvGIAhpi9UA-KqVUcYDuosMD2ZWS_oWJ7doMLFurSxBdhzOT-YK4cg4FzBqsIj7777trxhUZKSXdfKbeB0CSl8ydJlnGNQSxnp0BZIUIFRuu9pZpoDRXtfuUxs7zwKJ05w',
     ),
     Category(
       id: 'cat_boys',
       name: 'Boys',
+      handle: 'boys-clothing',
       imageUrl:
           'https://lh3.googleusercontent.com/aida-public/AB6AXuAckyM6Tg65_MvBPntWmJz3WidK1xsIwuN4aqpAGOwhxzQYhUxrTfmXzvm2uGNyBRgGNKAy8hMtPiC2PATH29IWUyOSZHfL-jj5vvpXovdUx1zOt1uUyQHWAMgUKcTkXkDxMpb5JezUlPxmF_i7rvf6nViII0jaDito0aOuOKlQt_XsM5pUi_jlIEPtTPCZ0X316M3_YCLDaA4P2hee1OGaSL6_0Lz2kveRoZ9xGy14eEzW07620152Xw',
     ),
     Category(
       id: 'cat_baby',
       name: 'Baby',
+      handle: 'frontpage',
       imageUrl:
           'https://lh3.googleusercontent.com/aida-public/AB6AXuCzNIhEQx2UML_N_ZGCjEyI6u6492OcdCZdv1igR3bEvXrxgN026OmBZyoQCpkIIXWiqTsJqV9zbRaDMOJAifgoB36fiGO5l-_M8e_eJA1WW-h6dOhhFjdHB3o2rv3Or8i7z5ex3emoga8oZi9jVkWugnaBhDTsLgf05juEjndWT4b-WVc6UVr7Nbj4qY0nJpyLhB_JkFJmGti2ykpAK2jpl9jrNMbUDrR0jHJMo4-wCKwn0LZptlVH3g',
     ),
     Category(
       id: 'cat_footwear',
       name: 'Footwear',
+      handle: 'accessories',
       imageUrl:
           'https://lh3.googleusercontent.com/aida-public/AB6AXuDpMtuBbxQMRPGs0TXtQ0HHM_hYTFCMGu3sly2d3mrvit72RaJ4j9wSA3dY6QyGFqGvV6UyPVqoMu4I3Wdy7WbNTsl7Jc6hUeY4jFgHlTFsZ_QJonyobLYaU210XJPO_80YHyiJh8WWAtlgP84NTERahfpXMF1ryjZE3QwaaGkEqdvYDcK5bh9vTlSiSNeQ8co4BJdxkQPHE4H1Cz6y9tZIv6lg_Qomj1kTjZDENOzkl24B1vGrqwZ_Ww',
     ),
@@ -34,7 +51,7 @@ class MockHomeData {
     Product(
       id: 'prod_romper',
       title: 'Forest Elephant Romper',
-      price: '\$34.00',
+      price: '₹799',
       rating: 4.5,
       reviewCount: 42,
       badgeText: 'NEW',
@@ -44,7 +61,7 @@ class MockHomeData {
     Product(
       id: 'prod_cardigan',
       title: 'Chunky Knit Cardigan',
-      price: '\$45.00',
+      price: '₹1,099',
       rating: 5.0,
       reviewCount: 18,
       imageUrl:
@@ -53,7 +70,7 @@ class MockHomeData {
     Product(
       id: 'prod_overalls',
       title: 'Classic Denim Overalls',
-      price: '\$52.00',
+      price: '₹1,299',
       rating: 4.0,
       reviewCount: 9,
       imageUrl:
@@ -62,7 +79,7 @@ class MockHomeData {
     Product(
       id: 'prod_beanie',
       title: 'Ribbed Beanie Set (3-Pack)',
-      price: '\$28.00',
+      price: '₹699',
       rating: 5.0,
       reviewCount: 56,
       imageUrl:
