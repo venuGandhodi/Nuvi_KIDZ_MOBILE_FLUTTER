@@ -9,7 +9,6 @@ import '../../../core/theme/nuvi_typography.dart';
 import '../../../core/widgets/nuvi_button.dart';
 import '../../../core/widgets/nuvi_top_bar.dart';
 import '../../cart/presentation/cart_controller.dart';
-import 'checkout_controller.dart';
 
 class OrderConfirmationScreen extends ConsumerWidget {
   final String? orderId;
@@ -18,19 +17,12 @@ class OrderConfirmationScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final checkoutState = ref.watch(checkoutControllerProvider);
     final cartState = ref.watch(cartControllerProvider);
 
-    final rawOrderId =
-        orderId ??
-        cartState.lastCompletedOrderId ??
-        checkoutState.orderConfirmation?.orderId;
+    final rawOrderId = orderId ?? cartState.lastCompletedOrderId;
     final displayOrderId = rawOrderId != null && rawOrderId.isNotEmpty
         ? rawOrderId.replaceFirst('gid://shopify/Order/', '')
         : 'Confirmed';
-
-    final totalAmount = checkoutState.orderConfirmation?.totalAmount ?? 0.0;
-    final address = checkoutState.orderConfirmation?.shippingAddress;
 
     return Scaffold(
       backgroundColor: NuviColors.surface,
@@ -101,34 +93,13 @@ class OrderConfirmationScreen extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: NuviSpacing.sm),
-                    if (totalAmount > 0)
-                      Text(
-                        'Total Paid: ₹${totalAmount.toStringAsFixed(2)}',
-                        style: NuviTypography.textTheme.bodyLarge?.copyWith(
-                          color: NuviColors.accent,
-                          fontWeight: FontWeight.bold,
-                        ),
+                    Text(
+                      'Your order details and tracking status are available in My Orders.',
+                      style: NuviTypography.textTheme.bodyMedium?.copyWith(
+                        color: NuviColors.onSurface.withValues(alpha: 0.8),
                       ),
-                    if (address != null && address.isValid) ...[
-                      const SizedBox(height: NuviSpacing.md),
-                      const Divider(color: NuviColors.border),
-                      const SizedBox(height: NuviSpacing.md),
-                      Text(
-                        'Shipping To:',
-                        style: NuviTypography.textTheme.labelMedium?.copyWith(
-                          color: NuviColors.primary,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${address.firstName} ${address.lastName}\n${address.address}\n${address.city}, ${address.state} ${address.zipCode}',
-                        style: NuviTypography.textTheme.bodyMedium?.copyWith(
-                          color: NuviColors.onSurface.withValues(alpha: 0.8),
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
+                      textAlign: TextAlign.center,
+                    ),
                   ],
                 ),
               ),

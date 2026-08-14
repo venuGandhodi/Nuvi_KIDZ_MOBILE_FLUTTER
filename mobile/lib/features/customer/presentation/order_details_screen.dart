@@ -6,16 +6,80 @@ import '../../../core/theme/nuvi_colors.dart';
 import '../../../core/theme/nuvi_radii.dart';
 import '../../../core/theme/nuvi_spacing.dart';
 import '../../../core/theme/nuvi_typography.dart';
+import '../../../core/utils/nuvi_logger.dart';
 import '../../../core/widgets/nuvi_button.dart';
 import '../../../core/widgets/nuvi_top_bar.dart';
 import '../../cart/presentation/cart_controller.dart';
 import '../../order/domain/shopify_order.dart';
+import '../data/shopify_customer_repository.dart';
 import 'customer_controller.dart';
 
-class OrderDetailsScreen extends ConsumerWidget {
+class OrderDetailsScreen extends ConsumerStatefulWidget {
   final String orderId;
 
   const OrderDetailsScreen({super.key, required this.orderId});
+
+  @override
+  ConsumerState<OrderDetailsScreen> createState() => _OrderDetailsScreenState();
+}
+
+class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
+  ShopifyOrder? _remoteOrder;
+  bool _isLoadingRemote = false;
+  String? _remoteErrorMessage;
+  bool _attemptedRemoteFetch = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAndFetchRemoteOrderIfNeeded();
+    });
+  }
+
+  void _checkAndFetchRemoteOrderIfNeeded() {
+    final cleanId = widget.orderId.replaceAll('#', '');
+    final notifier = ref.read(customerControllerProvider.notifier);
+    final localOrder =
+        notifier.getOrderById(cleanId) ??
+        notifier.getOrderById('#$cleanId') ??
+        notifier.getOrderById(widget.orderId);
+
+    if (localOrder == null && !_attemptedRemoteFetch) {
+      _fetchRemoteOrder();
+    }
+  }
+
+  Future<void> _fetchRemoteOrder() async {
+    setState(() {
+      _isLoadingRemote = true;
+      _remoteErrorMessage = null;
+      _attemptedRemoteFetch = true;
+    });
+
+    try {
+      nuviLog('NUVI-CUSTOMER', 'Fetching order remotely: ${widget.orderId}');
+      final repo = ref.read(shopifyCustomerRepositoryProvider);
+      final fetched = await repo.getCustomerOrder(widget.orderId);
+      if (mounted) {
+        setState(() {
+          _remoteOrder = fetched;
+          _isLoadingRemote = false;
+          if (fetched == null) {
+            _remoteErrorMessage = 'Order could not be found.';
+          }
+        });
+      }
+    } catch (e) {
+      nuviLog('NUVI-CUSTOMER', 'Remote order fetch failed: $e');
+      if (mounted) {
+        setState(() {
+          _isLoadingRemote = false;
+          _remoteErrorMessage = 'Unable to load this order. Please try again.';
+        });
+      }
+    }
+  }
 
   String _formatDate(DateTime dt) {
     final months = [
@@ -60,16 +124,20 @@ class OrderDetailsScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final customerState = ref.watch(customerControllerProvider);
     final cartState = ref.watch(cartControllerProvider);
     final notifier = ref.read(customerControllerProvider.notifier);
 
-    final cleanId = orderId.replaceAll('#', '');
-    final order =
+    final cleanId = widget.orderId.replaceAll('#', '');
+    final localOrder =
         notifier.getOrderById(cleanId) ??
         notifier.getOrderById('#$cleanId') ??
-        notifier.getOrderById(orderId);
+        notifier.getOrderById(widget.orderId);
+    final order = localOrder ?? _remoteOrder;
+
+    final isLoading =
+        (customerState.isLoading && localOrder == null) || _isLoadingRemote;
 
     return Scaffold(
       backgroundColor: NuviColors.surface,
@@ -85,12 +153,15 @@ class OrderDetailsScreen extends ConsumerWidget {
         cartItemCount: cartState.totalItemCount,
         onCartTap: () => context.push('/cart'),
       ),
-      body: customerState.isLoading
+      body: isLoading
           ? const Center(
               child: CircularProgressIndicator(color: NuviColors.primary),
             )
           : order == null
-          ? _buildOrderNotFound(context)
+          ? _buildErrorState(
+              context,
+              _remoteErrorMessage ?? 'Order could not be found.',
+            )
           : SingleChildScrollView(
               padding: const EdgeInsets.all(NuviSpacing.md),
               child: Column(
@@ -420,7 +491,7 @@ class OrderDetailsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildOrderNotFound(BuildContext context) {
+  Widget _buildErrorState(BuildContext context, String message) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(NuviSpacing.xl),
@@ -438,7 +509,7 @@ class OrderDetailsScreen extends ConsumerWidget {
             ),
             const SizedBox(height: NuviSpacing.xs),
             Text(
-              "We couldn't locate order details for $orderId.",
+              message,
               style: NuviTypography.textTheme.bodyMedium?.copyWith(
                 color: NuviColors.onSurface.withValues(alpha: 0.6),
               ),
@@ -446,8 +517,14 @@ class OrderDetailsScreen extends ConsumerWidget {
             ),
             const SizedBox(height: NuviSpacing.xl),
             NuviButton(
-              text: 'VIEW ALL ORDERS',
+              text: 'TRY AGAIN',
               type: NuviButtonType.primary,
+              onPressed: _fetchRemoteOrder,
+            ),
+            const SizedBox(height: NuviSpacing.md),
+            NuviButton(
+              text: 'VIEW ALL ORDERS',
+              type: NuviButtonType.secondary,
               onPressed: () => context.go('/orders'),
             ),
           ],

@@ -6,8 +6,23 @@ import 'package:nuvi_kidz/features/cart/data/shopify_cart_storage.dart';
 import 'package:nuvi_kidz/features/cart/domain/shopify_cart.dart';
 import 'package:nuvi_kidz/features/cart/presentation/cart_controller.dart';
 import 'package:nuvi_kidz/features/checkout/data/shopify_checkout_service.dart';
+import 'package:nuvi_kidz/features/customer/data/shopify_customer_repository.dart';
 import 'package:nuvi_kidz/features/home/domain/product.dart';
 import 'package:nuvi_kidz/features/product/domain/product_variant.dart';
+
+class FakeCustomerRepoForCart extends ShopifyCustomerRepository {
+  int loadCustomerCount = 0;
+  bool shouldFail = false;
+
+  @override
+  Future<CustomerSyncResult> getCustomerProfile() async {
+    loadCustomerCount++;
+    if (shouldFail) {
+      throw Exception('Simulated network error');
+    }
+    return const CustomerSyncResult(status: CustomerSyncStatus.notLinked);
+  }
+}
 
 class FakeShopifyCheckoutService extends ShopifyCheckoutService {
   String? lastPreloadedUrl;
@@ -198,6 +213,7 @@ void main() {
   late FakeShopifyCartRepository fakeRepo;
   late FakeShopifyCartStorage fakeStorage;
   late FakeShopifyCheckoutService fakeCheckoutService;
+  late FakeCustomerRepoForCart fakeCustomerRepo;
 
   final sampleProduct = const Product(
     id: 'boys-dino-tshirt',
@@ -218,12 +234,14 @@ void main() {
     fakeRepo = FakeShopifyCartRepository();
     fakeStorage = FakeShopifyCartStorage();
     fakeCheckoutService = FakeShopifyCheckoutService();
+    fakeCustomerRepo = FakeCustomerRepoForCart();
 
     container = ProviderContainer(
       overrides: [
         shopifyCartRepositoryProvider.overrideWithValue(fakeRepo),
         shopifyCartStorageProvider.overrideWithValue(fakeStorage),
         shopifyCheckoutServiceProvider.overrideWithValue(fakeCheckoutService),
+        shopifyCustomerRepositoryProvider.overrideWithValue(fakeCustomerRepo),
       ],
     );
   });
@@ -413,11 +431,41 @@ void main() {
         // Trigger completion callback
         await controller.onCheckoutCompleted('gid://shopify/Order/1001');
 
+        // Allow microtask for background customer refresh to run
+        await Future.delayed(Duration.zero);
+
         final state = container.read(cartControllerProvider);
         expect(state.items, isEmpty);
         expect(state.totalItemCount, equals(0));
         expect(state.checkoutStatus, equals(CheckoutStatus.completed));
         expect(state.lastCompletedOrderId, equals('gid://shopify/Order/1001'));
+        expect(await fakeStorage.getCartId(), isNull);
+        expect(fakeCustomerRepo.loadCustomerCount, greaterThanOrEqualTo(1));
+      },
+    );
+
+    test(
+      'onCheckoutCompleted remains completed even if background customer refresh fails',
+      () async {
+        final controller = container.read(cartControllerProvider.notifier);
+        await controller.loadCart();
+        await controller.addItem(
+          product: sampleProduct,
+          shopifyVariantId: 'gid://shopify/ProductVariant/v1',
+          selectedSize: '3-4Y',
+          quantity: 2,
+        );
+
+        fakeCustomerRepo.shouldFail = true;
+
+        await controller.onCheckoutCompleted('gid://shopify/Order/1002');
+        await Future.delayed(Duration.zero);
+
+        final state = container.read(cartControllerProvider);
+        expect(state.items, isEmpty);
+        expect(state.totalItemCount, equals(0));
+        expect(state.checkoutStatus, equals(CheckoutStatus.completed));
+        expect(state.lastCompletedOrderId, equals('gid://shopify/Order/1002'));
         expect(await fakeStorage.getCartId(), isNull);
       },
     );

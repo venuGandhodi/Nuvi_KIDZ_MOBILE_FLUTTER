@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/nuvi_logger.dart';
 import '../../checkout/data/shopify_checkout_service.dart';
+import '../../customer/presentation/customer_controller.dart';
 import '../../home/domain/product.dart';
 import '../../product/domain/product_color.dart';
 import '../data/cart_repository.dart';
@@ -439,6 +440,22 @@ class CartController extends Notifier<CartState> {
       checkoutStatus: CheckoutStatus.completed,
       lastCompletedOrderId: orderId,
     );
+
+    // Trigger non-blocking background customer order refresh
+    _refreshCustomerOrdersInBackground();
+  }
+
+  void _refreshCustomerOrdersInBackground() {
+    Future.microtask(() async {
+      try {
+        nuviLog('NUVI-CHECKOUT', 'Order refresh started');
+        await ref.read(customerControllerProvider.notifier).loadCustomer();
+        nuviLog('NUVI-CHECKOUT', 'Order refresh completed');
+      } catch (e) {
+        nuviLog('NUVI-CHECKOUT', 'Order refresh failed: $e');
+        // Checkout remains successful; background sync failure is isolated.
+      }
+    });
   }
 
   /// Invoked when the user dismisses or cancels the in-app Checkout Sheet.
