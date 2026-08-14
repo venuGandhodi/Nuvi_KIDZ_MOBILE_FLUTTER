@@ -42,12 +42,17 @@ class ShopifyCartRepository {
   Future<ShopifyCart> createCart({
     required String variantId,
     required int quantity,
+    String? buyerEmail,
   }) async {
-    final input = {
+    final input = <String, dynamic>{
       'lines': [
         {'merchandiseId': variantId, 'quantity': quantity},
       ],
     };
+
+    if (buyerEmail != null && buyerEmail.trim().isNotEmpty) {
+      input['buyerIdentity'] = {'email': buyerEmail.trim()};
+    }
 
     final data = await client.query(
       query: ShopifyQueries.cartCreate,
@@ -144,6 +149,31 @@ class ShopifyCartRepository {
     if (cartJson == null) {
       throw ShopifyCartException(
         'Shopify did not return an updated cart on cartLinesRemove.',
+      );
+    }
+
+    return ShopifyCart.fromJson(cartJson);
+  }
+
+  Future<ShopifyCart> updateBuyerIdentity({
+    required String cartId,
+    required String email,
+  }) async {
+    final data = await client.query(
+      query: ShopifyQueries.cartBuyerIdentityUpdate,
+      variables: {
+        'cartId': cartId,
+        'buyerIdentity': {'email': email},
+      },
+    );
+
+    final payload = data['cartBuyerIdentityUpdate'] as Map<String, dynamic>?;
+    _checkUserErrors(payload, 'Failed to update buyer identity');
+
+    final cartJson = payload?['cart'] as Map<String, dynamic>?;
+    if (cartJson == null) {
+      throw ShopifyCartException(
+        'Shopify did not return an updated cart on cartBuyerIdentityUpdate.',
       );
     }
 

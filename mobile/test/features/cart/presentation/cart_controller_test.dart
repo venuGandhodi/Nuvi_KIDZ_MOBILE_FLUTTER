@@ -1,11 +1,44 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nuvi_kidz/features/cart/data/shopify_cart_repository.dart';
 import 'package:nuvi_kidz/features/cart/data/shopify_cart_storage.dart';
 import 'package:nuvi_kidz/features/cart/domain/shopify_cart.dart';
 import 'package:nuvi_kidz/features/cart/presentation/cart_controller.dart';
+import 'package:nuvi_kidz/features/checkout/data/shopify_checkout_service.dart';
 import 'package:nuvi_kidz/features/home/domain/product.dart';
 import 'package:nuvi_kidz/features/product/domain/product_variant.dart';
+
+class FakeShopifyCheckoutService extends ShopifyCheckoutService {
+  String? lastPreloadedUrl;
+  String? lastPresentedUrl;
+  bool presentSuccess = true;
+  ValueChanged<String>? onCompletedCallback;
+  VoidCallback? onCancelledCallback;
+  ValueChanged<String>? onFailedCallback;
+
+  @override
+  void setEventHandlers({
+    ValueChanged<String>? onCompleted,
+    VoidCallback? onCancelled,
+    ValueChanged<String>? onFailed,
+  }) {
+    onCompletedCallback = onCompleted;
+    onCancelledCallback = onCancelled;
+    onFailedCallback = onFailed;
+  }
+
+  @override
+  Future<void> preloadCheckout(String? checkoutUrl) async {
+    lastPreloadedUrl = checkoutUrl;
+  }
+
+  @override
+  Future<bool> presentCheckout(String? checkoutUrl) async {
+    lastPresentedUrl = checkoutUrl;
+    return presentSuccess;
+  }
+}
 
 class FakeShopifyCartStorage extends ShopifyCartStorage {
   String? _cartId;
@@ -30,6 +63,7 @@ class FakeShopifyCartRepository extends ShopifyCartRepository {
   Future<ShopifyCart> createCart({
     required String variantId,
     required int quantity,
+    String? buyerEmail,
   }) async {
     currentCart = ShopifyCart(
       id: 'gid://shopify/Cart/fake_cart_1',
@@ -134,12 +168,36 @@ class FakeShopifyCartRepository extends ShopifyCartRepository {
     );
     return currentCart!;
   }
+
+  @override
+  Future<ShopifyCart> updateBuyerIdentity({
+    required String cartId,
+    required String email,
+  }) async {
+    final prev = currentCart;
+    currentCart = ShopifyCart(
+      id: cartId,
+      totalQuantity: prev?.totalQuantity ?? 0,
+      checkoutUrl: 'https://shopify.com/checkout/1?email=$email',
+      cost:
+          prev?.cost ??
+          const ShopifyCartCost(
+            subtotalAmount: ShopifyCartMoney(amount: 0.0),
+            totalAmount: ShopifyCartMoney(amount: 0.0),
+          ),
+      lines: prev?.lines ?? const [],
+    );
+    return currentCart!;
+  }
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   late ProviderContainer container;
   late FakeShopifyCartRepository fakeRepo;
   late FakeShopifyCartStorage fakeStorage;
+  late FakeShopifyCheckoutService fakeCheckoutService;
 
   final sampleProduct = const Product(
     id: 'boys-dino-tshirt',
@@ -159,11 +217,13 @@ void main() {
   setUp(() {
     fakeRepo = FakeShopifyCartRepository();
     fakeStorage = FakeShopifyCartStorage();
+    fakeCheckoutService = FakeShopifyCheckoutService();
 
     container = ProviderContainer(
       overrides: [
         shopifyCartRepositoryProvider.overrideWithValue(fakeRepo),
         shopifyCartStorageProvider.overrideWithValue(fakeStorage),
+        shopifyCheckoutServiceProvider.overrideWithValue(fakeCheckoutService),
       ],
     );
   });
@@ -228,5 +288,210 @@ void main() {
       expect(state.totalItemCount, equals(0));
       expect(state.subtotal, equals(0.0));
     });
+
+    test(
+      'updateBuyerIdentity updates cart state with latest checkoutUrl',
+      () async {
+        final controller = container.read(cartControllerProvider.notifier);
+        await controller.loadCart();
+        await controller.addItem(
+          product: sampleProduct,
+          shopifyVariantId: 'gid://shopify/ProductVariant/v1',
+          selectedSize: '3-4Y',
+          quantity: 1,
+        );
+
+        final success = await controller.updateBuyerIdentity(
+          'user@example.com',
+        );
+        expect(success, isTrue);
+
+        final state = container.read(cartControllerProvider);
+        expect(state.checkoutUrl, contains('email=user@example.com'));
+      },
+    );
+
+    test(
+      'prepareCheckoutUrl returns latest checkoutUrl with buyer identity when email present',
+      () async {
+        final controller = container.read(cartControllerProvider.notifier);
+        await controller.loadCart();
+        await controller.addItem(
+          product: sampleProduct,
+          shopifyVariantId: 'gid://shopify/ProductVariant/v1',
+          selectedSize: '3-4Y',
+          quantity: 1,
+        );
+
+        final checkoutUrl = await controller.prepareCheckoutUrl(
+          userEmail: 'newuser@gmail.com',
+        );
+
+        expect(checkoutUrl, contains('email=newuser@gmail.com'));
+      },
+    );
+
+    test(
+      'prepareCheckoutUrl falls back gracefully when email is null or unauthenticated',
+      () async {
+        final controller = container.read(cartControllerProvider.notifier);
+        await controller.loadCart();
+        await controller.addItem(
+          product: sampleProduct,
+          shopifyVariantId: 'gid://shopify/ProductVariant/v1',
+          selectedSize: '3-4Y',
+          quantity: 1,
+        );
+
+        final checkoutUrl = await controller.prepareCheckoutUrl(
+          userEmail: null,
+        );
+        expect(checkoutUrl, equals('https://shopify.com/checkout/1'));
+      },
+    );
+
+    test(
+      'preloadCheckout calls checkout service preload with current checkoutUrl',
+      () async {
+        final controller = container.read(cartControllerProvider.notifier);
+        await controller.loadCart();
+        await controller.addItem(
+          product: sampleProduct,
+          shopifyVariantId: 'gid://shopify/ProductVariant/v1',
+          selectedSize: '3-4Y',
+          quantity: 1,
+        );
+
+        await controller.preloadCheckout();
+        expect(
+          fakeCheckoutService.lastPreloadedUrl,
+          equals('https://shopify.com/checkout/1'),
+        );
+      },
+    );
+
+    test(
+      'launchInAppCheckout presents checkout and registers callbacks',
+      () async {
+        final controller = container.read(cartControllerProvider.notifier);
+        await controller.loadCart();
+        await controller.addItem(
+          product: sampleProduct,
+          shopifyVariantId: 'gid://shopify/ProductVariant/v1',
+          selectedSize: '3-4Y',
+          quantity: 1,
+        );
+
+        final success = await controller.launchInAppCheckout(
+          userEmail: 'user@example.com',
+        );
+        expect(success, isTrue);
+        expect(
+          fakeCheckoutService.lastPresentedUrl,
+          contains('email=user@example.com'),
+        );
+
+        final state = container.read(cartControllerProvider);
+        expect(state.checkoutStatus, equals(CheckoutStatus.inCheckout));
+      },
+    );
+
+    test(
+      'onCheckoutCompleted clears cart and sets completed status and orderId',
+      () async {
+        final controller = container.read(cartControllerProvider.notifier);
+        await controller.loadCart();
+        await controller.addItem(
+          product: sampleProduct,
+          shopifyVariantId: 'gid://shopify/ProductVariant/v1',
+          selectedSize: '3-4Y',
+          quantity: 2,
+        );
+
+        await controller.launchInAppCheckout();
+
+        // Trigger completion callback
+        await controller.onCheckoutCompleted('gid://shopify/Order/1001');
+
+        final state = container.read(cartControllerProvider);
+        expect(state.items, isEmpty);
+        expect(state.totalItemCount, equals(0));
+        expect(state.checkoutStatus, equals(CheckoutStatus.completed));
+        expect(state.lastCompletedOrderId, equals('gid://shopify/Order/1001'));
+        expect(await fakeStorage.getCartId(), isNull);
+      },
+    );
+
+    test(
+      'onCheckoutCancelled preserves cart items and sets cancelled status',
+      () async {
+        final controller = container.read(cartControllerProvider.notifier);
+        await controller.loadCart();
+        await controller.addItem(
+          product: sampleProduct,
+          shopifyVariantId: 'gid://shopify/ProductVariant/v1',
+          selectedSize: '3-4Y',
+          quantity: 2,
+        );
+
+        await controller.launchInAppCheckout();
+
+        // Trigger cancellation callback
+        fakeCheckoutService.onCancelledCallback?.call();
+
+        final state = container.read(cartControllerProvider);
+        expect(state.items.length, 1);
+        expect(state.totalItemCount, equals(2));
+        expect(state.checkoutStatus, equals(CheckoutStatus.cancelled));
+        expect(await fakeStorage.getCartId(), isNotNull);
+      },
+    );
+
+    test(
+      'onCheckoutFailed preserves cart items and sets error message',
+      () async {
+        final controller = container.read(cartControllerProvider.notifier);
+        await controller.loadCart();
+        await controller.addItem(
+          product: sampleProduct,
+          shopifyVariantId: 'gid://shopify/ProductVariant/v1',
+          selectedSize: '3-4Y',
+          quantity: 2,
+        );
+
+        await controller.launchInAppCheckout();
+
+        // Trigger failure callback
+        fakeCheckoutService.onFailedCallback?.call('Card was declined.');
+
+        final state = container.read(cartControllerProvider);
+        expect(state.items.length, 1);
+        expect(state.totalItemCount, equals(2));
+        expect(state.checkoutStatus, equals(CheckoutStatus.failed));
+        expect(state.errorMessage, equals('Card was declined.'));
+      },
+    );
+
+    test(
+      'launchInAppCheckout ignores duplicate taps when already checking out',
+      () async {
+        final controller = container.read(cartControllerProvider.notifier);
+        await controller.loadCart();
+        await controller.addItem(
+          product: sampleProduct,
+          shopifyVariantId: 'gid://shopify/ProductVariant/v1',
+          selectedSize: '3-4Y',
+          quantity: 1,
+        );
+
+        // First tap
+        final first = await controller.launchInAppCheckout();
+        expect(first, isTrue);
+
+        // Second tap while inCheckout
+        final second = await controller.launchInAppCheckout();
+        expect(second, isFalse);
+      },
+    );
   });
 }

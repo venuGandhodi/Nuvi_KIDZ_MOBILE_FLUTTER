@@ -57,8 +57,8 @@ class CartSummaryCard extends StatelessWidget {
 
           // Shipping
           _buildSummaryRow(
-            label: 'Shipping (Standard)',
-            value: shipping > 0 ? _format(shipping) : 'Free',
+            label: 'Shipping',
+            value: shipping > 0 ? _format(shipping) : 'Calculated at checkout',
           ),
           const SizedBox(height: NuviSpacing.xs),
 

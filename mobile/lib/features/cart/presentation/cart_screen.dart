@@ -1,24 +1,70 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
+
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/theme/nuvi_colors.dart';
 import '../../../core/theme/nuvi_radii.dart';
 import '../../../core/theme/nuvi_spacing.dart';
 import '../../../core/theme/nuvi_typography.dart';
+import '../../../core/utils/nuvi_logger.dart';
 import '../../../core/widgets/nuvi_bottom_nav.dart';
 import '../../../core/widgets/nuvi_button.dart';
 import '../../../core/widgets/nuvi_top_bar.dart';
+import '../../checkout/data/shopify_checkout_service.dart';
 import 'cart_controller.dart';
 import 'widgets/cart_item_row.dart';
 import 'widgets/cart_summary_card.dart';
 
-class CartScreen extends ConsumerWidget {
+class CartScreen extends ConsumerStatefulWidget {
   const CartScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CartScreen> createState() => _CartScreenState();
+}
+
+class _CartScreenState extends ConsumerState<CartScreen>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(cartControllerProvider.notifier).preloadCheckout();
+    });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // Re-sync cart when app resumes
+      ref.read(cartControllerProvider.notifier).refreshCart();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    ref.listen<CartState>(cartControllerProvider, (previous, next) {
+      if (next.checkoutStatus == CheckoutStatus.completed) {
+        context.go('/order-confirmation', extra: next.lastCompletedOrderId);
+      } else if (next.errorMessage != null &&
+          next.errorMessage != previous?.errorMessage) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(next.errorMessage!),
+            backgroundColor: NuviColors.error,
+          ),
+        );
+      }
+    });
+
     final cartState = ref.watch(cartControllerProvider);
     final notifier = ref.read(cartControllerProvider.notifier);
 
@@ -127,20 +173,39 @@ class CartScreen extends ConsumerWidget {
                     total: cartState.grandTotal,
                     currencyCode: cartState.currencyCode,
                     onCheckout: () async {
-                      if (cartState.checkoutUrl != null &&
-                          cartState.checkoutUrl!.isNotEmpty) {
-                        final uri = Uri.tryParse(cartState.checkoutUrl!);
-                        if (uri != null && await canLaunchUrl(uri)) {
-                          await launchUrl(
-                            uri,
-                            mode: LaunchMode.externalApplication,
+                      if (cartState.items.isEmpty || cartState.isCheckingOut) {
+                        return;
+                      }
+
+                      String? userEmail;
+                      try {
+                        final user = Supabase.instance.client.auth.currentUser;
+                        if (user != null &&
+                            user.email != null &&
+                            user.email!.isNotEmpty) {
+                          userEmail = user.email;
+                          nuviLog(
+                            'NUVI-CHECKOUT',
+                            'Supabase session present=true',
                           );
-                          return;
+                          nuviLog(
+                            'NUVI-CHECKOUT',
+                            'Buyer email available=true',
+                          );
+                        } else {
+                          nuviLog(
+                            'NUVI-CHECKOUT',
+                            'Supabase session present=false',
+                          );
                         }
+                      } catch (_) {
+                        nuviLog(
+                          'NUVI-CHECKOUT',
+                          'Supabase instance not initialized/available',
+                        );
                       }
-                      if (context.mounted) {
-                        context.push('/checkout');
-                      }
+
+                      await notifier.launchInAppCheckout(userEmail: userEmail);
                     },
                   ),
                 ],
@@ -163,7 +228,7 @@ class CartScreen extends ConsumerWidget {
               // Favorites / Wishlist placeholder
               break;
             case 4:
-              // Profile placeholder
+              context.push('/account');
               break;
           }
         },

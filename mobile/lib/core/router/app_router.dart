@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart'
     show AuthState, AuthChangeEvent;
 
+import '../utils/nuvi_logger.dart';
 import '../../features/auth/presentation/auth_controller.dart';
 import '../../features/auth/presentation/sign_in_screen.dart';
 import '../../features/auth/presentation/sign_up_screen.dart';
@@ -15,52 +16,48 @@ import '../../features/product/presentation/product_detail_screen.dart';
 import '../../features/cart/presentation/cart_screen.dart';
 import '../../features/checkout/presentation/checkout_screen.dart';
 import '../../features/checkout/presentation/order_confirmation_screen.dart';
+import '../../features/customer/presentation/account_screen.dart';
+import '../../features/customer/presentation/my_orders_screen.dart';
+import '../../features/customer/presentation/order_details_screen.dart';
+import '../../features/customer/presentation/saved_addresses_screen.dart';
+import '../../features/search/presentation/search_screen.dart';
+import '../../features/wishlist/presentation/wishlist_screen.dart';
 
 // ---------------------------------------------------------------------------
 // RouterNotifier
 //
 // Bridges the Riverpod [authStateProvider] stream into a [ChangeNotifier] that
-// GoRouter can use as a [refreshListenable].  This is the pattern recommended
-// by the go_router + riverpod community:
-//
-//   • GoRouter is created ONCE and never re-instantiated.
-//   • When the auth stream emits an event (SIGNED_IN, SIGNED_OUT, etc.) this
-//     notifier calls [notifyListeners()], which causes GoRouter to re-evaluate
-//     its redirect() callback — without tearing down the navigation stack.
+// GoRouter can use as a [refreshListenable].
 // ---------------------------------------------------------------------------
 class RouterNotifier extends ChangeNotifier {
-  // Cached auth state so the redirect() callback can read it synchronously.
   AsyncValue<AuthState> _authState = const AsyncLoading();
 
   AsyncValue<AuthState> get authState => _authState;
 
-  /// True when a valid session is confirmed (not loading / not errored).
   bool get isAuthenticated => _authState.value?.session != null;
 
-  /// True while the initial Supabase session is still being resolved.
   bool get isLoading => _authState.isLoading;
 
-  /// True when the current auth change event is password recovery.
   bool get isPasswordRecovery =>
       _authState.value?.event == AuthChangeEvent.passwordRecovery;
 
-  /// Called by [routerNotifierProvider] whenever [authStateProvider] changes.
   void update(AsyncValue<AuthState> newState) {
     _authState = newState;
+    nuviLog(
+      'NUVI-ROUTER',
+      'Auth state changed. isAuthenticated=$isAuthenticated, isLoading=$isLoading',
+    );
+    nuviLog('NUVI-ROUTER', 'Router refresh triggered');
     notifyListeners();
   }
 }
 
 // ---------------------------------------------------------------------------
 // routerNotifierProvider
-//
-// A Riverpod provider that owns the [RouterNotifier] instance.  It listens to
-// [authStateProvider] and forwards every change to the notifier.
 // ---------------------------------------------------------------------------
 final routerNotifierProvider = Provider<RouterNotifier>((ref) {
   final notifier = RouterNotifier();
 
-  // Forward every auth state change into the notifier.
   ref.listen<AsyncValue<AuthState>>(
     authStateProvider,
     (_, next) => notifier.update(next),
@@ -74,9 +71,6 @@ final routerNotifierProvider = Provider<RouterNotifier>((ref) {
 
 // ---------------------------------------------------------------------------
 // routerProvider
-//
-// Creates the [GoRouter] ONCE.  Auth-driven redirects are handled via
-// [refreshListenable] — the router instance itself is never recreated.
 // ---------------------------------------------------------------------------
 final routerProvider = Provider<GoRouter>((ref) {
   final notifier = ref.watch(routerNotifierProvider);
@@ -85,17 +79,29 @@ final routerProvider = Provider<GoRouter>((ref) {
     initialLocation: '/sign-in',
     refreshListenable: notifier,
     redirect: (context, state) {
-      // Do not redirect while Supabase is resolving the initial session.
-      // This prevents the /sign-in → /home → /sign-in startup loop.
-      if (notifier.isLoading) return null;
+      if (notifier.isLoading) {
+        nuviLog(
+          'NUVI-ROUTER',
+          'Router evaluation skipped (initial session loading)',
+        );
+        return null;
+      }
 
       final isAuth = notifier.isAuthenticated;
       final isRecovery = notifier.isPasswordRecovery;
       final location = state.matchedLocation;
 
-      // In password recovery mode, we must redirect to /reset-password
+      nuviLog(
+        'NUVI-ROUTER',
+        'Evaluating redirect for location: $location (isAuth=$isAuth, isRecovery=$isRecovery)',
+      );
+
       if (isRecovery) {
         if (location != '/reset-password') {
+          nuviLog(
+            'NUVI-ROUTER',
+            'Navigating to /reset-password (password recovery mode)',
+          );
           return '/reset-password';
         }
         return null;
@@ -108,15 +114,24 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       // Unauthenticated user trying to reach a protected route.
       if (!isAuth && !isOnAuthScreen) {
+        nuviLog(
+          'NUVI-ROUTER',
+          'Navigating to /sign-in (unauthenticated user on protected route)',
+        );
         return '/sign-in';
       }
 
       // Authenticated user on an auth screen → send to home.
       if (isAuth && isOnAuthScreen) {
+        nuviLog('NUVI-ROUTER', 'Google authentication navigation START');
+        nuviLog(
+          'NUVI-ROUTER',
+          'Navigating to /home (authenticated user on auth screen)',
+        );
+        nuviLog('NUVI-ROUTER', 'Navigation COMPLETE');
         return '/home';
       }
 
-      // No redirect needed.
       return null;
     },
     routes: [
@@ -153,12 +168,42 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: '/cart', builder: (context, state) => const CartScreen()),
       GoRoute(
+        path: '/search',
+        builder: (context, state) => const SearchScreen(),
+      ),
+      GoRoute(
+        path: '/wishlist',
+        builder: (context, state) => const WishlistScreen(),
+      ),
+      GoRoute(
+        path: '/account',
+        builder: (context, state) => const AccountScreen(),
+      ),
+      GoRoute(
+        path: '/addresses',
+        builder: (context, state) => const SavedAddressesScreen(),
+      ),
+      GoRoute(
+        path: '/orders',
+        builder: (context, state) => const MyOrdersScreen(),
+      ),
+      GoRoute(
+        path: '/orders/:orderId',
+        builder: (context, state) {
+          final id = state.pathParameters['orderId'] ?? '';
+          return OrderDetailsScreen(orderId: id);
+        },
+      ),
+      GoRoute(
         path: '/checkout',
         builder: (context, state) => const CheckoutScreen(),
       ),
       GoRoute(
         path: '/order-confirmation',
-        builder: (context, state) => const OrderConfirmationScreen(),
+        builder: (context, state) {
+          final orderId = state.extra as String?;
+          return OrderConfirmationScreen(orderId: orderId);
+        },
       ),
     ],
   );

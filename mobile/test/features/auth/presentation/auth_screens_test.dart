@@ -7,8 +7,10 @@ import 'package:nuvi_kidz/features/auth/presentation/sign_up_screen.dart';
 import 'package:nuvi_kidz/features/auth/presentation/forgot_password_screen.dart';
 import 'package:nuvi_kidz/features/auth/presentation/reset_password_screen.dart';
 import 'package:nuvi_kidz/features/auth/presentation/auth_controller.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:nuvi_kidz/features/auth/data/auth_repository.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MockAuthRepository implements AuthRepository {
   bool signInWithGoogleCalled = false;
@@ -49,6 +51,11 @@ class MockAuthRepository implements AuthRepository {
 }
 
 void main() {
+  setUpAll(() {
+    SharedPreferences.setMockInitialValues({});
+    FlutterSecureStorage.setMockInitialValues({});
+  });
+
   testWidgets('SignInScreen displays Sign Up link and navigates', (
     tester,
   ) async {

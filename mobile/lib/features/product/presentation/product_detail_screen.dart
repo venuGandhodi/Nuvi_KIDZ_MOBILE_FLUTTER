@@ -10,6 +10,7 @@ import '../../../core/widgets/nuvi_pill_selector.dart';
 import '../../../core/widgets/nuvi_product_card.dart';
 import '../../../core/widgets/nuvi_top_bar.dart';
 import '../../cart/presentation/cart_controller.dart';
+import '../../wishlist/presentation/wishlist_controller.dart';
 import 'product_controller.dart';
 import 'widgets/product_accordion_section.dart';
 import 'widgets/product_color_selector.dart';
@@ -143,16 +144,26 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                               ),
                         ),
                       ),
-                      IconButton(
-                        icon: Icon(
-                          state.isFavorite
-                              ? Icons.favorite
-                              : Icons.favorite_border,
-                          color: state.isFavorite
-                              ? NuviColors.secondary
-                              : NuviColors.onSurface.withValues(alpha: 0.6),
-                        ),
-                        onPressed: () => notifier.toggleFavorite(),
+                      Builder(
+                        builder: (context) {
+                          final wishlistState = ref.watch(
+                            wishlistControllerProvider,
+                          );
+                          final isFav = wishlistState.isWishlisted(product.id);
+                          return IconButton(
+                            icon: Icon(
+                              isFav ? Icons.favorite : Icons.favorite_border,
+                              color: isFav
+                                  ? NuviColors.secondary
+                                  : NuviColors.onSurface.withValues(alpha: 0.6),
+                            ),
+                            onPressed: () {
+                              ref
+                                  .read(wishlistControllerProvider.notifier)
+                                  .toggleWishlist(product);
+                            },
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -306,6 +317,10 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                             const SizedBox(width: NuviSpacing.md),
                         itemBuilder: (context, index) {
                           final rel = state.relatedProducts[index];
+                          final wishlistState = ref.watch(
+                            wishlistControllerProvider,
+                          );
+                          final isRelFav = wishlistState.isWishlisted(rel.id);
                           return SizedBox(
                             width: 160,
                             child: NuviProductCard(
@@ -314,6 +329,12 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                               salePrice: rel.salePrice,
                               rating: rel.rating,
                               imageUrl: rel.imageUrl,
+                              isFavorite: isRelFav,
+                              onFavoriteToggle: () {
+                                ref
+                                    .read(wishlistControllerProvider.notifier)
+                                    .toggleWishlist(rel);
+                              },
                               onTap: () => context.push('/product/${rel.id}'),
                             ),
                           );

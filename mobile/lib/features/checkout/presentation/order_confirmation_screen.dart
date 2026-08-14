@@ -8,19 +8,29 @@ import '../../../core/theme/nuvi_spacing.dart';
 import '../../../core/theme/nuvi_typography.dart';
 import '../../../core/widgets/nuvi_button.dart';
 import '../../../core/widgets/nuvi_top_bar.dart';
+import '../../cart/presentation/cart_controller.dart';
 import 'checkout_controller.dart';
 
 class OrderConfirmationScreen extends ConsumerWidget {
-  const OrderConfirmationScreen({super.key});
+  final String? orderId;
+
+  const OrderConfirmationScreen({super.key, this.orderId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final checkoutState = ref.watch(checkoutControllerProvider);
-    final confirmation = checkoutState.orderConfirmation;
+    final cartState = ref.watch(cartControllerProvider);
 
-    final orderId = confirmation?.orderId ?? 'NK-849201';
-    final totalAmount = confirmation?.totalAmount ?? 0.0;
-    final address = confirmation?.shippingAddress;
+    final rawOrderId =
+        orderId ??
+        cartState.lastCompletedOrderId ??
+        checkoutState.orderConfirmation?.orderId;
+    final displayOrderId = rawOrderId != null && rawOrderId.isNotEmpty
+        ? rawOrderId.replaceFirst('gid://shopify/Order/', '')
+        : 'Confirmed';
+
+    final totalAmount = checkoutState.orderConfirmation?.totalAmount ?? 0.0;
+    final address = checkoutState.orderConfirmation?.shippingAddress;
 
     return Scaffold(
       backgroundColor: NuviColors.surface,
@@ -84,7 +94,7 @@ class OrderConfirmationScreen extends ConsumerWidget {
                 child: Column(
                   children: [
                     Text(
-                      'Order #$orderId',
+                      'Order #$displayOrderId',
                       style: NuviTypography.textTheme.headlineMedium?.copyWith(
                         color: NuviColors.primary,
                         fontWeight: FontWeight.bold,
@@ -93,7 +103,7 @@ class OrderConfirmationScreen extends ConsumerWidget {
                     const SizedBox(height: NuviSpacing.sm),
                     if (totalAmount > 0)
                       Text(
-                        'Total Paid: \$${totalAmount.toStringAsFixed(2)}',
+                        'Total Paid: ₹${totalAmount.toStringAsFixed(2)}',
                         style: NuviTypography.textTheme.bodyLarge?.copyWith(
                           color: NuviColors.accent,
                           fontWeight: FontWeight.bold,
@@ -124,12 +134,23 @@ class OrderConfirmationScreen extends ConsumerWidget {
               ),
               const SizedBox(height: NuviSpacing.xxl),
 
+              // View Orders Button
+              SizedBox(
+                width: double.infinity,
+                child: NuviButton(
+                  text: 'VIEW MY ORDERS',
+                  type: NuviButtonType.primary,
+                  onPressed: () => context.go('/orders'),
+                ),
+              ),
+              const SizedBox(height: NuviSpacing.md),
+
               // Continue Shopping Button
               SizedBox(
                 width: double.infinity,
                 child: NuviButton(
                   text: 'CONTINUE SHOPPING',
-                  type: NuviButtonType.primary,
+                  type: NuviButtonType.secondary,
                   onPressed: () => context.go('/home'),
                 ),
               ),

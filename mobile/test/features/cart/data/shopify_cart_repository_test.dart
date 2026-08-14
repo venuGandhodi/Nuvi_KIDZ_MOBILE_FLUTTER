@@ -249,5 +249,80 @@ void main() {
       expect(cart.totalQuantity, equals(0));
       expect(cart.lines, isEmpty);
     });
+
+    test(
+      'updateBuyerIdentity calls cartBuyerIdentityUpdate and returns updated cart',
+      () async {
+        final mockClient = MockClient((request) async {
+          final body = jsonDecode(request.body) as Map<String, dynamic>;
+          expect(
+            body['variables']['buyerIdentity']['email'],
+            equals('buyer@example.com'),
+          );
+          return http.Response(
+            jsonEncode({
+              'data': {
+                'cartBuyerIdentityUpdate': {
+                  'cart': sampleCartJson,
+                  'userErrors': [],
+                },
+              },
+            }),
+            200,
+          );
+        });
+
+        final client = ShopifyStorefrontClient(
+          domain: 'mock.myshopify.com',
+          httpClient: mockClient,
+        );
+        final repo = ShopifyCartRepository(client: client);
+
+        final cart = await repo.updateBuyerIdentity(
+          cartId: 'gid://shopify/Cart/c1_12345',
+          email: 'buyer@example.com',
+        );
+
+        expect(cart.id, equals('gid://shopify/Cart/c1_12345'));
+      },
+    );
+
+    test(
+      'updateBuyerIdentity throws ShopifyCartException on userErrors',
+      () async {
+        final mockClient = MockClient((request) async {
+          return http.Response(
+            jsonEncode({
+              'data': {
+                'cartBuyerIdentityUpdate': {
+                  'cart': null,
+                  'userErrors': [
+                    {
+                      'field': ['email'],
+                      'message': 'Invalid email address.',
+                    },
+                  ],
+                },
+              },
+            }),
+            200,
+          );
+        });
+
+        final client = ShopifyStorefrontClient(
+          domain: 'mock.myshopify.com',
+          httpClient: mockClient,
+        );
+        final repo = ShopifyCartRepository(client: client);
+
+        expect(
+          () => repo.updateBuyerIdentity(
+            cartId: 'gid://shopify/Cart/c1_12345',
+            email: 'invalid-email',
+          ),
+          throwsA(isA<ShopifyCartException>()),
+        );
+      },
+    );
   });
 }

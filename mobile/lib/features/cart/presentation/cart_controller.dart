@@ -1,4 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/utils/nuvi_logger.dart';
+import '../../checkout/data/shopify_checkout_service.dart';
 import '../../home/domain/product.dart';
 import '../../product/domain/product_color.dart';
 import '../data/cart_repository.dart';
@@ -31,6 +33,8 @@ class CartState {
   final bool isLoading;
   final bool isUpdating;
   final String? errorMessage;
+  final CheckoutStatus checkoutStatus;
+  final String? lastCompletedOrderId;
 
   const CartState({
     this.items = const [],
@@ -44,7 +48,14 @@ class CartState {
     this.isLoading = false,
     this.isUpdating = false,
     this.errorMessage,
+    this.checkoutStatus = CheckoutStatus.idle,
+    this.lastCompletedOrderId,
   });
+
+  bool get isCheckingOut =>
+      checkoutStatus == CheckoutStatus.preparing ||
+      checkoutStatus == CheckoutStatus.presenting ||
+      checkoutStatus == CheckoutStatus.inCheckout;
 
   int get totalItemCount => totalQuantity > 0
       ? totalQuantity
@@ -86,6 +97,8 @@ class CartState {
     bool? isLoading,
     bool? isUpdating,
     String? errorMessage,
+    CheckoutStatus? checkoutStatus,
+    String? lastCompletedOrderId,
   }) {
     return CartState(
       items: items ?? this.items,
@@ -99,6 +112,8 @@ class CartState {
       isLoading: isLoading ?? this.isLoading,
       isUpdating: isUpdating ?? this.isUpdating,
       errorMessage: errorMessage,
+      checkoutStatus: checkoutStatus ?? this.checkoutStatus,
+      lastCompletedOrderId: lastCompletedOrderId ?? this.lastCompletedOrderId,
     );
   }
 }
@@ -134,6 +149,29 @@ class CartController extends Notifier<CartState> {
         isLoading: false,
         errorMessage: 'Unable to load your bag. Please check your connection.',
       );
+    }
+  }
+
+  Future<void> refreshCart() async {
+    try {
+      final storage = ref.read(shopifyCartStorageProvider);
+      final repo = ref.read(shopifyCartRepositoryProvider);
+
+      final cartId = await storage.getCartId();
+      if (cartId == null || cartId.isEmpty) {
+        state = const CartState(isLoading: false);
+        return;
+      }
+
+      final cart = await repo.getCart(cartId);
+      if (cart != null) {
+        _applyShopifyCart(cart);
+      } else {
+        await storage.clearCartId();
+        state = const CartState(isLoading: false);
+      }
+    } catch (_) {
+      // Quiet background refresh failure: keep existing state
     }
   }
 
@@ -279,6 +317,149 @@ class CartController extends Notifier<CartState> {
         errorMessage: 'Failed to clear bag.',
       );
     }
+  }
+
+  /// Updates buyer identity email on the active Shopify cart if available.
+  Future<bool> updateBuyerIdentity(String email) async {
+    final cartId = state.cartId;
+    if (cartId == null || cartId.isEmpty) {
+      return false;
+    }
+
+    try {
+      nuviLog('NUVI-CHECKOUT', 'Updating Shopify cart buyer identity');
+      final repo = ref.read(shopifyCartRepositoryProvider);
+      final updatedCart = await repo.updateBuyerIdentity(
+        cartId: cartId,
+        email: email.trim(),
+      );
+      _applyShopifyCart(updatedCart);
+      nuviLog('NUVI-CHECKOUT', 'Buyer identity update SUCCESS');
+      return true;
+    } catch (e) {
+      nuviLog('NUVI-CHECKOUT', 'Buyer identity update FAILED: $e');
+      return false;
+    }
+  }
+
+  /// Prepares checkout by updating buyer identity with authenticated email (if present)
+  /// and returning the latest checkoutUrl.
+  Future<String?> prepareCheckoutUrl({String? userEmail}) async {
+    if (userEmail != null &&
+        userEmail.trim().isNotEmpty &&
+        state.cartId != null) {
+      await updateBuyerIdentity(userEmail.trim());
+    }
+    return state.checkoutUrl;
+  }
+
+  /// Preloads the checkout sheet in the background if checkoutUrl is available.
+  Future<void> preloadCheckout() async {
+    final checkoutUrl = state.checkoutUrl;
+    if (checkoutUrl != null && checkoutUrl.isNotEmpty) {
+      final checkoutService = ref.read(shopifyCheckoutServiceProvider);
+      await checkoutService.preloadCheckout(checkoutUrl);
+    }
+  }
+
+  /// Initiates in-app Shopify Checkout Kit presentation.
+  Future<bool> launchInAppCheckout({String? userEmail}) async {
+    if (state.isCheckingOut) {
+      nuviLog(
+        'NUVI-CHECKOUT',
+        'Checkout presentation ignored: already checking out',
+      );
+      return false;
+    }
+
+    if (state.items.isEmpty) {
+      state = state.copyWith(
+        errorMessage: 'Your cart is empty. Add items before checking out.',
+      );
+      return false;
+    }
+
+    nuviLog('NUVI-CHECKOUT', 'Checkout START');
+    state = state.copyWith(
+      checkoutStatus: CheckoutStatus.preparing,
+      errorMessage: null,
+    );
+
+    try {
+      final checkoutUrl = await prepareCheckoutUrl(userEmail: userEmail);
+      if (checkoutUrl == null || checkoutUrl.isEmpty) {
+        state = state.copyWith(
+          checkoutStatus: CheckoutStatus.failed,
+          errorMessage:
+              'Unable to initialize checkout. Please refresh your bag.',
+        );
+        return false;
+      }
+
+      nuviLog('NUVI-CHECKOUT', 'Checkout URL ready');
+      state = state.copyWith(checkoutStatus: CheckoutStatus.presenting);
+
+      final checkoutService = ref.read(shopifyCheckoutServiceProvider);
+
+      // Register lifecycle event hooks
+      checkoutService.setEventHandlers(
+        onCompleted: (orderId) => onCheckoutCompleted(orderId),
+        onCancelled: () => onCheckoutCancelled(),
+        onFailed: (message) => onCheckoutFailed(message),
+      );
+
+      final presented = await checkoutService.presentCheckout(checkoutUrl);
+      if (presented) {
+        state = state.copyWith(checkoutStatus: CheckoutStatus.inCheckout);
+      } else {
+        state = state.copyWith(
+          checkoutStatus: CheckoutStatus.failed,
+          errorMessage: 'Could not open in-app checkout.',
+        );
+      }
+      return presented;
+    } catch (e) {
+      nuviLog('NUVI-CHECKOUT', 'Checkout presentation FAILED: $e');
+      state = state.copyWith(
+        checkoutStatus: CheckoutStatus.failed,
+        errorMessage: 'Unable to start checkout: $e',
+      );
+      return false;
+    }
+  }
+
+  /// Invoked when Shopify Checkout Kit reports successful order placement.
+  Future<void> onCheckoutCompleted(String orderId) async {
+    nuviLog(
+      'NUVI-CHECKOUT',
+      'Checkout COMPLETED. Clearing cart for order $orderId',
+    );
+    await clearCart();
+    state = state.copyWith(
+      checkoutStatus: CheckoutStatus.completed,
+      lastCompletedOrderId: orderId,
+    );
+  }
+
+  /// Invoked when the user dismisses or cancels the in-app Checkout Sheet.
+  void onCheckoutCancelled() {
+    nuviLog('NUVI-CHECKOUT', 'Checkout CANCELLED. Preserving cart state.');
+    state = state.copyWith(
+      checkoutStatus: CheckoutStatus.cancelled,
+      errorMessage: null,
+    );
+  }
+
+  /// Invoked when Checkout Kit encounters a fatal error.
+  void onCheckoutFailed(String message) {
+    nuviLog(
+      'NUVI-CHECKOUT',
+      'Checkout FAILED: $message. Preserving cart state.',
+    );
+    state = state.copyWith(
+      checkoutStatus: CheckoutStatus.failed,
+      errorMessage: message,
+    );
   }
 
   void _applyShopifyCart(ShopifyCart cart) {

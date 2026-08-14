@@ -5,7 +5,7 @@ class ShopifyCartStorage {
   final SharedPreferences? _injectedPrefs;
 
   ShopifyCartStorage({SharedPreferences? preferences})
-      : _injectedPrefs = preferences;
+    : _injectedPrefs = preferences;
 
   Future<SharedPreferences> get _prefs async =>
       _injectedPrefs ?? await SharedPreferences.getInstance();

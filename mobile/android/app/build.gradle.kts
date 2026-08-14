@@ -43,3 +43,7 @@ kotlin {
 flutter {
     source = "../.."
 }
+
+dependencies {
+    implementation("com.shopify.checkoutkit:checkout-sheet-kit:3.0.0")
+}

@@ -46,6 +46,70 @@ class ShopifyQueries {
     }
   ''';
 
+  static const String searchProducts = r'''
+    query SearchProducts(
+      $query: String
+      $first: Int = 20
+      $after: String
+      $sortKey: ProductSortKeys
+      $reverse: Boolean
+    ) {
+      products(
+        first: $first
+        after: $after
+        query: $query
+        sortKey: $sortKey
+        reverse: $reverse
+      ) {
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+        edges {
+          cursor
+          node {
+            id
+            title
+            handle
+            descriptionHtml
+            vendor
+            productType
+            tags
+            images(first: 10) {
+              edges {
+                node {
+                  url
+                  altText
+                }
+              }
+            }
+            variants(first: 50) {
+              edges {
+                node {
+                  id
+                  title
+                  availableForSale
+                  price {
+                    amount
+                    currencyCode
+                  }
+                  compareAtPrice {
+                    amount
+                    currencyCode
+                  }
+                  selectedOptions {
+                    name
+                    value
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ''';
+
   static const String getProductByHandle = r'''
     query GetProductByHandle($handle: String!) {
       product(handle: $handle) {
@@ -375,6 +439,27 @@ class ShopifyQueries {
       r'''
     mutation CartLinesRemove($cartId: ID!, $lineIds: [ID!]!) {
       cartLinesRemove(cartId: $cartId, lineIds: $lineIds) {
+        cart {
+          ...CartFields
+        }
+        userErrors {
+          field
+          message
+          code
+        }
+        warnings {
+          message
+          code
+        }
+      }
+    }
+  ''' +
+      cartFragment;
+
+  static const String cartBuyerIdentityUpdate =
+      r'''
+    mutation CartBuyerIdentityUpdate($cartId: ID!, $buyerIdentity: CartBuyerIdentityInput!) {
+      cartBuyerIdentityUpdate(cartId: $cartId, buyerIdentity: $buyerIdentity) {
         cart {
           ...CartFields
         }

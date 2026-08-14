@@ -10,6 +10,7 @@ import '../../../core/widgets/nuvi_bottom_nav.dart';
 import '../../../core/widgets/nuvi_product_card.dart';
 import '../../../core/widgets/nuvi_top_bar.dart';
 import '../../cart/presentation/cart_controller.dart';
+import '../../wishlist/presentation/wishlist_controller.dart';
 import 'category_controller.dart';
 import '../domain/category_filter.dart';
 import 'widgets/category_filter_sheet.dart';
@@ -178,6 +179,8 @@ class _CategoryListingScreenState extends ConsumerState<CategoryListingScreen> {
             context.go('/home');
           } else if (index == 1) {
             context.go('/category/toddler');
+          } else if (index == 4) {
+            context.push('/account');
           }
         },
       ),
@@ -281,7 +284,8 @@ class _CategoryListingScreenState extends ConsumerState<CategoryListingScreen> {
       ),
       itemBuilder: (context, index) {
         final product = state.products[index];
-        final isFav = state.favoriteProductIds.contains(product.id);
+        final wishlistState = ref.watch(wishlistControllerProvider);
+        final isFav = wishlistState.isWishlisted(product.id);
         return NuviProductCard(
           title: product.title,
           price: product.price,
@@ -291,7 +295,11 @@ class _CategoryListingScreenState extends ConsumerState<CategoryListingScreen> {
           badgeText: product.badgeText,
           imageUrl: product.imageUrl,
           colorSwatches: product.colorSwatches,
-          onFavoriteToggle: () => notifier.toggleFavorite(product.id),
+          onFavoriteToggle: () {
+            ref
+                .read(wishlistControllerProvider.notifier)
+                .toggleWishlist(product);
+          },
           onTap: () {
             context.push('/product/${product.id}');
           },

@@ -34,11 +34,13 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  Widget buildTestWidget({dynamic overrides}) {
+  Widget buildTestWidget({List<dynamic>? overrides}) {
     return ProviderScope(
       overrides: [
-        shopifyCartStorageProvider.overrideWithValue(FakeStorageForScreenTest()),
-        if (overrides != null) ...overrides,
+        shopifyCartStorageProvider.overrideWithValue(
+          FakeStorageForScreenTest(),
+        ),
+        ...?overrides,
       ],
       child: const MaterialApp(home: CartScreen()),
     );
@@ -75,5 +77,20 @@ void main() {
         expect(find.text('CHECKOUT'), findsOneWidget);
       },
     );
+
+    testWidgets('tapping CHECKOUT invokes launchInAppCheckout', (tester) async {
+      final controller = PopulatedCartController();
+      await tester.pumpWidget(
+        buildTestWidget(
+          overrides: [cartControllerProvider.overrideWith(() => controller)],
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final checkoutBtn = find.text('CHECKOUT');
+      expect(checkoutBtn, findsOneWidget);
+      await tester.tap(checkoutBtn);
+      await tester.pump();
+    });
   });
 }

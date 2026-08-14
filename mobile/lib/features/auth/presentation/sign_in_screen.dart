@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/nuvi_colors.dart';
 import '../../../core/theme/nuvi_spacing.dart';
 import '../../../core/theme/nuvi_typography.dart';
+import '../../../core/utils/nuvi_logger.dart';
 import '../../../core/widgets/nuvi_button.dart';
 import '../../../core/widgets/nuvi_input_field.dart';
 import '../../auth/domain/auth_exception.dart' as domain;
@@ -42,12 +43,16 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
   }
 
   void _onGoogleSignIn() async {
+    nuviLog('NUVI-GOOGLE', 'Google login button PRESSED');
     final success = await ref
         .read(authControllerProvider.notifier)
         .signInWithGoogle();
 
     if (success && mounted) {
-      // Success handling handled by authState changes in router
+      nuviLog(
+        'NUVI-GOOGLE',
+        'Google sign-in completed successfully in SignInScreen',
+      );
     }
   }
 

@@ -10,6 +10,9 @@ import '../../../core/widgets/nuvi_button.dart';
 import '../../../core/widgets/nuvi_top_bar.dart';
 import '../../auth/presentation/auth_controller.dart';
 import '../../cart/presentation/cart_controller.dart';
+import '../../search/presentation/search_screen.dart';
+import '../../wishlist/presentation/wishlist_controller.dart';
+import '../../wishlist/presentation/wishlist_screen.dart';
 import 'home_controller.dart';
 import 'widgets/age_filter_section.dart';
 import 'widgets/best_sellers_section.dart';
@@ -118,8 +121,19 @@ class HomeScreen extends ConsumerWidget {
               const SizedBox(height: NuviSpacing.xl),
               BestSellersSection(
                 products: homeState.bestSellers,
-                favoriteProductIds: homeState.favoriteProductIds,
-                onToggleFavorite: (id) => homeNotifier.toggleFavorite(id),
+                favoriteProductIds: ref
+                    .watch(wishlistControllerProvider)
+                    .wishlistProductIds,
+                onToggleFavorite: (id) {
+                  final matches = homeState.bestSellers.where(
+                    (p) => p.id == id,
+                  );
+                  if (matches.isNotEmpty) {
+                    ref
+                        .read(wishlistControllerProvider.notifier)
+                        .toggleWishlist(matches.first);
+                  }
+                },
                 onProductTap: (product) {
                   context.push('/product/${product.id}');
                 },
@@ -138,20 +152,9 @@ class HomeScreen extends ConsumerWidget {
           message: 'Explore all categories and items.',
         );
       case 2:
-        return _buildPlaceholderTab(
-          context,
-          title: 'Search',
-          icon: Icons.search,
-          message: 'Search for products, colors, and styles.',
-        );
+        return const SearchScreen();
       case 3:
-        return _buildPlaceholderTab(
-          context,
-          title: 'Wishlist',
-          icon: Icons.favorite_outline,
-          message:
-              'Items you favorite will appear here.\n(${homeState.favoriteProductIds.length} items saved)',
-        );
+        return const WishlistScreen();
       case 4:
         return _buildAccountTab(context, ref);
       default:
@@ -233,6 +236,12 @@ class HomeScreen extends ConsumerWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: NuviSpacing.xxl),
+            NuviButton(
+              text: 'VIEW ACCOUNT & ORDERS',
+              type: NuviButtonType.primary,
+              onPressed: () => context.push('/account'),
+            ),
+            const SizedBox(height: NuviSpacing.md),
             NuviButton(
               text: 'Sign Out',
               type: NuviButtonType.secondary,

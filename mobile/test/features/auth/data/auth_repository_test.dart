@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -68,6 +69,26 @@ class FakeGoTrueClient implements supabase.GoTrueClient {
     return supabase.AuthResponse();
   }
 
+  bool signInWithOAuthCalled = false;
+  supabase.OAuthProvider? lastOAuthProvider;
+  String? lastRedirectTo;
+
+  @override
+  Future<supabase.OAuthResponse> getOAuthSignInUrl({
+    required supabase.OAuthProvider provider,
+    String? redirectTo,
+    String? scopes,
+    Map<String, String>? queryParams,
+  }) async {
+    signInWithOAuthCalled = true;
+    lastOAuthProvider = provider;
+    lastRedirectTo = redirectTo;
+    return supabase.OAuthResponse(
+      provider: provider,
+      url: 'https://mock.supabase.co/auth/v1/authorize',
+    );
+  }
+
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
@@ -85,6 +106,7 @@ class FakeSupabaseClient implements supabase.SupabaseClient {
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   late FakeGoTrueClient fakeGoTrue;
   late FakeSupabaseClient fakeSupabase;
   late AuthRepository repository;
@@ -210,5 +232,26 @@ void main() {
         ),
       );
     });
+
+    test(
+      '7. Standard signInWithGoogle delegates to Supabase signInWithOAuth',
+      () async {
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(
+              const MethodChannel('plugins.flutter.io/url_launcher'),
+              (methodCall) async => true,
+            );
+
+        final result = await repository.signInWithGoogle();
+
+        expect(result, isTrue);
+        expect(fakeGoTrue.signInWithOAuthCalled, isTrue);
+        expect(fakeGoTrue.lastOAuthProvider, supabase.OAuthProvider.google);
+        expect(
+          fakeGoTrue.lastRedirectTo,
+          'io.supabase.nuvikidz://login-callback/',
+        );
+      },
+    );
   });
 }
