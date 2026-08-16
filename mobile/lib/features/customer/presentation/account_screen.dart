@@ -311,13 +311,18 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
                         color: NuviColors.primary,
                         fontWeight: FontWeight.bold,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 2),
                     Text(
                       email,
                       style: NuviTypography.textTheme.bodyMedium?.copyWith(
                         color: NuviColors.onSurface.withValues(alpha: 0.7),
+                        fontSize: 13,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
@@ -428,7 +433,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(
           vertical: NuviSpacing.md,
-          horizontal: NuviSpacing.sm,
+          horizontal: 4,
         ),
         decoration: BoxDecoration(
           color: NuviColors.surfaceVariant.withValues(alpha: 0.35),
@@ -452,9 +457,12 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
               label,
               style: NuviTypography.textTheme.labelSmall?.copyWith(
                 color: NuviColors.onSurface.withValues(alpha: 0.6),
-                fontSize: 10,
-                letterSpacing: 0.5,
+                fontSize: 8,
+                letterSpacing: 0,
               ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),
