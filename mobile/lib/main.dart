@@ -27,7 +27,8 @@ void main() async {
     try {
       await Supabase.initialize(
         url: supabaseUrl,
-        publishableKey: supabaseAnonKey,
+        // ignore: deprecated_member_use
+        anonKey: supabaseAnonKey,
       );
       nuviLog('NUVI-APP', 'Supabase initialization COMPLETE');
 

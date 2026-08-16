@@ -35,6 +35,10 @@ class ShopifyCustomerRepository {
 
   ShopifyCustomerRepository([this._supabase]);
 
+  // ── Low-level client accessor ──────────────────────────────────────────────
+  // Returns the injected client (for tests) or the global Supabase instance.
+  // Returns null if Supabase is not initialized (test environments that don't
+  // inject a client and haven't called Supabase.initialize).
   SupabaseClient? get _client {
     if (_supabase != null) return _supabase;
     try {
@@ -46,27 +50,120 @@ class ShopifyCustomerRepository {
 
   bool get hasCurrentUser => _client?.auth.currentUser != null;
 
-  Future<CustomerSyncResult> getCustomerProfile() async {
+  // ── Centralized Edge Function Invoker ──────────────────────────────────────
+  //
+  // Requirements satisfied:
+  //   1. Obtains current Supabase session via client.auth.currentSession.
+  //   2. If session is null, returns null (unauthenticated).
+  //   3. Checks session expiration against current timestamp.
+  //   4. If expired or near-expiry (< 60s), calls official refreshSession().
+  //   5. Reads session again after refresh to verify fresh token.
+  //   6. Verifies freshSession != null, accessToken.isNotEmpty, user != null.
+  //   7. Explicitly passes 'Authorization': 'Bearer <freshSession.accessToken>'
+  //      to client.functions.invoke('shopify-customer-sync', ...).
+  //   8. Never logs the access token or refresh token.
+  //   9. Logs safe diagnostics only.
+  //  10. All 7 methods delegate through this single helper.
+  Future<FunctionResponse?> _invokeShopifyCustomerSync(
+    Map<String, dynamic> body,
+  ) async {
     final client = _client;
-    if (client == null || client.auth.currentUser == null) {
-      nuviLog(
-        'NUVI-SHOPIFY-CUSTOMER',
-        'No authenticated Supabase user for getCustomerProfile',
-      );
-      return const CustomerSyncResult(
-        status: CustomerSyncStatus.unauthenticated,
-        message: 'No authenticated Supabase user.',
-      );
+
+    if (client == null) {
+      nuviLog('NUVI-AUTH', 'sessionExists=false');
+      nuviLog('NUVI-AUTH', 'userExists=false');
+      nuviLog('NUVI-AUTH', 'accessTokenExists=false');
+      return null;
     }
 
-    nuviLog('NUVI-SHOPIFY-CUSTOMER', 'Edge Function invocation START');
+    var session = client.auth.currentSession;
+    if (session == null) {
+      nuviLog('NUVI-AUTH', 'sessionExists=false');
+      nuviLog('NUVI-AUTH', 'userExists=${client.auth.currentUser != null}');
+      nuviLog('NUVI-AUTH', 'accessTokenExists=false');
+      nuviLog(
+        'NUVI-SHOPIFY-CUSTOMER',
+        'No valid Supabase session — aborting Edge Function call',
+      );
+      return null;
+    }
+
+    final expiresAt = session.expiresAt;
+    final nowSec = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    final isExpired = expiresAt != null && expiresAt < nowSec;
+    final nearExpiry = expiresAt != null && (expiresAt - nowSec) < 60;
+
+    if (isExpired || nearExpiry) {
+      nuviLog(
+        'NUVI-AUTH',
+        'Session expired or near-expiry (isExpired=$isExpired, nearExpiry=$nearExpiry) — refreshing',
+      );
+      try {
+        final refreshResult = await client.auth.refreshSession();
+        session = refreshResult.session ?? client.auth.currentSession;
+      } catch (refreshError) {
+        nuviLog(
+          'NUVI-AUTH',
+          'Session refresh failed: ${refreshError.runtimeType}',
+        );
+        if (isExpired) {
+          nuviLog(
+            'NUVI-SHOPIFY-CUSTOMER',
+            'Token was expired and refresh failed — aborting Edge Function call',
+          );
+          return null;
+        }
+      }
+    }
+
+    final freshSession = session ?? client.auth.currentSession;
+    if (freshSession == null || freshSession.accessToken.isEmpty) {
+      nuviLog(
+        'NUVI-SHOPIFY-CUSTOMER',
+        'freshSession is invalid after refresh check — aborting',
+      );
+      return null;
+    }
+
+    final currentExpiresAt = freshSession.expiresAt;
+    final currentIsExpired =
+        currentExpiresAt != null &&
+        currentExpiresAt < (DateTime.now().millisecondsSinceEpoch ~/ 1000);
+
+    // ── Safe diagnostics (no token values ever logged) ──────────────────────
+    nuviLog('NUVI-AUTH', 'sessionExists=true');
+    nuviLog('NUVI-AUTH', 'userExists=true');
+    nuviLog('NUVI-AUTH', 'userId=${freshSession.user.id}');
+    nuviLog('NUVI-AUTH', 'accessTokenExists=true');
+    nuviLog('NUVI-AUTH', 'sessionExpiresAt=$currentExpiresAt');
+    nuviLog('NUVI-AUTH', 'tokenExpired=$currentIsExpired');
+    nuviLog('NUVI-AUTH', 'Invoking shopify-customer-sync with current session');
+
+    nuviLog('NUVI-SHOPIFY-CUSTOMER', 'Invoking shopify-customer-sync');
+
+    return await client.functions.invoke(
+      'shopify-customer-sync',
+      body: body,
+      headers: {'Authorization': 'Bearer ${freshSession.accessToken}'},
+    );
+  }
+
+  // ── Public methods ─────────────────────────────────────────────────────────
+
+  Future<CustomerSyncResult> getCustomerProfile() async {
     nuviLog('NUVI-SHOPIFY-CUSTOMER', 'action=GET_CUSTOMER');
 
     try {
-      final response = await client.functions.invoke(
-        'shopify-customer-sync',
-        body: {'action': 'GET_CUSTOMER'},
-      );
+      final response = await _invokeShopifyCustomerSync({
+        'action': 'GET_CUSTOMER',
+      });
+
+      if (response == null) {
+        return const CustomerSyncResult(
+          status: CustomerSyncStatus.unauthenticated,
+          message: 'No valid Supabase session.',
+        );
+      }
 
       nuviLog(
         'NUVI-SHOPIFY-CUSTOMER',
@@ -138,29 +235,24 @@ class ShopifyCustomerRepository {
     int first = 20,
     String? after,
   }) async {
-    final client = _client;
-    if (client == null || client.auth.currentUser == null) {
-      nuviLog(
-        'NUVI-SHOPIFY-CUSTOMER',
-        'No authenticated Supabase user for getCustomerOrders',
-      );
-      return const CustomerOrdersResult(
-        status: CustomerSyncStatus.unauthenticated,
-        message: 'No authenticated Supabase user.',
-      );
-    }
-
-    nuviLog('NUVI-SHOPIFY-CUSTOMER', 'Edge Function invocation START');
     nuviLog(
       'NUVI-SHOPIFY-CUSTOMER',
       'action=GET_ORDERS, first=$first, after=$after',
     );
 
     try {
-      final response = await client.functions.invoke(
-        'shopify-customer-sync',
-        body: {'action': 'GET_ORDERS', 'first': first, 'after': ?after},
-      );
+      final response = await _invokeShopifyCustomerSync({
+        'action': 'GET_ORDERS',
+        'first': first,
+        'after': ?after,
+      });
+
+      if (response == null) {
+        return const CustomerOrdersResult(
+          status: CustomerSyncStatus.unauthenticated,
+          message: 'No valid Supabase session.',
+        );
+      }
 
       nuviLog(
         'NUVI-SHOPIFY-CUSTOMER',
@@ -169,10 +261,6 @@ class ShopifyCustomerRepository {
 
       final data = response.data;
       if (data is! Map<String, dynamic>) {
-        nuviLog(
-          'NUVI-SHOPIFY-CUSTOMER',
-          'ERROR: Invalid response format from Edge Function',
-        );
         return const CustomerOrdersResult(
           status: CustomerSyncStatus.error,
           message: 'Invalid response format from server.',
@@ -222,19 +310,15 @@ class ShopifyCustomerRepository {
   }
 
   Future<ShopifyOrder?> getCustomerOrder(String orderId) async {
-    final client = _client;
-    if (client == null || client.auth.currentUser == null) {
-      return null;
-    }
-
-    nuviLog('NUVI-SHOPIFY-CUSTOMER', 'Edge Function invocation START');
     nuviLog('NUVI-SHOPIFY-CUSTOMER', 'action=GET_ORDER, orderId=$orderId');
 
     try {
-      final response = await client.functions.invoke(
-        'shopify-customer-sync',
-        body: {'action': 'GET_ORDER', 'orderId': orderId},
-      );
+      final response = await _invokeShopifyCustomerSync({
+        'action': 'GET_ORDER',
+        'orderId': orderId,
+      });
+
+      if (response == null) return null;
 
       nuviLog(
         'NUVI-SHOPIFY-CUSTOMER',
@@ -258,16 +342,13 @@ class ShopifyCustomerRepository {
   }
 
   Future<ShopifyAddress> createAddress(Map<String, dynamic> addressData) async {
-    final client = _client;
-    if (client == null || client.auth.currentUser == null) {
-      throw Exception('No authenticated user.');
-    }
-
     nuviLog('NUVI-SHOPIFY-CUSTOMER', 'Edge Function CREATE_ADDRESS START');
-    final response = await client.functions.invoke(
-      'shopify-customer-sync',
-      body: {'action': 'CREATE_ADDRESS', 'address': addressData},
-    );
+    final response = await _invokeShopifyCustomerSync({
+      'action': 'CREATE_ADDRESS',
+      'address': addressData,
+    });
+
+    if (response == null) throw Exception('No valid Supabase session.');
 
     final data = response.data;
     if (data is Map<String, dynamic> &&
@@ -286,20 +367,14 @@ class ShopifyCustomerRepository {
     String addressId,
     Map<String, dynamic> addressData,
   ) async {
-    final client = _client;
-    if (client == null || client.auth.currentUser == null) {
-      throw Exception('No authenticated user.');
-    }
-
     nuviLog('NUVI-SHOPIFY-CUSTOMER', 'Edge Function UPDATE_ADDRESS START');
-    final response = await client.functions.invoke(
-      'shopify-customer-sync',
-      body: {
-        'action': 'UPDATE_ADDRESS',
-        'addressId': addressId,
-        'address': addressData,
-      },
-    );
+    final response = await _invokeShopifyCustomerSync({
+      'action': 'UPDATE_ADDRESS',
+      'addressId': addressId,
+      'address': addressData,
+    });
+
+    if (response == null) throw Exception('No valid Supabase session.');
 
     final data = response.data;
     if (data is Map<String, dynamic> &&
@@ -315,16 +390,13 @@ class ShopifyCustomerRepository {
   }
 
   Future<void> deleteAddress(String addressId) async {
-    final client = _client;
-    if (client == null || client.auth.currentUser == null) {
-      throw Exception('No authenticated user.');
-    }
-
     nuviLog('NUVI-SHOPIFY-CUSTOMER', 'Edge Function DELETE_ADDRESS START');
-    final response = await client.functions.invoke(
-      'shopify-customer-sync',
-      body: {'action': 'DELETE_ADDRESS', 'addressId': addressId},
-    );
+    final response = await _invokeShopifyCustomerSync({
+      'action': 'DELETE_ADDRESS',
+      'addressId': addressId,
+    });
+
+    if (response == null) throw Exception('No valid Supabase session.');
 
     final data = response.data;
     if (data is Map<String, dynamic> && data['status'] == 'SUCCESS') {
@@ -338,16 +410,13 @@ class ShopifyCustomerRepository {
   }
 
   Future<ShopifyAddress?> setDefaultAddress(String addressId) async {
-    final client = _client;
-    if (client == null || client.auth.currentUser == null) {
-      throw Exception('No authenticated user.');
-    }
-
     nuviLog('NUVI-SHOPIFY-CUSTOMER', 'Edge Function SET_DEFAULT_ADDRESS START');
-    final response = await client.functions.invoke(
-      'shopify-customer-sync',
-      body: {'action': 'SET_DEFAULT_ADDRESS', 'addressId': addressId},
-    );
+    final response = await _invokeShopifyCustomerSync({
+      'action': 'SET_DEFAULT_ADDRESS',
+      'addressId': addressId,
+    });
+
+    if (response == null) throw Exception('No valid Supabase session.');
 
     final data = response.data;
     if (data is Map<String, dynamic> && data['status'] == 'SUCCESS') {

@@ -7,8 +7,6 @@ import '../../../core/theme/nuvi_spacing.dart';
 import '../../../core/theme/nuvi_typography.dart';
 import '../../../core/widgets/nuvi_button.dart';
 import '../../../core/widgets/nuvi_product_card.dart';
-import '../../../core/widgets/nuvi_top_bar.dart';
-import '../../cart/presentation/cart_controller.dart';
 import 'wishlist_controller.dart';
 
 class WishlistScreen extends ConsumerStatefulWidget {
@@ -31,22 +29,10 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen> {
   Widget build(BuildContext context) {
     final wishlistState = ref.watch(wishlistControllerProvider);
     final wishlistNotifier = ref.read(wishlistControllerProvider.notifier);
-    final cartState = ref.watch(cartControllerProvider);
 
-    return Scaffold(
-      backgroundColor: NuviColors.surface,
-      appBar: NuviTopBar(
-        title: Text(
-          'Wishlist',
-          style: NuviTypography.textTheme.headlineMedium?.copyWith(
-            color: NuviColors.primary,
-          ),
-        ),
-        showBackButton: Navigator.of(context).canPop(),
-        cartItemCount: cartState.totalItemCount,
-        onCartTap: () => context.push('/cart'),
-      ),
-      body: _buildBody(context, wishlistState, wishlistNotifier),
+    return Material(
+      color: NuviColors.surface,
+      child: _buildBody(context, wishlistState, wishlistNotifier),
     );
   }
 

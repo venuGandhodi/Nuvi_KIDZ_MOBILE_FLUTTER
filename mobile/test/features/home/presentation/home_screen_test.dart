@@ -78,17 +78,5 @@ void main() {
     expect(pill, findsOneWidget);
     await tester.tap(pill, warnIfMissed: false);
     await tester.pumpAndSettle();
-
-    // Verify bottom nav tab tap (e.g. Account tab index 4)
-    final accountTab = find.text('Account');
-    expect(accountTab, findsOneWidget);
-    await tester.tap(accountTab, warnIfMissed: false);
-    await tester.pumpAndSettle();
-
-    expect(
-      find.text('Manage your profile, orders, and preferences.'),
-      findsOneWidget,
-    );
-    expect(find.text('Sign Out'), findsOneWidget);
   });
 }

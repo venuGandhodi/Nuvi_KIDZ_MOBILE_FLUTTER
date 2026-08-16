@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/utils/nuvi_logger.dart';
 import '../data/shopify_customer_repository.dart';
 import '../domain/shopify_customer.dart';
@@ -54,17 +55,120 @@ class CustomerState {
 }
 
 class CustomerController extends Notifier<CustomerState> {
+  bool _isLoadingCustomer = false;
+
   @override
   CustomerState build() {
-    Future.microtask(() => loadCustomer());
-    return const CustomerState(isLoading: true);
+    // Controller starts idle in the new guest-first flow.
+    // loadCustomer() is triggered explicitly by AuthController after confirmed
+    // authentication, and by the RouterNotifier on cold-start session restore.
+    // Do NOT call loadCustomer() here — the provider may be first accessed
+    // during the unauthenticated guest phase, and calling it here would race
+    // against the sign-in session propagation, causing the 401.
+    return const CustomerState();
   }
 
   /// Loads the customer profile and orders via the secure Edge Function.
+  ///
+  /// Before invoking the Edge Function, this method:
+  ///   1. Reads the current Supabase session.
+  ///   2. Logs safe diagnostics (Phase 4 — no tokens ever logged).
+  ///   3. Refreshes the session if the access token is expired or near-expiry.
+  ///   4. Aborts gracefully if no valid session is available.
   Future<void> loadCustomer() async {
-    nuviLog('NUVI-CUSTOMER', 'loadCustomer START');
+    if (_isLoadingCustomer) {
+      nuviLog(
+        'NUVI-CUSTOMER',
+        'loadCustomer: already in progress — skipping duplicate concurrent call',
+      );
+      return;
+    }
+    _isLoadingCustomer = true;
+    nuviLog('NUVI-AUTH-DIAGNOSTIC', 'loadCustomer triggered');
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
+      // ── Phase 4: Session diagnostics + session-validity guard ─────────────
+      //
+      // Access Supabase.instance.client safely: in test environments where
+      // Supabase is not initialized, this throws an AssertionError. We catch
+      // it and fall through to the repository-level check, which tests can
+      // control via FakeCustomerRepository.
+      try {
+        final supabase = Supabase.instance.client;
+        var session = supabase.auth.currentSession;
+
+        final sessionExists = session != null;
+        nuviLog('NUVI-AUTH-DIAGNOSTIC', 'sessionExists=$sessionExists');
+
+        if (session != null) {
+          final userId = session.user.id;
+          nuviLog('NUVI-AUTH-DIAGNOSTIC', 'userId=$userId');
+          nuviLog('NUVI-AUTH-DIAGNOSTIC', 'accessTokenExists=true');
+
+          final expiresAt = session.expiresAt;
+          nuviLog('NUVI-AUTH-DIAGNOSTIC', 'expiresAt=$expiresAt');
+
+          final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+          final isExpired = expiresAt != null && expiresAt < now;
+          nuviLog('NUVI-AUTH-DIAGNOSTIC', 'tokenExpired=$isExpired');
+
+          // Refresh if expired or within 60 seconds of expiry.
+          final nearExpiry = expiresAt != null && (expiresAt - now) < 60;
+          if (isExpired || nearExpiry) {
+            nuviLog(
+              'NUVI-AUTH-DIAGNOSTIC',
+              'Token expired or near-expiry — refreshing session',
+            );
+            try {
+              final refreshResult = await supabase.auth.refreshSession();
+              session = refreshResult.session;
+              nuviLog(
+                'NUVI-AUTH-DIAGNOSTIC',
+                'Session refresh complete. sessionExists=${session != null}',
+              );
+            } catch (refreshError) {
+              nuviLog(
+                'NUVI-AUTH-DIAGNOSTIC',
+                'Session refresh failed: $refreshError',
+              );
+              // Proceed with existing session; Edge Function rejects if expired.
+            }
+          }
+        } else {
+          nuviLog('NUVI-AUTH-DIAGNOSTIC', 'accessTokenExists=false');
+        }
+
+        // Guard: abort if no valid session (production path).
+        if (session == null || supabase.auth.currentUser == null) {
+          nuviLog(
+            'NUVI-CUSTOMER',
+            'loadCustomer: no authenticated user — aborting',
+          );
+          state = const CustomerState(
+            syncStatus: CustomerSyncStatus.unauthenticated,
+            isAuthenticated: false,
+            isLoading: false,
+          );
+          return;
+        }
+
+        final loadUserId = session.user.id;
+        nuviLog(
+          'NUVI-AUTH-DIAGNOSTIC',
+          'loadCustomer session userId=$loadUserId',
+        );
+        nuviLog('NUVI-AUTH-DIAGNOSTIC', 'loadCustomer token valid=true');
+      } catch (supabaseInitError) {
+        // Supabase not initialized (test environment): skip session diagnostics
+        // and fall through to the repository-level auth check below.
+        nuviLog(
+          'NUVI-AUTH-DIAGNOSTIC',
+          'sessionExists=false (Supabase not initialized — test environment)',
+        );
+      }
+
+      nuviLog('NUVI-CUSTOMER', 'loadCustomer START');
+
       final repo = ref.read(shopifyCustomerRepositoryProvider);
       final userAvailable = repo.hasCurrentUser;
 
@@ -148,6 +252,8 @@ class CustomerController extends Notifier<CustomerState> {
         isLoading: false,
         errorMessage: 'Unable to load profile. Please try again.',
       );
+    } finally {
+      _isLoadingCustomer = false;
     }
   }
 
@@ -277,6 +383,7 @@ class CustomerController extends Notifier<CustomerState> {
 
   /// Resets state on logout.
   void clear() {
+    _isLoadingCustomer = false;
     nuviLog('NUVI-CUSTOMER', 'CustomerController.clear executed');
     state = const CustomerState(
       syncStatus: CustomerSyncStatus.unauthenticated,

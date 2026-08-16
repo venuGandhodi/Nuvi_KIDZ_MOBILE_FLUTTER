@@ -36,6 +36,101 @@ interface RequestPayload {
   };
 }
 
+function normalizeShopifyDomain(rawDomain: string): string {
+  let domain = (rawDomain || "").trim();
+  domain = domain.replace(/^https?:\/\//i, "");
+  domain = domain.replace(/\/+$/, "");
+  return domain || "muu1gj-t6.myshopify.com";
+}
+
+interface ShopifyTokenCache {
+  accessToken: string;
+  expiresAt: number;
+}
+
+let cachedShopifyToken: ShopifyTokenCache | null = null;
+
+async function getShopifyAdminAccessToken(shopifyDomain: string): Promise<string> {
+  const now = Date.now();
+  if (cachedShopifyToken && now < cachedShopifyToken.expiresAt - 60000) {
+    return cachedShopifyToken.accessToken;
+  }
+
+  const clientId = Deno.env.get("SHOPIFY_CLIENT_ID")?.trim() ?? "";
+  const clientSecret = Deno.env.get("SHOPIFY_CLIENT_SECRET")?.trim() ?? "";
+  const staticAdminToken = Deno.env.get("SHOPIFY_ADMIN_ACCESS_TOKEN")?.trim() ?? "";
+
+  console.log(`[NUVI-SHOPIFY-CONFIG] shopifyDomain=${shopifyDomain}`);
+  console.log(
+    `[NUVI-SHOPIFY-CONFIG] shopifyApiEndpoint=https://${shopifyDomain}/admin/api/2026-04/graphql.json`
+  );
+  console.log(`[NUVI-SHOPIFY-CONFIG] clientIdConfigured=${Boolean(clientId)}`);
+  console.log(`[NUVI-SHOPIFY-CONFIG] clientSecretConfigured=${Boolean(clientSecret)}`);
+  console.log(`[NUVI-SHOPIFY-CONFIG] staticTokenConfigured=${Boolean(staticAdminToken)}`);
+
+  // 1. Prioritize Client Credentials Grant if Client ID and Secret are configured
+  if (clientId && clientSecret) {
+    console.log("[NUVI-SHOPIFY-AUTH] tokenRequestStarted=true");
+    const oauthUrl = `https://${shopifyDomain}/admin/oauth/access_token`;
+
+    const bodyParams = new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
+      grant_type: "client_credentials",
+    });
+
+    const response = await fetch(oauthUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Accept": "application/json",
+      },
+      body: bodyParams.toString(),
+    });
+
+    console.log(`[NUVI-SHOPIFY-AUTH] tokenRequestStatus=${response.status}`);
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error(
+        `[NUVI-SHOPIFY-AUTH] Shopify OAuth token exchange failed (HTTP ${response.status}): ${errText}`
+      );
+      throw new Error(
+        `Shopify OAuth token exchange failed (HTTP ${response.status}): ${errText}`
+      );
+    }
+
+    const tokenData = await response.json();
+    if (!tokenData.access_token) {
+      console.error("[NUVI-SHOPIFY-AUTH] OAuth response missing access_token");
+      throw new Error("Shopify OAuth response missing access_token");
+    }
+
+    const expiresInSec =
+      typeof tokenData.expires_in === "number" ? tokenData.expires_in : 86399;
+
+    cachedShopifyToken = {
+      accessToken: tokenData.access_token,
+      expiresAt: Date.now() + expiresInSec * 1000,
+    };
+
+    console.log("[NUVI-SHOPIFY-AUTH] tokenAvailable=true");
+    return cachedShopifyToken.accessToken;
+  }
+
+  // 2. Fallback to static SHOPIFY_ADMIN_ACCESS_TOKEN if configured
+  if (staticAdminToken) {
+    console.log("[NUVI-SHOPIFY-AUTH] Using static SHOPIFY_ADMIN_ACCESS_TOKEN fallback");
+    console.log("[NUVI-SHOPIFY-AUTH] tokenAvailable=true");
+    return staticAdminToken;
+  }
+
+  // 3. Neither configured
+  throw new Error(
+    "Missing Shopify credentials: Set SHOPIFY_CLIENT_ID and SHOPIFY_CLIENT_SECRET, or SHOPIFY_ADMIN_ACCESS_TOKEN in Supabase secrets."
+  );
+}
+
 serve(async (req: Request) => {
   console.log("[NUVI-EDGE] shopify-customer-sync START");
 
@@ -47,31 +142,42 @@ serve(async (req: Request) => {
   try {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
-      console.log("[NUVI-EDGE] Missing Authorization header");
+      console.log("[NUVI-EDGE] Authorization header present=false");
       return new Response(
-        JSON.stringify({ error: "Missing Authorization header" }),
+        JSON.stringify({ error: "Unauthorized: Missing Authorization header" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+    console.log("[NUVI-EDGE] Authorization header present=true");
+
+    const accessToken = authHeader.replace(/^Bearer\s+/i, "").trim();
+    if (!accessToken) {
+      console.log("[NUVI-EDGE] Bearer token present=false");
+      return new Response(
+        JSON.stringify({ error: "Unauthorized: Missing Bearer token" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    console.log("[NUVI-EDGE] Bearer token present=true");
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
     const supabaseServiceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-    const shopifyDomain = Deno.env.get("SHOPIFY_STORE_DOMAIN") ?? "muu1gj-t6.myshopify.com";
-    const shopifyAdminToken = Deno.env.get("SHOPIFY_ADMIN_ACCESS_TOKEN") ?? "";
+    const rawShopifyDomain = Deno.env.get("SHOPIFY_STORE_DOMAIN") ?? "muu1gj-t6.myshopify.com";
+    const shopifyDomain = normalizeShopifyDomain(rawShopifyDomain);
 
-    // 1. Verify authenticated Supabase User
+    // 1. Verify authenticated Supabase User explicitly with the access token
     const supabaseUserClient = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } },
+      auth: { persistSession: false },
     });
 
     const {
       data: { user },
       error: userError,
-    } = await supabaseUserClient.auth.getUser();
+    } = await supabaseUserClient.auth.getUser(accessToken);
 
     if (userError || !user) {
-      console.log("[NUVI-EDGE] Supabase user authentication failed");
+      console.log("[NUVI-EDGE] Supabase user authenticated=false");
       return new Response(
         JSON.stringify({ error: "Unauthorized: Invalid or expired session" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -96,24 +202,22 @@ serve(async (req: Request) => {
 
     // Helper for executing GraphQL against Shopify Admin API
     const runShopifyAdminGraphQL = async (query: string, variables: Record<string, unknown> = {}) => {
-      if (!shopifyAdminToken) {
-        throw new Error("SHOPIFY_ADMIN_ACCESS_TOKEN secret is not configured on the server.");
-      }
+      const shopifyAccessToken = await getShopifyAdminAccessToken(shopifyDomain);
 
-      console.log("[NUVI-EDGE] Shopify Admin GraphQL REQUEST START");
+      console.log("[NUVI-SHOPIFY-ADMIN] graphqlRequestStarted=true");
       const response = await fetch(
         `https://${shopifyDomain}/admin/api/2026-04/graphql.json`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "X-Shopify-Access-Token": shopifyAdminToken,
+            "X-Shopify-Access-Token": shopifyAccessToken,
           },
           body: JSON.stringify({ query, variables }),
         }
       );
 
-      console.log(`[NUVI-EDGE] Shopify Admin GraphQL RESPONSE RECEIVED (HTTP ${response.status})`);
+      console.log(`[NUVI-SHOPIFY-ADMIN] httpStatus=${response.status}`);
 
       if (!response.ok) {
         const text = await response.text();
