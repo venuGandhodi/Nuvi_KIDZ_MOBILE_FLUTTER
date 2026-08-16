@@ -6,7 +6,10 @@ import '../../../core/theme/nuvi_colors.dart';
 import '../../../core/theme/nuvi_spacing.dart';
 import '../../../core/theme/nuvi_typography.dart';
 import '../../../core/widgets/nuvi_button.dart';
+import '../../category/domain/menu_category.dart';
+import '../../category/presentation/category_menu_controller.dart';
 import '../../wishlist/presentation/wishlist_controller.dart';
+import '../domain/category.dart';
 import 'home_controller.dart';
 import 'widgets/age_filter_section.dart';
 import 'widgets/best_sellers_section.dart';
@@ -14,13 +17,31 @@ import 'widgets/category_circles_section.dart';
 import 'widgets/hero_banner_section.dart';
 import 'widgets/home_search_bar.dart';
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      ref.read(categoryMenuControllerProvider.notifier).loadMenu();
+    });
+  }
+
+  void _onMenuCategoryTap(MenuCategory category) {
+    context.push('/category/${category.collectionHandle ?? category.id}');
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final homeState = ref.watch(homeControllerProvider);
     final homeNotifier = ref.read(homeControllerProvider.notifier);
+    final menuCategories = ref.watch(categoryMenuControllerProvider).categories;
 
     if (homeState.isLoading) {
       return const Center(
@@ -65,11 +86,26 @@ class HomeScreen extends ConsumerWidget {
               HomeSearchBar(onTap: () => context.push('/search')),
               const SizedBox(height: NuviSpacing.lg),
               CategoryCirclesSection(
-                categories: homeState.categories,
+                categories: menuCategories
+                    .map(
+                      (m) => Category(
+                        id: m.id,
+                        name: m.title,
+                        imageUrl: m.imageUrl,
+                        handle: m.collectionHandle,
+                      ),
+                    )
+                    .toList(),
                 selectedCategoryId: homeState.selectedCategoryId,
                 onCategorySelected: (id) {
                   homeNotifier.selectCategory(id);
-                  context.push('/category/$id');
+                  final category = menuCategories.firstWhere(
+                    (m) => m.id == id,
+                    orElse: () => const MenuCategory(id: '', title: ''),
+                  );
+                  if (category.id.isNotEmpty) {
+                    _onMenuCategoryTap(category);
+                  }
                 },
               ),
               const SizedBox(height: NuviSpacing.xl),

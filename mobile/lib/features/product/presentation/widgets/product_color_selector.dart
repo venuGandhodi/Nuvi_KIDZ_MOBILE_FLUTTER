@@ -8,12 +8,14 @@ class ProductColorSelector extends StatelessWidget {
   final List<ProductColor> colors;
   final ProductColor? selectedColor;
   final ValueChanged<ProductColor> onColorSelected;
+  final bool dense;
 
   const ProductColorSelector({
     super.key,
     required this.colors,
     required this.selectedColor,
     required this.onColorSelected,
+    this.dense = false,
   });
 
   @override
@@ -21,6 +23,10 @@ class ProductColorSelector extends StatelessWidget {
     if (colors.isEmpty) return const SizedBox.shrink();
 
     final activeName = selectedColor?.name ?? colors.first.name;
+    final swatchSize = dense ? 26.0 : 40.0;
+    final labelStyle = NuviTypography.textTheme.labelLarge?.copyWith(
+      fontSize: dense ? 12 : null,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -29,21 +35,21 @@ class ProductColorSelector extends StatelessWidget {
           children: [
             Text(
               'Color: ',
-              style: NuviTypography.textTheme.labelLarge?.copyWith(
+              style: labelStyle?.copyWith(
                 color: NuviColors.primary,
                 fontWeight: FontWeight.bold,
               ),
             ),
             Text(
               activeName,
-              style: NuviTypography.textTheme.labelLarge?.copyWith(
+              style: labelStyle?.copyWith(
                 color: NuviColors.onSurface.withValues(alpha: 0.8),
                 fontWeight: FontWeight.normal,
               ),
             ),
           ],
         ),
-        const SizedBox(height: NuviSpacing.sm),
+        SizedBox(height: dense ? NuviSpacing.xs : NuviSpacing.sm),
         Row(
           children: colors.map((c) {
             final isSelected = selectedColor?.id == c.id;
@@ -51,9 +57,9 @@ class ProductColorSelector extends StatelessWidget {
               onTap: () => onColorSelected(c),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 150),
-                width: 40,
-                height: 40,
-                margin: const EdgeInsets.only(right: 12),
+                width: swatchSize,
+                height: swatchSize,
+                margin: EdgeInsets.only(right: dense ? 8 : 12),
                 decoration: BoxDecoration(
                   color: c.color,
                   shape: BoxShape.circle,

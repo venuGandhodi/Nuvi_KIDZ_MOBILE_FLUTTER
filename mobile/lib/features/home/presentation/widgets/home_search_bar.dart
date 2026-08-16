@@ -29,11 +29,7 @@ class HomeSearchBar extends StatelessWidget {
           ),
           child: Row(
             children: [
-              const Icon(
-                Icons.search,
-                color: NuviColors.primary,
-                size: 20,
-              ),
+              const Icon(Icons.search, color: NuviColors.primary, size: 20),
               const SizedBox(width: NuviSpacing.sm),
               Text(
                 'Search products, colors, and styles',

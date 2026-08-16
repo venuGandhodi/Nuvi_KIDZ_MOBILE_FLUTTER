@@ -14,6 +14,8 @@ import '../../wishlist/presentation/wishlist_controller.dart';
 import 'product_controller.dart';
 import 'widgets/product_accordion_section.dart';
 import 'widgets/product_color_selector.dart';
+import 'widgets/product_coupon_carousel.dart';
+import 'widgets/product_delivery_info_section.dart';
 import 'widgets/product_image_carousel.dart';
 
 class ProductDetailScreen extends ConsumerStatefulWidget {
@@ -58,6 +60,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
       return Scaffold(
         backgroundColor: NuviColors.surface,
         appBar: NuviTopBar(
+          title: const SizedBox.shrink(),
           showBackButton: true,
           cartItemCount: cartState.totalItemCount,
           onCartTap: () => context.push('/cart'),
@@ -72,6 +75,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
       return Scaffold(
         backgroundColor: NuviColors.surface,
         appBar: NuviTopBar(
+          title: const SizedBox.shrink(),
           showBackButton: true,
           cartItemCount: cartState.totalItemCount,
           onCartTap: () => context.push('/cart'),
@@ -93,6 +97,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
     return Scaffold(
       backgroundColor: NuviColors.surface,
       appBar: NuviTopBar(
+        title: const SizedBox.shrink(),
         showBackButton: true,
         onBackTap: () {
           if (context.canPop()) {
@@ -243,8 +248,9 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                       colors: product.availableColors!,
                       selectedColor: state.selectedColor,
                       onColorSelected: (c) => notifier.selectColor(c),
+                      dense: true,
                     ),
-                    const SizedBox(height: NuviSpacing.lg),
+                    const SizedBox(height: NuviSpacing.md),
                   ],
 
                   // Size Selector
@@ -256,6 +262,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                         Text(
                           'Size',
                           style: NuviTypography.textTheme.labelLarge?.copyWith(
+                            fontSize: 12,
                             color: NuviColors.primary,
                             fontWeight: FontWeight.bold,
                           ),
@@ -268,6 +275,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                             'Size Guide',
                             style: NuviTypography.textTheme.labelLarge
                                 ?.copyWith(
+                                  fontSize: 12,
                                   color: NuviColors.primary,
                                   decoration: TextDecoration.underline,
                                 ),
@@ -275,20 +283,21 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: NuviSpacing.sm),
+                    const SizedBox(height: NuviSpacing.xs),
                     Wrap(
-                      spacing: NuviSpacing.sm,
-                      runSpacing: NuviSpacing.sm,
+                      spacing: NuviSpacing.xs,
+                      runSpacing: NuviSpacing.xs,
                       children: product.availableSizes!.map((size) {
                         final isSelected = state.selectedSize == size;
                         return NuviPillSelector(
                           label: size,
                           isSelected: isSelected,
+                          dense: true,
                           onTap: () => notifier.selectSize(size),
                         );
                       }).toList(),
                     ),
-                    const SizedBox(height: NuviSpacing.xl),
+                    const SizedBox(height: NuviSpacing.lg),
                   ],
 
                   // Accordion Section
@@ -297,6 +306,14 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                     fabricAndCare: product.fabricAndCare,
                     reviews: product.reviews,
                   ),
+                  const SizedBox(height: NuviSpacing.lg),
+
+                  // Pincode & Delivery Info
+                  const ProductDeliveryInfoSection(),
+                  const SizedBox(height: NuviSpacing.lg),
+
+                  // Coupon Carousel
+                  const ProductCouponCarousel(),
                   const SizedBox(height: NuviSpacing.xxl),
 
                   // You May Also Like Horizontal Carousel

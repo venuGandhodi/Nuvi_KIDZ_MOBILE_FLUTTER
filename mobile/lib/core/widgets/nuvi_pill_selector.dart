@@ -7,6 +7,7 @@ class NuviPillSelector extends StatelessWidget {
   final String label;
   final bool isSelected;
   final bool isDisabled;
+  final bool dense;
   final VoidCallback? onTap;
 
   const NuviPillSelector({
@@ -14,6 +15,7 @@ class NuviPillSelector extends StatelessWidget {
     required this.label,
     this.isSelected = false,
     this.isDisabled = false,
+    this.dense = false,
     this.onTap,
   });
 
@@ -37,12 +39,16 @@ class NuviPillSelector extends StatelessWidget {
     return GestureDetector(
       onTap: isDisabled ? null : onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        padding: EdgeInsets.symmetric(
+          horizontal: dense ? 14 : 20,
+          vertical: dense ? 6 : 10,
+        ),
         decoration: decoration,
         child: Text(
           label,
           style: NuviTypography.textTheme.labelLarge?.copyWith(
             color: textColor,
+            fontSize: dense ? 12 : null,
           ),
         ),
       ),

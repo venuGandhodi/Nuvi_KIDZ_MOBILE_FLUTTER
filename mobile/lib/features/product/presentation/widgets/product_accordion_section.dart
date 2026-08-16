@@ -34,7 +34,7 @@ class _ProductAccordionSectionState extends State<ProductAccordionSection> {
         // Description Accordion
         if (widget.description != null) ...[
           _buildAccordionTile(
-            title: 'Description',
+            title: 'Product Details',
             isExpanded: _isDescriptionExpanded,
             onTap: () => setState(
               () => _isDescriptionExpanded = !_isDescriptionExpanded,
@@ -162,13 +162,17 @@ class _ProductAccordionSectionState extends State<ProductAccordionSection> {
             onTap: onTap,
             borderRadius: BorderRadius.circular(NuviRadii.card / 2),
             child: Padding(
-              padding: const EdgeInsets.all(NuviSpacing.md),
+              padding: const EdgeInsets.symmetric(
+                horizontal: NuviSpacing.sm,
+                vertical: NuviSpacing.xs,
+              ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
                     title,
                     style: NuviTypography.textTheme.labelLarge?.copyWith(
+                      fontSize: 12,
                       color: NuviColors.primary,
                       fontWeight: FontWeight.bold,
                     ),
@@ -179,6 +183,7 @@ class _ProductAccordionSectionState extends State<ProductAccordionSection> {
                     child: const Icon(
                       Icons.expand_more,
                       color: NuviColors.primary,
+                      size: 18,
                     ),
                   ),
                 ],
@@ -188,9 +193,9 @@ class _ProductAccordionSectionState extends State<ProductAccordionSection> {
           if (isExpanded)
             Padding(
               padding: const EdgeInsets.only(
-                left: NuviSpacing.md,
-                right: NuviSpacing.md,
-                bottom: NuviSpacing.md,
+                left: NuviSpacing.sm,
+                right: NuviSpacing.sm,
+                bottom: NuviSpacing.sm,
               ),
               child: content,
             ),

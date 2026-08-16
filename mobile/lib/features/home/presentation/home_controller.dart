@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/home_repository.dart';
 import '../data/shopify_home_repository.dart';
 import '../domain/age_filter.dart';
-import '../domain/category.dart';
 import '../domain/home_hero.dart';
 import '../domain/product.dart';
 
@@ -12,7 +11,6 @@ final homeRepositoryProvider = Provider<HomeRepository>((ref) {
 
 class HomeState {
   final HomeHero? hero;
-  final List<Category> categories;
   final List<AgeFilter> ageFilters;
   final List<Product> bestSellers;
   final String? selectedAgeFilterId;
@@ -25,7 +23,6 @@ class HomeState {
 
   const HomeState({
     this.hero,
-    this.categories = const [],
     this.ageFilters = const [],
     this.bestSellers = const [],
     this.selectedAgeFilterId,
@@ -39,7 +36,6 @@ class HomeState {
 
   HomeState copyWith({
     HomeHero? hero,
-    List<Category>? categories,
     List<AgeFilter>? ageFilters,
     List<Product>? bestSellers,
     String? selectedAgeFilterId,
@@ -52,7 +48,6 @@ class HomeState {
   }) {
     return HomeState(
       hero: hero ?? this.hero,
-      categories: categories ?? this.categories,
       ageFilters: ageFilters ?? this.ageFilters,
       bestSellers: bestSellers ?? this.bestSellers,
       selectedAgeFilterId: selectedAgeFilterId ?? this.selectedAgeFilterId,
@@ -78,13 +73,11 @@ class HomeController extends Notifier<HomeState> {
   Future<void> _loadInitialData(HomeRepository repository) async {
     try {
       final hero = await repository.getHero();
-      final categories = await repository.getCategories();
       final ageFilters = await repository.getAgeFilters();
       final bestSellers = await repository.getBestSellers();
 
       state = state.copyWith(
         hero: hero,
-        categories: categories,
         ageFilters: ageFilters,
         bestSellers: bestSellers,
         isLoading: false,

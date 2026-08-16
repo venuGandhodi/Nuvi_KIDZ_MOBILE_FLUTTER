@@ -266,8 +266,8 @@ class ShopifyProductMapper {
     final title = json['title'] as String? ?? '';
     final resource = json['resource'] as Map<String, dynamic>?;
     final handle = resource?['handle'] as String?;
-    final imageUrl = (resource?['image'] as Map<String, dynamic>?)?['url']
-        as String?;
+    final imageUrl =
+        (resource?['image'] as Map<String, dynamic>?)?['url'] as String?;
 
     final rawChildren = json['items'] as List<dynamic>? ?? [];
     final children = rawChildren

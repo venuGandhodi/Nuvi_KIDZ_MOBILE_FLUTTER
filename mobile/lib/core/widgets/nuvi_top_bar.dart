@@ -101,10 +101,7 @@ class NuviTopBar extends StatelessWidget implements PreferredSizeWidget {
           Padding(
             padding: const EdgeInsets.only(right: 8.0),
             child: IconButton(
-              icon: const Icon(
-                Icons.person_outline,
-                color: NuviColors.primary,
-              ),
+              icon: const Icon(Icons.person_outline, color: NuviColors.primary),
               onPressed: onProfileTap,
             ),
           ),

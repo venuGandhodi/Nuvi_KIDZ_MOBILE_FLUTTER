@@ -50,7 +50,6 @@ void main() {
       expect(state.isLoading, isFalse);
       expect(state.hero, isNotNull);
       expect(state.hero!.title, equals('Hero Title'));
-      expect(state.categories.length, 1);
       expect(state.bestSellers.length, 1);
 
       // Test selectAgeFilter

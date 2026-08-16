@@ -22,10 +22,7 @@ class NuviBottomNav extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(14, 6, 14, 10),
           child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 8.0,
-              vertical: 8.0,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
             decoration: BoxDecoration(
               color: NuviColors.surfaceVariant,
               borderRadius: BorderRadius.circular(NuviRadii.pill),

@@ -207,7 +207,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/category/:categoryId',
             builder: (context, state) {
               final id = state.pathParameters['categoryId'] ?? 'toddler';
-              return CategoryListingScreen(categoryId: id);
+              return CategoryListingScreen(
+                categoryId: id,
+                flat: state.extra as bool? ?? false,
+              );
             },
           ),
           GoRoute(

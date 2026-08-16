@@ -43,11 +43,11 @@ void main() {
       await tester.pumpAndSettle();
     });
 
-    testWidgets('renders description accordion', (tester) async {
+    testWidgets('renders product details accordion', (tester) async {
       await tester.pumpWidget(buildTestWidget());
       await tester.pumpAndSettle();
 
-      expect(find.text('Description'), findsOneWidget);
+      expect(find.text('Product Details'), findsOneWidget);
       expect(find.text('Fabric & Care'), findsOneWidget);
     });
   });

@@ -19,7 +19,7 @@ class CategoryMenuState {
     for (final category in categories) {
       if (category.id == selectedCategoryId) return category;
     }
-    return categories.isNotEmpty ? categories.first : null;
+    return null;
   }
 
   CategoryMenuState copyWith({
@@ -48,11 +48,7 @@ class CategoryMenuController extends Notifier<CategoryMenuState> {
     try {
       final repository = ref.read(categoryRepositoryProvider);
       final categories = await repository.getCategoryMenu();
-      state = state.copyWith(
-        categories: categories,
-        selectedCategoryId: categories.isNotEmpty ? categories.first.id : null,
-        isLoading: false,
-      );
+      state = state.copyWith(categories: categories, isLoading: false);
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
