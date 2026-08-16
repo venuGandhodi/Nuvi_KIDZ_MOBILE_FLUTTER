@@ -1,6 +1,7 @@
 import '../../home/domain/product.dart';
 import '../domain/category_detail.dart';
 import '../domain/category_filter.dart';
+import '../domain/menu_category.dart';
 import 'mock_category_data.dart';
 
 abstract class CategoryRepository {
@@ -10,6 +11,7 @@ abstract class CategoryRepository {
     FilterState? filter,
     SortOption? sort,
   });
+  Future<List<MenuCategory>> getCategoryMenu({String handle = 'main-menu'});
 }
 
 class MockCategoryRepository implements CategoryRepository {
@@ -75,5 +77,13 @@ class MockCategoryRepository implements CategoryRepository {
     final str = p.salePrice ?? p.price;
     final cleanStr = str.replaceAll('\$', '').trim();
     return double.tryParse(cleanStr) ?? 0.0;
+  }
+
+  @override
+  Future<List<MenuCategory>> getCategoryMenu({
+    String handle = 'main-menu',
+  }) async {
+    await Future.delayed(const Duration(milliseconds: 50));
+    return MockCategoryData.menu;
   }
 }

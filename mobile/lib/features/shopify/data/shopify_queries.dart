@@ -274,6 +274,49 @@ class ShopifyQueries {
     }
   ''';
 
+  static const String getMenu = r'''
+    query GetMenu($handle: String!) {
+      menu(handle: $handle) {
+        id
+        title
+        items {
+          id
+          title
+          type
+          url
+          resource {
+            ... on Collection {
+              id
+              handle
+              title
+              image {
+                url
+                altText
+              }
+            }
+          }
+          items {
+            id
+            title
+            type
+            url
+            resource {
+              ... on Collection {
+                id
+                handle
+                title
+                image {
+                  url
+                  altText
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ''';
+
   static const String getHomeHero = r'''
     query GetHomeHero {
       metaobjects(type: "home_hero", first: 1) {

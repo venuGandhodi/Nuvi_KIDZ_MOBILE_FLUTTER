@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../category/domain/category_detail.dart';
+import '../../category/domain/menu_category.dart';
 import '../../home/domain/category.dart';
 import '../../home/domain/home_hero.dart';
 import '../../home/domain/product.dart';
@@ -249,6 +250,37 @@ class ShopifyProductMapper {
       name: title,
       handle: handle.isNotEmpty ? handle : null,
       imageUrl: imageUrl,
+    );
+  }
+
+  static List<MenuCategory> mapToMenuCategories(Map<String, dynamic> json) {
+    final rawItems = json['items'] as List<dynamic>? ?? [];
+    return rawItems
+        .whereType<Map<String, dynamic>>()
+        .map(_mapMenuItem)
+        .toList();
+  }
+
+  static MenuCategory _mapMenuItem(Map<String, dynamic> json) {
+    final id = json['id'] as String? ?? '';
+    final title = json['title'] as String? ?? '';
+    final resource = json['resource'] as Map<String, dynamic>?;
+    final handle = resource?['handle'] as String?;
+    final imageUrl = (resource?['image'] as Map<String, dynamic>?)?['url']
+        as String?;
+
+    final rawChildren = json['items'] as List<dynamic>? ?? [];
+    final children = rawChildren
+        .whereType<Map<String, dynamic>>()
+        .map(_mapMenuItem)
+        .toList();
+
+    return MenuCategory(
+      id: id.isNotEmpty ? id : title,
+      title: title,
+      imageUrl: imageUrl,
+      collectionHandle: handle,
+      items: children,
     );
   }
 

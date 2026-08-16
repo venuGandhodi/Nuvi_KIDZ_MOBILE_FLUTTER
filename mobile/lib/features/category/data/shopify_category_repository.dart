@@ -4,6 +4,7 @@ import '../../shopify/data/shopify_queries.dart';
 import '../../shopify/data/shopify_storefront_client.dart';
 import '../domain/category_detail.dart';
 import '../domain/category_filter.dart';
+import '../domain/menu_category.dart';
 import 'category_repository.dart';
 
 class ShopifyCategoryRepository implements CategoryRepository {
@@ -44,6 +45,7 @@ class ShopifyCategoryRepository implements CategoryRepository {
     SortOption? sort,
   }) async {
     List<Product> products = [];
+    bool collectionFound = false;
 
     try {
       // 1. Fetch by collection handle
@@ -53,14 +55,16 @@ class ShopifyCategoryRepository implements CategoryRepository {
       );
 
       final collection = data['collection'];
-      if (collection != null &&
-          collection['products'] != null &&
-          collection['products']['edges'] != null) {
-        final edges = collection['products']['edges'] as List<dynamic>;
-        for (final edge in edges) {
-          final node = edge['node'] as Map<String, dynamic>?;
-          if (node != null) {
-            products.add(ShopifyProductMapper.mapToProduct(node));
+      if (collection != null) {
+        collectionFound = true;
+        if (collection['products'] != null &&
+            collection['products']['edges'] != null) {
+          final edges = collection['products']['edges'] as List<dynamic>;
+          for (final edge in edges) {
+            final node = edge['node'] as Map<String, dynamic>?;
+            if (node != null) {
+              products.add(ShopifyProductMapper.mapToProduct(node));
+            }
           }
         }
       }
@@ -68,8 +72,11 @@ class ShopifyCategoryRepository implements CategoryRepository {
       // Fallthrough
     }
 
-    // 2. Fallback: if collection has no products or wasn't found by handle, fetch all products
-    if (products.isEmpty) {
+    // 2. Fallback: only fetch the generic product feed when the collection
+    // itself couldn't be resolved (invalid/stale handle). A collection that
+    // *was* found but is genuinely empty must stay empty here — substituting
+    // unrelated products would mislabel them under the wrong category name.
+    if (!collectionFound && products.isEmpty) {
       try {
         final data = await client.query(
           query: ShopifyQueries.getProducts,
@@ -90,7 +97,7 @@ class ShopifyCategoryRepository implements CategoryRepository {
       }
     }
 
-    if (products.isEmpty) {
+    if (!collectionFound && products.isEmpty) {
       return _fallbackRepo.getCategoryProducts(
         categoryId,
         filter: filter,
@@ -133,5 +140,31 @@ class ShopifyCategoryRepository implements CategoryRepository {
         .replaceAll(',', '')
         .trim();
     return double.tryParse(cleanStr) ?? 0.0;
+  }
+
+  @override
+  Future<List<MenuCategory>> getCategoryMenu({
+    String handle = 'main-menu',
+  }) async {
+    try {
+      final data = await client.query(
+        query: ShopifyQueries.getMenu,
+        variables: {'handle': handle},
+      );
+
+      final menu = data['menu'];
+      if (menu != null) {
+        final categories = ShopifyProductMapper.mapToMenuCategories(
+          menu as Map<String, dynamic>,
+        );
+        if (categories.isNotEmpty) {
+          return categories;
+        }
+      }
+    } catch (_) {
+      // Fallthrough
+    }
+
+    return _fallbackRepo.getCategoryMenu(handle: handle);
   }
 }
