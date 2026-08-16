@@ -8,8 +8,6 @@ import '../../../core/theme/nuvi_spacing.dart';
 import '../../../core/theme/nuvi_typography.dart';
 import '../../../core/widgets/nuvi_button.dart';
 import '../../../core/widgets/nuvi_product_card.dart';
-import '../../../core/widgets/nuvi_top_bar.dart';
-import '../../cart/presentation/cart_controller.dart';
 import '../../wishlist/presentation/wishlist_controller.dart';
 import 'search_controller.dart';
 import 'widgets/search_filter_bottom_sheet.dart';
@@ -64,11 +62,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   void _openFilters() {
     final state = ref.read(searchControllerProvider);
+    final notifier = ref.read(searchControllerProvider.notifier);
+
     SearchFilterBottomSheet.show(
       context,
       initialFilter: state.selectedFilters,
       onApply: (newFilters) {
-        ref.read(searchControllerProvider.notifier).applyFilters(newFilters);
+        notifier.applyFilters(newFilters);
       },
     );
   }
@@ -77,22 +77,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   Widget build(BuildContext context) {
     final searchState = ref.watch(searchControllerProvider);
     final searchNotifier = ref.read(searchControllerProvider.notifier);
-    final cartState = ref.watch(cartControllerProvider);
 
-    return Scaffold(
-      backgroundColor: NuviColors.surface,
-      appBar: NuviTopBar(
-        title: Text(
-          'Search',
-          style: NuviTypography.textTheme.headlineMedium?.copyWith(
-            color: NuviColors.primary,
-          ),
-        ),
-        showBackButton: Navigator.of(context).canPop(),
-        cartItemCount: cartState.totalItemCount,
-        onCartTap: () => context.push('/cart'),
-      ),
-      body: Column(
+    return Material(
+      color: NuviColors.surface,
+      child: Column(
         children: [
           // Search Input Bar
           Padding(
@@ -174,7 +162,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               const SizedBox(height: NuviSpacing.md),
               Text(
                 state.errorMessage!,
-                style: NuviTypography.textTheme.headlineSmall?.copyWith(
+                style: NuviTypography.textTheme.bodyMedium?.copyWith(
                   color: NuviColors.primary,
                 ),
                 textAlign: TextAlign.center,
@@ -345,7 +333,6 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             'Quick Suggestions',
             style: NuviTypography.textTheme.labelLarge?.copyWith(
               fontWeight: FontWeight.bold,
-              color: NuviColors.primary,
             ),
           ),
           const SizedBox(height: NuviSpacing.sm),

@@ -6,10 +6,7 @@ import '../../../core/theme/nuvi_colors.dart';
 import '../../../core/theme/nuvi_radii.dart';
 import '../../../core/theme/nuvi_spacing.dart';
 import '../../../core/theme/nuvi_typography.dart';
-import '../../../core/widgets/nuvi_bottom_nav.dart';
 import '../../../core/widgets/nuvi_product_card.dart';
-import '../../../core/widgets/nuvi_top_bar.dart';
-import '../../cart/presentation/cart_controller.dart';
 import '../../wishlist/presentation/wishlist_controller.dart';
 import 'category_controller.dart';
 import '../domain/category_filter.dart';
@@ -84,27 +81,11 @@ class _CategoryListingScreenState extends ConsumerState<CategoryListingScreen> {
   Widget build(BuildContext context) {
     final state = ref.watch(categoryControllerProvider);
     final notifier = ref.read(categoryControllerProvider.notifier);
-    final cartState = ref.watch(cartControllerProvider);
     final title = state.categoryDetail?.title ?? 'Toddler Collection';
 
-    return Scaffold(
-      backgroundColor: NuviColors.surface,
-      appBar: NuviTopBar(
-        title: Image.asset(
-          'assets/images/brand/nuvi_kidz_logo.png',
-          height: 32,
-          fit: BoxFit.contain,
-          errorBuilder: (context, error, stackTrace) => Text(
-            'Nuvi Kidz',
-            style: NuviTypography.textTheme.headlineMedium?.copyWith(
-              color: NuviColors.primary,
-            ),
-          ),
-        ),
-        cartItemCount: cartState.totalItemCount,
-        onCartTap: () => context.push('/cart'),
-      ),
-      body: Column(
+    return Material(
+      color: NuviColors.surface,
+      child: Column(
         children: [
           // Sub-header for Category Title + Filter & Sort buttons
           Container(
@@ -171,18 +152,6 @@ class _CategoryListingScreenState extends ConsumerState<CategoryListingScreen> {
                 : _buildProductGrid(context, state, notifier),
           ),
         ],
-      ),
-      bottomNavigationBar: NuviBottomNav(
-        currentIndex: 1, // Shop tab active
-        onTap: (index) {
-          if (index == 0) {
-            context.go('/home');
-          } else if (index == 1) {
-            context.go('/category/toddler');
-          } else if (index == 4) {
-            context.push('/account');
-          }
-        },
       ),
     );
   }
