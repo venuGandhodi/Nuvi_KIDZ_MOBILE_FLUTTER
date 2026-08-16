@@ -8,6 +8,8 @@ import '../../../core/theme/nuvi_spacing.dart';
 import '../../../core/theme/nuvi_typography.dart';
 import '../../../core/widgets/nuvi_button.dart';
 import '../../../core/widgets/nuvi_product_card.dart';
+import '../../../core/widgets/nuvi_top_bar.dart';
+import '../../cart/presentation/cart_controller.dart';
 import '../../wishlist/presentation/wishlist_controller.dart';
 import 'search_controller.dart';
 import 'widgets/search_filter_bottom_sheet.dart';
@@ -77,10 +79,23 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   Widget build(BuildContext context) {
     final searchState = ref.watch(searchControllerProvider);
     final searchNotifier = ref.read(searchControllerProvider.notifier);
+    final cartState = ref.watch(cartControllerProvider);
 
-    return Material(
-      color: NuviColors.surface,
-      child: Column(
+    return Scaffold(
+      backgroundColor: NuviColors.surface,
+      appBar: NuviTopBar(
+        showBackButton: true,
+        title: Text(
+          'Search',
+          style: NuviTypography.textTheme.headlineMedium?.copyWith(
+            color: NuviColors.primary,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        cartItemCount: cartState.totalItemCount,
+        onCartTap: () => context.push('/cart'),
+      ),
+      body: Column(
         children: [
           // Search Input Bar
           Padding(

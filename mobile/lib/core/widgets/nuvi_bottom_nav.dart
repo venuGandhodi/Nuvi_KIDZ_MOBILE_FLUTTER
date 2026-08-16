@@ -16,38 +16,54 @@ class NuviBottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
-        color: NuviColors.surface,
-        boxShadow: [
-          BoxShadow(
-            color: NuviColors.primary.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, -5),
-          ),
-        ],
-      ),
+      color: NuviColors.surface,
       child: SafeArea(
+        top: false,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildNavItem(0, Icons.home_outlined, Icons.home, 'Home'),
-              _buildNavItem(
-                1,
-                Icons.shopping_bag_outlined,
-                Icons.shopping_bag,
-                'Shop',
+          padding: const EdgeInsets.fromLTRB(14, 6, 14, 10),
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 8.0,
+              vertical: 8.0,
+            ),
+            decoration: BoxDecoration(
+              color: NuviColors.surfaceVariant,
+              borderRadius: BorderRadius.circular(NuviRadii.pill),
+              border: Border.all(
+                color: NuviColors.border.withValues(alpha: 0.6),
               ),
-              _buildNavItem(2, Icons.search_outlined, Icons.search, 'Search'),
-              _buildNavItem(
-                3,
-                Icons.favorite_outline,
-                Icons.favorite,
-                'Wishlist',
-              ),
-              _buildNavItem(4, Icons.person_outline, Icons.person, 'Account'),
-            ],
+              boxShadow: [
+                BoxShadow(
+                  color: NuviColors.primary.withValues(alpha: 0.08),
+                  blurRadius: 14,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildNavItem(0, Icons.home_outlined, Icons.home, 'Home'),
+                _buildNavItem(
+                  1,
+                  Icons.receipt_long_outlined,
+                  Icons.receipt_long,
+                  'Orders',
+                ),
+                _buildNavItem(
+                  2,
+                  Icons.shopping_cart_outlined,
+                  Icons.shopping_cart,
+                  'Cart',
+                ),
+                _buildNavItem(
+                  3,
+                  Icons.favorite_outline,
+                  Icons.favorite,
+                  'Wishlist',
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -66,7 +82,7 @@ class NuviBottomNav extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+        padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
         decoration: BoxDecoration(
           color: isSelected ? NuviColors.secondary : Colors.transparent,
           borderRadius: BorderRadius.circular(NuviRadii.pill),
@@ -79,13 +95,13 @@ class NuviBottomNav extends StatelessWidget {
               color: isSelected
                   ? NuviColors.onSecondary
                   : NuviColors.onSurface.withValues(alpha: 0.7),
-              size: 24,
+              size: 22,
             ),
             const SizedBox(height: 2),
             Text(
               label,
               style: NuviTypography.textTheme.bodySmall?.copyWith(
-                fontSize: 10,
+                fontSize: 12,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                 color: isSelected
                     ? NuviColors.onSecondary

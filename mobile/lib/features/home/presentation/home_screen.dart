@@ -12,6 +12,7 @@ import 'widgets/age_filter_section.dart';
 import 'widgets/best_sellers_section.dart';
 import 'widgets/category_circles_section.dart';
 import 'widgets/hero_banner_section.dart';
+import 'widgets/home_search_bar.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -54,10 +55,24 @@ class HomeScreen extends ConsumerWidget {
           await homeNotifier.loadHomeData();
         },
         child: SingleChildScrollView(
-          padding: const EdgeInsets.only(bottom: NuviSpacing.xxl),
+          padding: const EdgeInsets.only(
+            top: NuviSpacing.sm,
+            bottom: NuviSpacing.xxl,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              HomeSearchBar(onTap: () => context.push('/search')),
+              const SizedBox(height: NuviSpacing.lg),
+              CategoryCirclesSection(
+                categories: homeState.categories,
+                selectedCategoryId: homeState.selectedCategoryId,
+                onCategorySelected: (id) {
+                  homeNotifier.selectCategory(id);
+                  context.push('/category/$id');
+                },
+              ),
+              const SizedBox(height: NuviSpacing.xl),
               HeroBannerSection(
                 hero: homeState.hero,
                 onShopCollectionPressed: () {
@@ -66,15 +81,6 @@ class HomeScreen extends ConsumerWidget {
                       ? homeState.hero!.collectionHandle
                       : 'new-arrivals';
                   context.push('/category/$handle');
-                },
-              ),
-              const SizedBox(height: NuviSpacing.xl),
-              CategoryCirclesSection(
-                categories: homeState.categories,
-                selectedCategoryId: homeState.selectedCategoryId,
-                onCategorySelected: (id) {
-                  homeNotifier.selectCategory(id);
-                  context.push('/category/$id');
                 },
               ),
               const SizedBox(height: NuviSpacing.xl),

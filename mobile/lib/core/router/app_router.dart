@@ -211,18 +211,26 @@ final routerProvider = Provider<GoRouter>((ref) {
             },
           ),
           GoRoute(
-            path: '/search',
-            builder: (context, state) => const SearchScreen(),
+            path: '/account',
+            builder: (context, state) => const AccountScreen(),
+          ),
+          GoRoute(
+            path: '/cart',
+            builder: (context, state) => const CartScreen(),
+          ),
+          GoRoute(
+            path: '/orders',
+            builder: (context, state) => const MyOrdersScreen(),
           ),
           GoRoute(
             path: '/wishlist',
             builder: (context, state) => const WishlistScreen(),
           ),
-          GoRoute(
-            path: '/account',
-            builder: (context, state) => const AccountScreen(),
-          ),
         ],
+      ),
+      GoRoute(
+        path: '/search',
+        builder: (context, state) => const SearchScreen(),
       ),
       GoRoute(
         path: '/product/:productId',
@@ -231,14 +239,9 @@ final routerProvider = Provider<GoRouter>((ref) {
           return ProductDetailScreen(productId: id);
         },
       ),
-      GoRoute(path: '/cart', builder: (context, state) => const CartScreen()),
       GoRoute(
         path: '/addresses',
         builder: (context, state) => const SavedAddressesScreen(),
-      ),
-      GoRoute(
-        path: '/orders',
-        builder: (context, state) => const MyOrdersScreen(),
       ),
       GoRoute(
         path: '/orders/:orderId',

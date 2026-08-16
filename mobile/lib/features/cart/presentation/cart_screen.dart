@@ -9,9 +9,7 @@ import '../../../core/theme/nuvi_radii.dart';
 import '../../../core/theme/nuvi_spacing.dart';
 import '../../../core/theme/nuvi_typography.dart';
 import '../../../core/utils/nuvi_logger.dart';
-import '../../../core/widgets/nuvi_bottom_nav.dart';
 import '../../../core/widgets/nuvi_button.dart';
-import '../../../core/widgets/nuvi_top_bar.dart';
 import '../../checkout/data/shopify_checkout_service.dart';
 import 'cart_controller.dart';
 import 'widgets/cart_item_row.dart';
@@ -68,23 +66,9 @@ class _CartScreenState extends ConsumerState<CartScreen>
     final cartState = ref.watch(cartControllerProvider);
     final notifier = ref.read(cartControllerProvider.notifier);
 
-    return Scaffold(
-      backgroundColor: NuviColors.surface,
-      appBar: NuviTopBar(
-        showBackButton: true,
-        onBackTap: () {
-          if (context.canPop()) {
-            context.pop();
-          } else {
-            context.go('/home');
-          }
-        },
-        cartItemCount: cartState.totalItemCount,
-        onCartTap: () {
-          // Already on cart screen
-        },
-      ),
-      body: cartState.isLoading
+    return Material(
+      color: NuviColors.surface,
+      child: cartState.isLoading
           ? const Center(
               child: CircularProgressIndicator(color: NuviColors.primary),
             )
@@ -211,28 +195,6 @@ class _CartScreenState extends ConsumerState<CartScreen>
                 ],
               ),
             ),
-      bottomNavigationBar: NuviBottomNav(
-        currentIndex: 2,
-        onTap: (index) {
-          switch (index) {
-            case 0:
-              context.go('/home');
-              break;
-            case 1:
-              context.go('/category/toddler');
-              break;
-            case 2:
-              // Active Cart
-              break;
-            case 3:
-              // Favorites / Wishlist placeholder
-              break;
-            case 4:
-              context.push('/account');
-              break;
-          }
-        },
-      ),
     );
   }
 

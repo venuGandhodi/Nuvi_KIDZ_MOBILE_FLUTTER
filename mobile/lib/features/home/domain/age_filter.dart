@@ -1,8 +1,9 @@
 class AgeFilter {
   final String id;
   final String label;
+  final String? imageUrl;
 
-  const AgeFilter({required this.id, required this.label});
+  const AgeFilter({required this.id, required this.label, this.imageUrl});
 
   static const List<AgeFilter> defaultFilters = [
     AgeFilter(id: '0-3m', label: '0-3m'),

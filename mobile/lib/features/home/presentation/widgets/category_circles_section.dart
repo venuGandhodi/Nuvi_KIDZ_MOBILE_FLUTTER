@@ -22,22 +22,6 @@ class CategoryCirclesSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: NuviSpacing.md),
-          child: Row(
-            children: [
-              Text(
-                'Shop tiny styles',
-                style: NuviTypography.textTheme.headlineMedium?.copyWith(
-                  color: NuviColors.primary,
-                ),
-              ),
-              const SizedBox(width: NuviSpacing.xs),
-              const Icon(Icons.star, size: 20, color: NuviColors.secondary),
-            ],
-          ),
-        ),
-        const SizedBox(height: NuviSpacing.md),
         SizedBox(
           height: 110,
           child: ListView.separated(

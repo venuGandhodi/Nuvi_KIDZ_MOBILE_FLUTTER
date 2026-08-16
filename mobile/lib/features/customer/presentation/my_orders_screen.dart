@@ -6,8 +6,6 @@ import '../../../core/theme/nuvi_colors.dart';
 import '../../../core/theme/nuvi_spacing.dart';
 import '../../../core/theme/nuvi_typography.dart';
 import '../../../core/widgets/nuvi_button.dart';
-import '../../../core/widgets/nuvi_top_bar.dart';
-import '../../cart/presentation/cart_controller.dart';
 import 'customer_controller.dart';
 import 'widgets/order_card.dart';
 
@@ -17,24 +15,11 @@ class MyOrdersScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final customerState = ref.watch(customerControllerProvider);
-    final cartState = ref.watch(cartControllerProvider);
     final orders = customerState.orders;
 
-    return Scaffold(
-      backgroundColor: NuviColors.surface,
-      appBar: NuviTopBar(
-        showBackButton: true,
-        onBackTap: () {
-          if (context.canPop()) {
-            context.pop();
-          } else {
-            context.go('/account');
-          }
-        },
-        cartItemCount: cartState.totalItemCount,
-        onCartTap: () => context.push('/cart'),
-      ),
-      body: customerState.isLoading
+    return Material(
+      color: NuviColors.surface,
+      child: customerState.isLoading
           ? const Center(
               child: CircularProgressIndicator(color: NuviColors.primary),
             )

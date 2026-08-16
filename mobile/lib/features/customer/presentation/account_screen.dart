@@ -198,7 +198,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
                 icon: Icons.favorite_outline,
                 count: '${wishlistState.wishlistProductIds.length}',
                 label: 'WISHLIST',
-                onTap: () => context.push('/wishlist'),
+                onTap: () => context.go('/wishlist'),
               ),
             ),
             const SizedBox(width: NuviSpacing.md),
@@ -340,7 +340,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
                 icon: Icons.favorite_outline,
                 count: '${wishlistState.wishlistProductIds.length}',
                 label: 'WISHLIST',
-                onTap: () => context.push('/wishlist'),
+                onTap: () => context.go('/wishlist'),
               ),
             ),
             const SizedBox(width: NuviSpacing.md),
@@ -349,7 +349,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
                 icon: Icons.shopping_bag_outlined,
                 count: '${customerState.orders.length}',
                 label: 'ORDERS',
-                onTap: () => context.push('/orders'),
+                onTap: () => context.go('/orders'),
               ),
             ),
             const SizedBox(width: NuviSpacing.md),
@@ -385,7 +385,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
           trailingBadge: customerState.orders.isNotEmpty
               ? '${customerState.orders.length}'
               : null,
-          onTap: () => context.push('/orders'),
+          onTap: () => context.go('/orders'),
         ),
         const SizedBox(height: NuviSpacing.sm),
 
