@@ -162,10 +162,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         return '/sign-in';
       }
 
-      // Authenticated user on an auth screen → send to account / home.
+      // Authenticated user on an auth screen → send to home.
       if (isAuth && isOnAuthScreen) {
-        nuviLog('NUVI-ROUTER', 'Authenticated user on auth screen -> /account');
-        return '/account';
+        nuviLog('NUVI-ROUTER', 'Authenticated user on auth screen -> /home');
+        return '/home';
       }
 
       return null;

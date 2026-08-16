@@ -37,7 +37,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
           .signIn(_emailController.text.trim(), _passwordController.text);
 
       if (success && mounted) {
-        // Success handling handled by authState changes in router
+        _navigateAfterSignIn();
       }
     }
   }
@@ -53,7 +53,19 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
         'NUVI-GOOGLE',
         'Google sign-in completed successfully in SignInScreen',
       );
+      _navigateAfterSignIn();
     }
+  }
+
+  // SignInScreen is often reached via context.push() (e.g. from AccountScreen's
+  // "Sign In" prompts), which puts it on top of the Navigator stack outside of
+  // GoRouter's declarative redirect — the router's reactive redirect (based on
+  // authStateProvider) only resolves the underlying location, it can't pop a
+  // page that was pushed imperatively. go('/home') replaces the whole stack,
+  // so it both dismisses any pushed sign-in page and lands on the post-login
+  // landing screen regardless of how this screen was reached.
+  void _navigateAfterSignIn() {
+    context.go('/home');
   }
 
   @override

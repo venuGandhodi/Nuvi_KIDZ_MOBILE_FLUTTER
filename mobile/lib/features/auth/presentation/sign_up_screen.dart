@@ -43,7 +43,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
           );
 
       if (success && mounted) {
-        // Success handling handled by authState changes in router
+        context.go('/home');
       }
     } else if (!_acceptedTerms) {
       ScaffoldMessenger.of(context).showSnackBar(

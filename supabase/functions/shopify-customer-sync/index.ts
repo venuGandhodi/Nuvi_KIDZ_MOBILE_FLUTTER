@@ -444,20 +444,16 @@ serve(async (req: Request) => {
                 phone
               }
               addresses(first: 10) {
-                edges {
-                  node {
-                    id
-                    address1
-                    address2
-                    city
-                    province
-                    zip
-                    country
-                    phone
-                  }
-                }
+                id
+                address1
+                address2
+                city
+                province
+                zip
+                country
+                phone
               }
-              ordersCount
+              numberOfOrders
             }
           }`,
           { id: shopifyCustomerId }
@@ -475,7 +471,7 @@ serve(async (req: Request) => {
           );
         }
 
-        const addresses = (rawCustomer.addresses?.edges ?? []).map((e: any) => e.node);
+        const addresses = rawCustomer.addresses ?? [];
 
         const sanitizedCustomer = {
           id: rawCustomer.id,
@@ -486,7 +482,7 @@ serve(async (req: Request) => {
           phone: rawCustomer.phone,
           defaultAddress: rawCustomer.defaultAddress,
           addresses: addresses,
-          ordersCount: rawCustomer.ordersCount ?? 0,
+          ordersCount: parseInt(rawCustomer.numberOfOrders ?? "0", 10) || 0,
         };
 
         return new Response(
@@ -516,7 +512,7 @@ serve(async (req: Request) => {
                   node {
                     id
                     name
-                    orderNumber
+                    number
                     processedAt
                     createdAt
                     displayFinancialStatus
@@ -545,7 +541,7 @@ serve(async (req: Request) => {
                           id
                           title
                           quantity
-                          originalTotalPriceSet {
+                          originalTotalSet {
                             shopMoney {
                               amount
                               currencyCode
@@ -585,8 +581,8 @@ serve(async (req: Request) => {
               quantity: liNode.quantity,
               variantTitle: liNode.variant?.title,
               originalTotalPrice: {
-                amount: parseFloat(liNode.originalTotalPriceSet?.shopMoney?.amount ?? "0.0"),
-                currencyCode: liNode.originalTotalPriceSet?.shopMoney?.currencyCode ?? "INR",
+                amount: parseFloat(liNode.originalTotalSet?.shopMoney?.amount ?? "0.0"),
+                currencyCode: liNode.originalTotalSet?.shopMoney?.currencyCode ?? "INR",
               },
               imageUrl: liNode.variant?.image?.url ?? null,
             };
@@ -595,7 +591,7 @@ serve(async (req: Request) => {
           return {
             id: node.id,
             name: node.name,
-            orderNumber: node.orderNumber,
+            orderNumber: node.number,
             processedAt: node.processedAt ?? node.createdAt,
             financialStatus: node.displayFinancialStatus,
             fulfillmentStatus: node.displayFulfillmentStatus,
@@ -647,7 +643,7 @@ serve(async (req: Request) => {
             order(id: $id) {
               id
               name
-              orderNumber
+              number
               processedAt
               createdAt
               displayFinancialStatus
@@ -687,7 +683,7 @@ serve(async (req: Request) => {
                     id
                     title
                     quantity
-                    originalTotalPriceSet {
+                    originalTotalSet {
                       shopMoney {
                         amount
                         currencyCode
@@ -733,8 +729,8 @@ serve(async (req: Request) => {
             quantity: liNode.quantity,
             variantTitle: liNode.variant?.title,
             originalTotalPrice: {
-              amount: parseFloat(liNode.originalTotalPriceSet?.shopMoney?.amount ?? "0.0"),
-              currencyCode: liNode.originalTotalPriceSet?.shopMoney?.currencyCode ?? "INR",
+              amount: parseFloat(liNode.originalTotalSet?.shopMoney?.amount ?? "0.0"),
+              currencyCode: liNode.originalTotalSet?.shopMoney?.currencyCode ?? "INR",
             },
             imageUrl: liNode.variant?.image?.url ?? null,
           };
@@ -743,7 +739,7 @@ serve(async (req: Request) => {
         const sanitizedOrder = {
           id: orderNode.id,
           name: orderNode.name,
-          orderNumber: orderNode.orderNumber,
+          orderNumber: orderNode.number,
           processedAt: orderNode.processedAt ?? orderNode.createdAt,
           financialStatus: orderNode.displayFinancialStatus,
           fulfillmentStatus: orderNode.displayFulfillmentStatus,
@@ -852,18 +848,14 @@ serve(async (req: Request) => {
           `query VerifyAddressOwnership($customerId: ID!) {
             customer(id: $customerId) {
               addresses(first: 20) {
-                edges {
-                  node {
-                    id
-                  }
-                }
+                id
               }
             }
           }`,
           { customerId: shopifyCustomerId }
         );
 
-        const ownedAddresses = (ownershipCheck?.customer?.addresses?.edges ?? []).map((e: any) => e.node?.id);
+        const ownedAddresses = (ownershipCheck?.customer?.addresses ?? []).map((a: any) => a?.id);
         if (!ownedAddresses.includes(payload.addressId)) {
           return new Response(
             JSON.stringify({ error: "Forbidden: Address does not belong to authenticated customer" }),
@@ -941,18 +933,14 @@ serve(async (req: Request) => {
           `query VerifyAddressOwnership($customerId: ID!) {
             customer(id: $customerId) {
               addresses(first: 20) {
-                edges {
-                  node {
-                    id
-                  }
-                }
+                id
               }
             }
           }`,
           { customerId: shopifyCustomerId }
         );
 
-        const ownedAddresses = (ownershipCheck?.customer?.addresses?.edges ?? []).map((e: any) => e.node?.id);
+        const ownedAddresses = (ownershipCheck?.customer?.addresses ?? []).map((a: any) => a?.id);
         if (!ownedAddresses.includes(payload.addressId)) {
           return new Response(
             JSON.stringify({ error: "Forbidden: Address does not belong to authenticated customer" }),
@@ -1009,18 +997,14 @@ serve(async (req: Request) => {
           `query VerifyAddressOwnership($customerId: ID!) {
             customer(id: $customerId) {
               addresses(first: 20) {
-                edges {
-                  node {
-                    id
-                  }
-                }
+                id
               }
             }
           }`,
           { customerId: shopifyCustomerId }
         );
 
-        const ownedAddresses = (ownershipCheck?.customer?.addresses?.edges ?? []).map((e: any) => e.node?.id);
+        const ownedAddresses = (ownershipCheck?.customer?.addresses ?? []).map((a: any) => a?.id);
         if (!ownedAddresses.includes(payload.addressId)) {
           return new Response(
             JSON.stringify({ error: "Forbidden: Address does not belong to authenticated customer" }),
