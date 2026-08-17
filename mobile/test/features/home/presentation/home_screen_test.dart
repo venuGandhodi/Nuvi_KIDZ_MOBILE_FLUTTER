@@ -95,7 +95,7 @@ void main() {
     HttpOverrides.global = TestHttpOverrides();
   });
 
-  testWidgets('HomeScreen renders hero and category sections', (
+  testWidgets('HomeScreen renders sections and handles tab selection', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(
@@ -118,5 +118,14 @@ void main() {
     // not the flat collection list.
     expect(find.text('Girls'), findsOneWidget);
     expect(find.text('Boys'), findsOneWidget);
+    expect(find.text('Shop by age'), findsOneWidget);
+    expect(find.text('Bestsellers'), findsOneWidget);
+    expect(find.text('Forest Elephant Romper'), findsOneWidget);
+
+    // Verify Age filter tap
+    final pill = find.text('0-3m');
+    expect(pill, findsOneWidget);
+    await tester.tap(pill, warnIfMissed: false);
+    await tester.pumpAndSettle();
   });
 }

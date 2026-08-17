@@ -3,31 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nuvi_kidz/core/widgets/nuvi_product_card.dart';
 import 'package:nuvi_kidz/features/home/domain/product.dart';
-import 'package:nuvi_kidz/features/home/presentation/widgets/best_sellers_section.dart';
+import 'package:nuvi_kidz/features/home/presentation/home_screen.dart';
 import 'package:nuvi_kidz/features/wishlist/data/wishlist_repository.dart';
 import 'package:nuvi_kidz/features/wishlist/presentation/wishlist_controller.dart';
 import 'package:nuvi_kidz/features/wishlist/presentation/wishlist_screen.dart';
-
-/// Mirrors how live screens (e.g. CategoryListingScreen) wire a product
-/// grid's favorite toggle to the centralized WishlistController.
-class _WishlistAwareBestSellers extends ConsumerWidget {
-  final List<Product> products;
-
-  const _WishlistAwareBestSellers({required this.products});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final wishlistState = ref.watch(wishlistControllerProvider);
-    return BestSellersSection(
-      products: products,
-      favoriteProductIds: wishlistState.wishlistProductIds,
-      onToggleFavorite: (productId) {
-        final product = products.firstWhere((p) => p.id == productId);
-        ref.read(wishlistControllerProvider.notifier).toggleWishlist(product);
-      },
-    );
-  }
-}
 
 class MockWishlistRepository implements WishlistRepository {
   List<String> mockIds = [];
@@ -81,16 +60,7 @@ void main() {
         await tester.pumpWidget(
           UncontrolledProviderScope(
             container: container,
-            child: MaterialApp(
-              home: Scaffold(
-                // BestSellersSection is always used inside a scrollable
-                // container in the app, which gives its GridView unbounded
-                // height — match that here instead of a fixed viewport.
-                body: SingleChildScrollView(
-                  child: _WishlistAwareBestSellers(products: [sampleProduct]),
-                ),
-              ),
-            ),
+            child: const MaterialApp(home: HomeScreen()),
           ),
         );
         await tester.pumpAndSettle();
