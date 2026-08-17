@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/nuvi_colors.dart';
-import '../../../../core/theme/nuvi_radii.dart';
 
 class ProductImageCarousel extends StatelessWidget {
   final List<String> images;
@@ -16,71 +15,62 @@ class ProductImageCarousel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (images.isEmpty) {
-      return AspectRatio(
-        aspectRatio: 4 / 5,
-        child: Container(
-          decoration: BoxDecoration(
-            color: NuviColors.surfaceVariant,
-            borderRadius: BorderRadius.circular(NuviRadii.card),
-          ),
-          child: const Icon(Icons.image, size: 48, color: NuviColors.border),
-        ),
-      );
-    }
-
-    return AspectRatio(
-      aspectRatio: 4 / 5,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(NuviRadii.card),
-        child: Stack(
-          children: [
-            PageView.builder(
-              itemCount: images.length,
-              onPageChanged: onPageChanged,
-              itemBuilder: (context, index) {
-                return Image.network(
-                  images[index],
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
+    return Column(
+      children: [
+        SizedBox(
+          height: 220,
+          width: double.infinity,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(18),
+            child: images.isEmpty
+                ? Container(
                     color: NuviColors.surfaceVariant,
                     child: const Icon(
-                      Icons.broken_image,
+                      Icons.image,
                       size: 48,
                       color: NuviColors.border,
                     ),
+                  )
+                : PageView.builder(
+                    itemCount: images.length,
+                    onPageChanged: onPageChanged,
+                    itemBuilder: (context, index) {
+                      return Image.network(
+                        images[index],
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          color: NuviColors.surfaceVariant,
+                          child: const Icon(
+                            Icons.broken_image,
+                            size: 48,
+                            color: NuviColors.border,
+                          ),
+                        ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
-            // Page Indicator Dots
-            if (images.length > 1)
-              Positioned(
-                bottom: 16,
-                left: 0,
-                right: 0,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(images.length, (index) {
-                    final isSelected = index == currentIndex;
-                    return AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      margin: const EdgeInsets.symmetric(horizontal: 3),
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: isSelected
-                            ? NuviColors.primary
-                            : NuviColors.border,
-                      ),
-                    );
-                  }),
-                ),
-              ),
-          ],
+          ),
         ),
-      ),
+        if (images.length > 1) ...[
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(images.length, (index) {
+              final isSelected = index == currentIndex;
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                margin: const EdgeInsets.symmetric(horizontal: 2.5),
+                width: 6,
+                height: 6,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isSelected ? NuviColors.primary : NuviColors.border,
+                ),
+              );
+            }),
+          ),
+        ],
+      ],
     );
   }
 }

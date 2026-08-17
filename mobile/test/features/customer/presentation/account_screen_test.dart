@@ -56,10 +56,7 @@ void main() {
         expect(find.text('Login / Register'), findsOneWidget);
         expect(find.text('WISHLIST'), findsOneWidget);
         expect(find.text('ORDERS'), findsOneWidget);
-        expect(find.text('ADDRESSES'), findsOneWidget);
-        expect(find.text('My Orders'), findsOneWidget);
-        expect(find.text('My Addresses'), findsOneWidget);
-        expect(find.text('Help & Support'), findsOneWidget);
+        expect(find.text('ADDRESS'), findsOneWidget);
         expect(find.text('LOG OUT'), findsNothing);
       },
     );

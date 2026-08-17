@@ -151,7 +151,7 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
           }
         },
         cartItemCount: cartState.totalItemCount,
-        onCartTap: () => context.push('/cart'),
+        onCartTap: () => context.go('/cart'),
       ),
       body: isLoading
           ? const Center(

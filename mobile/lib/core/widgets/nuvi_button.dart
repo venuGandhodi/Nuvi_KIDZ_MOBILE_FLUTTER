@@ -60,8 +60,8 @@ class NuviButton extends StatelessWidget {
 
     switch (type) {
       case NuviButtonType.primary:
-        backgroundColor = NuviColors.secondary;
-        textColor = NuviColors.onSecondary;
+        backgroundColor = NuviColors.primary;
+        textColor = NuviColors.onPrimary;
         break;
       case NuviButtonType.secondary:
         backgroundColor = Colors.transparent;
@@ -76,7 +76,7 @@ class NuviButton extends StatelessWidget {
     }
 
     if (isDisabled && type == NuviButtonType.primary) {
-      backgroundColor = NuviColors.secondary.withValues(alpha: 0.5);
+      backgroundColor = NuviColors.primary.withValues(alpha: 0.5);
     } else if (isDisabled) {
       textColor = textColor.withValues(alpha: 0.5);
       if (borderSide != BorderSide.none) {

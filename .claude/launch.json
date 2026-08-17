@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "nuvi-kidz-web",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "cd mobile && flutter run -d chrome --web-port=5050"],
+      "port": 5050
+    }
+  ]
+}

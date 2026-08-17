@@ -4,6 +4,19 @@ import ShopifyCheckoutSheetKit
 
 public class ShopifyCheckoutPlugin: NSObject, FlutterPlugin, CheckoutDelegate {
   private let channel: FlutterMethodChannel
+  // Guards against presenting a second checkout sheet on top of one that's
+  // already open — without this, topViewController() below finds the
+  // already-presented sheet and stacks a new one on top of it, so tapping
+  // the close (X) button only dismisses the top layer and the original
+  // sheet reappears underneath, looking like "close doesn't work."
+  private var isPresentingCheckout = false
+  // The view controller checkout was presented from — Shopify's SDK does not
+  // dismiss its sheet automatically on cancel/complete/fail; per Shopify's
+  // own docs, checkoutDidCancel() is "used to call dismiss(animated:)". This
+  // was missing, which is why tapping the sheet's close (X) button visually
+  // did nothing: the SDK notified us the checkout was cancelled, but nothing
+  // ever told UIKit to dismiss the presented view controller.
+  private weak var presentingViewController: UIViewController?
 
   public static func register(with registrar: FlutterPluginRegistrar) {
     print("[NUVI-IOS-CHECKOUT] Registering checkout MethodChannel")
@@ -41,6 +54,12 @@ public class ShopifyCheckoutPlugin: NSObject, FlutterPlugin, CheckoutDelegate {
         return
       }
 
+      if isPresentingCheckout {
+        print("[NUVI-IOS-CHECKOUT] Ignoring presentCheckout: a checkout sheet is already open")
+        result(true)
+        return
+      }
+
       guard let rootVC = topViewController() else {
         print("[NUVI-IOS-CHECKOUT] ERROR: Root view controller not found")
         result(FlutterError(code: "NO_ROOT_VC", message: "Root view controller not found", details: nil))
@@ -48,6 +67,8 @@ public class ShopifyCheckoutPlugin: NSObject, FlutterPlugin, CheckoutDelegate {
       }
 
       print("[NUVI-IOS-CHECKOUT] Presenting Shopify Checkout")
+      isPresentingCheckout = true
+      presentingViewController = rootVC
       DispatchQueue.main.async {
         ShopifyCheckoutSheetKit.present(checkout: url, from: rootVC, delegate: self)
       }
@@ -79,17 +100,23 @@ public class ShopifyCheckoutPlugin: NSObject, FlutterPlugin, CheckoutDelegate {
 
   public func checkoutDidComplete(event: CheckoutCompletedEvent) {
     print("[NUVI-IOS-CHECKOUT] checkoutDidComplete")
+    isPresentingCheckout = false
+    presentingViewController?.dismiss(animated: true)
     let orderId = event.orderDetails.id
     channel.invokeMethod("onCheckoutCompleted", arguments: ["orderId": orderId])
   }
 
   public func checkoutDidCancel() {
     print("[NUVI-IOS-CHECKOUT] checkoutDidCancel")
+    isPresentingCheckout = false
+    presentingViewController?.dismiss(animated: true)
     channel.invokeMethod("onCheckoutCancelled", arguments: nil)
   }
 
   public func checkoutDidFail(error: CheckoutError) {
     print("[NUVI-IOS-CHECKOUT] checkoutDidFail: \(error.localizedDescription)")
+    isPresentingCheckout = false
+    presentingViewController?.dismiss(animated: true)
     channel.invokeMethod("onCheckoutFailed", arguments: ["message": error.localizedDescription])
   }
 

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../theme/nuvi_colors.dart';
-import '../theme/nuvi_radii.dart';
 import '../theme/nuvi_typography.dart';
 import '../theme/nuvi_spacing.dart';
 
@@ -93,10 +92,10 @@ class _NuviInputFieldState extends State<NuviInputField> {
         Container(
           decoration: BoxDecoration(
             color: widget.enabled
-                ? NuviColors.surface
+                ? NuviColors.fieldBackground
                 : NuviColors.surfaceVariant,
-            borderRadius: BorderRadius.circular(NuviRadii.small),
-            border: Border.all(color: borderColor, width: _isFocused ? 2 : 1),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: borderColor, width: _isFocused ? 2 : 1.5),
             boxShadow: _isFocused && widget.errorText == null
                 ? [
                     BoxShadow(

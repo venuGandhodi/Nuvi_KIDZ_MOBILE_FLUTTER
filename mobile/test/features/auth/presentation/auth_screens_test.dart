@@ -81,15 +81,19 @@ void main() {
     expect(find.text('Don\'t have an account? '), findsOneWidget);
     expect(find.text('Sign Up'), findsWidgets);
 
-    // Need to scroll down to see the button
+    // Need to scroll down to see the button. The mascot avatar has a
+    // perpetual float animation, so pumpAndSettle would time out waiting
+    // for it to stop — use bounded pumps instead.
     await tester.drag(
       find.byType(SingleChildScrollView),
       const Offset(0, -500),
     );
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
 
     await tester.tap(find.text('Sign Up').last);
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
 
     expect(find.text('Sign Up Screen Dummy'), findsOneWidget);
   });
@@ -119,14 +123,18 @@ void main() {
     expect(find.text('Already have an account? '), findsOneWidget);
     expect(find.text('Sign In'), findsWidgets);
 
+    // The mascot avatar has a perpetual wave animation, so pumpAndSettle
+    // would time out waiting for it to stop — use bounded pumps instead.
     await tester.drag(
       find.byType(SingleChildScrollView),
       const Offset(0, -500),
     );
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
 
     await tester.tap(find.text('Sign In').last);
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
 
     expect(find.text('Sign In Screen Dummy'), findsOneWidget);
   });
@@ -136,21 +144,43 @@ void main() {
   ) async {
     final mockRepo = MockAuthRepository();
 
+    // Needs a real GoRouter: on success, SignInScreen navigates to '/home'
+    // once the mock repository's delayed future resolves, and that timer
+    // must be allowed to fire before the test ends (otherwise flutter_test
+    // fails on a pending timer at teardown).
+    final router = GoRouter(
+      initialLocation: '/sign-in',
+      routes: [
+        GoRoute(
+          path: '/sign-in',
+          builder: (context, state) => const SignInScreen(),
+        ),
+        GoRoute(
+          path: '/home',
+          builder: (context, state) =>
+              const Scaffold(body: Text('Home Screen Dummy')),
+        ),
+      ],
+    );
+
     await tester.pumpWidget(
       ProviderScope(
         overrides: [authRepositoryProvider.overrideWithValue(mockRepo)],
-        child: const MaterialApp(home: SignInScreen()),
+        child: MaterialApp.router(routerConfig: router),
       ),
     );
 
     final googleButton = find.text('Continue with Google');
     expect(googleButton, findsOneWidget);
 
+    // The mascot avatar has a perpetual float animation, so pumpAndSettle
+    // would time out waiting for it to stop — use bounded pumps instead.
     await tester.drag(
       find.byType(SingleChildScrollView),
       const Offset(0, -500),
     );
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
 
     await tester.tap(googleButton);
     await tester.pump();
@@ -161,7 +191,12 @@ void main() {
     await tester.tap(googleButton);
     expect(mockRepo.signInWithGoogleCalled, false);
 
-    await tester.pumpAndSettle();
+    // Let the mock repository's 100ms delay resolve and navigate to '/home'.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump(const Duration(milliseconds: 500));
+
+    expect(find.text('Home Screen Dummy'), findsOneWidget);
   });
 
   testWidgets('ForgotPasswordScreen link exists and navigates to it', (

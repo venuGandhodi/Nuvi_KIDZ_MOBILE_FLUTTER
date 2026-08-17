@@ -126,7 +126,7 @@ class _SavedAddressesScreenState extends ConsumerState<SavedAddressesScreen> {
         ),
         showBackButton: true,
         cartItemCount: cartState.totalItemCount,
-        onCartTap: () => context.push('/cart'),
+        onCartTap: () => context.go('/cart'),
       ),
       body: _buildBody(context, customerState),
       bottomNavigationBar:

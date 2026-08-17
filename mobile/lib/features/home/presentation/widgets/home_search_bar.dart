@@ -21,20 +21,26 @@ class HomeSearchBar extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(
             horizontal: NuviSpacing.md,
-            vertical: NuviSpacing.sm,
+            vertical: 12,
           ),
           decoration: BoxDecoration(
-            color: NuviColors.surfaceVariant,
-            borderRadius: BorderRadius.circular(NuviRadii.pill),
+            color: NuviColors.fieldBackground,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: NuviColors.border, width: 1.5),
           ),
           child: Row(
             children: [
-              const Icon(Icons.search, color: NuviColors.primary, size: 20),
+              Icon(
+                Icons.search,
+                color: NuviColors.onSurface.withValues(alpha: 0.55),
+                size: 18,
+              ),
               const SizedBox(width: NuviSpacing.sm),
               Text(
                 'Search products, colors, and styles',
                 style: NuviTypography.textTheme.bodyMedium?.copyWith(
-                  color: NuviColors.onSurface.withValues(alpha: 0.5),
+                  fontSize: 14,
+                  color: NuviColors.textTertiary,
                 ),
               ),
             ],

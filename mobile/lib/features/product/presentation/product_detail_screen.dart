@@ -63,7 +63,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
           title: const SizedBox.shrink(),
           showBackButton: true,
           cartItemCount: cartState.totalItemCount,
-          onCartTap: () => context.push('/cart'),
+          onCartTap: () => context.go('/cart'),
         ),
         body: const Center(
           child: CircularProgressIndicator(color: NuviColors.primary),
@@ -78,7 +78,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
           title: const SizedBox.shrink(),
           showBackButton: true,
           cartItemCount: cartState.totalItemCount,
-          onCartTap: () => context.push('/cart'),
+          onCartTap: () => context.go('/cart'),
         ),
         body: Center(
           child: Text(
@@ -107,7 +107,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
           }
         },
         cartItemCount: cartState.totalItemCount,
-        onCartTap: () => context.push('/cart'),
+        onCartTap: () => context.go('/cart'),
       ),
       body: Column(
         children: [
@@ -131,7 +131,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                     currentIndex: state.selectedImageIndex,
                     onPageChanged: (idx) => notifier.selectImage(idx),
                   ),
-                  const SizedBox(height: NuviSpacing.lg),
+                  const SizedBox(height: NuviSpacing.md),
 
                   // Title & Wishlist Button
                   Row(
@@ -143,9 +143,9 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                           product.title,
                           style: NuviTypography.textTheme.displayMedium
                               ?.copyWith(
-                                color: NuviColors.primary,
+                                color: NuviColors.onSurface,
                                 fontWeight: FontWeight.bold,
-                                fontSize: 24,
+                                fontSize: 23,
                               ),
                         ),
                       ),
@@ -184,7 +184,8 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                           style: NuviTypography.textTheme.headlineMedium
                               ?.copyWith(
                                 color: NuviColors.accent,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 19,
                               ),
                         ),
                         const SizedBox(width: 8),
@@ -201,7 +202,8 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                           style: NuviTypography.textTheme.headlineMedium
                               ?.copyWith(
                                 color: NuviColors.accent,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 19,
                               ),
                         ),
                       ],
@@ -228,7 +230,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: NuviSpacing.md),
+                  const SizedBox(height: NuviSpacing.sm),
 
                   // Subtitle Summary
                   if (product.description != null)
@@ -239,7 +241,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                         height: 1.4,
                       ),
                     ),
-                  const SizedBox(height: NuviSpacing.lg),
+                  const SizedBox(height: NuviSpacing.md),
 
                   // Color Selector
                   if (product.availableColors != null &&
@@ -250,7 +252,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                       onColorSelected: (c) => notifier.selectColor(c),
                       dense: true,
                     ),
-                    const SizedBox(height: NuviSpacing.md),
+                    const SizedBox(height: NuviSpacing.sm),
                   ],
 
                   // Size Selector
@@ -297,7 +299,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                         );
                       }).toList(),
                     ),
-                    const SizedBox(height: NuviSpacing.lg),
+                    const SizedBox(height: NuviSpacing.md),
                   ],
 
                   // Accordion Section
@@ -306,15 +308,15 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                     fabricAndCare: product.fabricAndCare,
                     reviews: product.reviews,
                   ),
-                  const SizedBox(height: NuviSpacing.lg),
+                  const SizedBox(height: NuviSpacing.md),
 
                   // Pincode & Delivery Info
                   const ProductDeliveryInfoSection(),
-                  const SizedBox(height: NuviSpacing.lg),
+                  const SizedBox(height: NuviSpacing.md),
 
                   // Coupon Carousel
                   const ProductCouponCarousel(),
-                  const SizedBox(height: NuviSpacing.xxl),
+                  const SizedBox(height: NuviSpacing.lg),
 
                   // You May Also Like Horizontal Carousel
                   if (state.relatedProducts.isNotEmpty) ...[
@@ -391,10 +393,26 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
           text: !state.isSelectedVariantAvailable
               ? 'Out of Stock'
               : state.addedToCartSuccess
-              ? 'Added to Cart ✓'
+              ? 'Added to Cart'
               : 'Add to Cart - ${state.selectedVariant?.formattedPrice ?? priceStr}',
           type: NuviButtonType.primary,
           isLoading: state.isAddingToCart,
+          icon: state.addedToCartSuccess
+              ? Container(
+                  width: 19,
+                  height: 19,
+                  decoration: const BoxDecoration(
+                    color: NuviColors.secondary,
+                    shape: BoxShape.circle,
+                  ),
+                  alignment: Alignment.center,
+                  child: const Icon(
+                    Icons.check,
+                    size: 12,
+                    color: NuviColors.onSecondary,
+                  ),
+                )
+              : null,
           onPressed: !state.isSelectedVariantAvailable
               ? () {}
               : () {

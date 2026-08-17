@@ -8,11 +8,8 @@ import '../../../core/theme/nuvi_typography.dart';
 import '../../../core/widgets/nuvi_button.dart';
 import '../../category/domain/menu_category.dart';
 import '../../category/presentation/category_menu_controller.dart';
-import '../../wishlist/presentation/wishlist_controller.dart';
 import '../domain/category.dart';
 import 'home_controller.dart';
-import 'widgets/age_filter_section.dart';
-import 'widgets/best_sellers_section.dart';
 import 'widgets/category_circles_section.dart';
 import 'widgets/hero_banner_section.dart';
 import 'widgets/home_search_bar.dart';
@@ -117,35 +114,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ? homeState.hero!.collectionHandle
                       : 'new-arrivals';
                   context.push('/category/$handle');
-                },
-              ),
-              const SizedBox(height: NuviSpacing.xl),
-              AgeFilterSection(
-                filters: homeState.ageFilters,
-                selectedFilterId: homeState.selectedAgeFilterId,
-                onFilterSelected: (id) => homeNotifier.selectAgeFilter(id),
-              ),
-              const SizedBox(height: NuviSpacing.xl),
-              BestSellersSection(
-                products: homeState.bestSellers,
-                favoriteProductIds: ref
-                    .watch(wishlistControllerProvider)
-                    .wishlistProductIds,
-                onToggleFavorite: (id) {
-                  final matches = homeState.bestSellers.where(
-                    (p) => p.id == id,
-                  );
-                  if (matches.isNotEmpty) {
-                    ref
-                        .read(wishlistControllerProvider.notifier)
-                        .toggleWishlist(matches.first);
-                  }
-                },
-                onProductTap: (product) {
-                  context.push('/product/${product.id}');
-                },
-                onViewAllTap: () {
-                  context.push('/category/most-selling-items');
                 },
               ),
             ],

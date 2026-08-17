@@ -56,20 +56,27 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Guest User Card
+        // Guest User Row
         Row(
           children: [
             Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                color: NuviColors.surfaceVariant.withValues(alpha: 0.7),
+              width: 60,
+              height: 60,
+              decoration: const BoxDecoration(
+                color: NuviColors.primary,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
-                Icons.person,
-                size: 36,
-                color: NuviColors.primary,
+              alignment: Alignment.center,
+              child: Image.asset(
+                'assets/images/brand/nuvi_elephant_mascot.png',
+                width: 42,
+                height: 42,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) => const Icon(
+                  Icons.person,
+                  size: 28,
+                  color: NuviColors.onPrimary,
+                ),
               ),
             ),
             const SizedBox(width: NuviSpacing.md),
@@ -78,24 +85,25 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
               children: [
                 Text(
                   'Guest User',
-                  style: NuviTypography.textTheme.displayMedium?.copyWith(
-                    color: NuviColors.primary,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 22,
+                  style: NuviTypography.textTheme.headlineMedium?.copyWith(
+                    color: NuviColors.onSurface,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 19,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   'Welcome to the Store',
                   style: NuviTypography.textTheme.bodyMedium?.copyWith(
-                    color: NuviColors.onSurface.withValues(alpha: 0.6),
+                    fontSize: 14,
+                    color: NuviColors.textSecondary,
                   ),
                 ),
               ],
             ),
           ],
         ),
-        const SizedBox(height: NuviSpacing.xl),
+        const SizedBox(height: NuviSpacing.lg),
 
         // Push Notifications Card
         Container(
@@ -104,9 +112,15 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
             vertical: NuviSpacing.md,
           ),
           decoration: BoxDecoration(
-            color: NuviColors.surfaceVariant.withValues(alpha: 0.35),
-            borderRadius: BorderRadius.circular(NuviRadii.card),
-            border: Border.all(color: NuviColors.border.withValues(alpha: 0.5)),
+            color: NuviColors.surfaceVariant,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: NuviColors.textTertiary.withValues(alpha: 0.08),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -117,16 +131,18 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
                   children: [
                     Text(
                       'Push Notifications',
-                      style: NuviTypography.textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: NuviColors.primary,
+                      style: NuviTypography.textTheme.labelLarge?.copyWith(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: NuviColors.onSurface,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 4),
                     Text(
                       'Enable to track your orders in real-time',
-                      style: NuviTypography.textTheme.bodySmall?.copyWith(
-                        color: NuviColors.onSurface.withValues(alpha: 0.6),
+                      style: NuviTypography.textTheme.bodyMedium?.copyWith(
+                        fontSize: 13,
+                        color: NuviColors.textSecondary,
                       ),
                     ),
                   ],
@@ -150,20 +166,29 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
         // Unlock Premium Features Card
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(NuviSpacing.xl),
+          padding: const EdgeInsets.symmetric(
+            horizontal: NuviSpacing.xl,
+            vertical: 26,
+          ),
           decoration: BoxDecoration(
-            color: NuviColors.surfaceVariant.withValues(alpha: 0.35),
-            borderRadius: BorderRadius.circular(NuviRadii.card),
-            border: Border.all(color: NuviColors.border.withValues(alpha: 0.5)),
+            color: NuviColors.primary,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: NuviColors.primary.withValues(alpha: 0.28),
+                blurRadius: 26,
+                offset: const Offset(0, 10),
+              ),
+            ],
           ),
           child: Column(
             children: [
               Text(
                 'Unlock Premium Features',
                 style: NuviTypography.textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: NuviColors.primary,
-                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: NuviColors.onPrimary,
+                  fontSize: 19,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -171,18 +196,34 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
               Text(
                 'Login to sync your orders, addresses and wishlist across all your devices.',
                 style: NuviTypography.textTheme.bodyMedium?.copyWith(
-                  color: NuviColors.onSurface.withValues(alpha: 0.65),
-                  height: 1.4,
+                  fontSize: 13.5,
+                  color: NuviColors.onPrimary.withValues(alpha: 0.85),
+                  height: 1.55,
                 ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: NuviSpacing.lg),
               SizedBox(
                 width: double.infinity,
-                child: NuviButton(
-                  text: 'Login / Register',
-                  type: NuviButtonType.primary,
+                child: ElevatedButton(
                   onPressed: () => context.push('/sign-in'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: NuviColors.secondary,
+                    foregroundColor: NuviColors.onSecondary,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(NuviRadii.pill),
+                    ),
+                  ),
+                  child: Text(
+                    'Login / Register',
+                    style: NuviTypography.textTheme.labelLarge?.copyWith(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      color: NuviColors.onSecondary,
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -196,53 +237,33 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
             Expanded(
               child: _buildStatCard(
                 icon: Icons.favorite_outline,
+                iconColor: const Color(0xFFB06B60),
                 count: '${wishlistState.wishlistProductIds.length}',
                 label: 'WISHLIST',
                 onTap: () => context.go('/wishlist'),
               ),
             ),
-            const SizedBox(width: NuviSpacing.md),
+            const SizedBox(width: NuviSpacing.sm),
             Expanded(
               child: _buildStatCard(
-                icon: Icons.shopping_bag_outlined,
+                icon: Icons.work_outline,
+                iconColor: const Color(0xFF7B865D),
                 count: '0',
                 label: 'ORDERS',
                 onTap: () => context.push('/sign-in'),
               ),
             ),
-            const SizedBox(width: NuviSpacing.md),
+            const SizedBox(width: NuviSpacing.sm),
             Expanded(
               child: _buildStatCard(
                 icon: Icons.location_on_outlined,
+                iconColor: const Color(0xFFCA933E),
                 count: '0',
-                label: 'ADDRESSES',
+                label: 'ADDRESS',
                 onTap: () => context.push('/sign-in'),
               ),
             ),
           ],
-        ),
-        const SizedBox(height: NuviSpacing.lg),
-
-        // Menu Items List
-        _buildMenuItem(
-          icon: Icons.shopping_bag_outlined,
-          title: 'My Orders',
-          subtitle: 'View order history and track shipments',
-          onTap: () => context.push('/sign-in'),
-        ),
-        const SizedBox(height: NuviSpacing.sm),
-        _buildMenuItem(
-          icon: Icons.location_on_outlined,
-          title: 'My Addresses',
-          subtitle: 'Manage saved delivery addresses',
-          onTap: () => context.push('/sign-in'),
-        ),
-        const SizedBox(height: NuviSpacing.sm),
-        _buildMenuItem(
-          icon: Icons.headset_mic_outlined,
-          title: 'Help & Support',
-          subtitle: 'Customer care, returns and sizing guide',
-          onTap: () => _showSupportSnackbar(context),
         ),
       ],
     );
@@ -271,64 +292,63 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
           child: Text(
             'Profile',
             style: NuviTypography.textTheme.headlineMedium?.copyWith(
-              color: NuviColors.primary,
-              fontWeight: FontWeight.bold,
-              fontSize: 20,
+              color: NuviColors.onSurface,
+              fontWeight: FontWeight.w600,
+              fontSize: 26,
             ),
           ),
         ),
         const SizedBox(height: NuviSpacing.xl),
 
-        // User Profile Card
-        Container(
-          padding: const EdgeInsets.all(NuviSpacing.lg),
-          decoration: BoxDecoration(
-            color: NuviColors.surfaceVariant.withValues(alpha: 0.5),
-            borderRadius: BorderRadius.circular(NuviRadii.card),
-            border: Border.all(color: NuviColors.border.withValues(alpha: 0.8)),
-          ),
-          child: Row(
-            children: [
-              CircleAvatar(
-                radius: 28,
-                backgroundColor: NuviColors.secondary,
-                child: Text(
-                  displayName.isNotEmpty ? displayName[0].toUpperCase() : 'N',
-                  style: NuviTypography.textTheme.headlineMedium?.copyWith(
-                    color: NuviColors.onSecondary,
-                    fontWeight: FontWeight.bold,
+        // User Profile Row
+        Row(
+          children: [
+            Container(
+              width: 60,
+              height: 60,
+              decoration: const BoxDecoration(
+                color: NuviColors.primary,
+                shape: BoxShape.circle,
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                displayName.isNotEmpty ? displayName[0].toUpperCase() : 'N',
+                style: NuviTypography.textTheme.headlineMedium?.copyWith(
+                  color: NuviColors.onPrimary,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 22,
+                ),
+              ),
+            ),
+            const SizedBox(width: NuviSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    displayName,
+                    style: NuviTypography.textTheme.headlineMedium?.copyWith(
+                      color: NuviColors.onSurface,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 19,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-              ),
-              const SizedBox(width: NuviSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      displayName,
-                      style: NuviTypography.textTheme.headlineMedium?.copyWith(
-                        color: NuviColors.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                  const SizedBox(height: 2),
+                  Text(
+                    email,
+                    style: NuviTypography.textTheme.bodyMedium?.copyWith(
+                      fontSize: 14,
+                      color: NuviColors.textSecondary,
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      email,
-                      style: NuviTypography.textTheme.bodyMedium?.copyWith(
-                        color: NuviColors.onSurface.withValues(alpha: 0.7),
-                        fontSize: 13,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
         const SizedBox(height: NuviSpacing.lg),
 
@@ -338,26 +358,29 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
             Expanded(
               child: _buildStatCard(
                 icon: Icons.favorite_outline,
+                iconColor: const Color(0xFFB06B60),
                 count: '${wishlistState.wishlistProductIds.length}',
                 label: 'WISHLIST',
                 onTap: () => context.go('/wishlist'),
               ),
             ),
-            const SizedBox(width: NuviSpacing.md),
+            const SizedBox(width: NuviSpacing.sm),
             Expanded(
               child: _buildStatCard(
-                icon: Icons.shopping_bag_outlined,
+                icon: Icons.work_outline,
+                iconColor: const Color(0xFF7B865D),
                 count: '${customerState.orders.length}',
                 label: 'ORDERS',
                 onTap: () => context.go('/orders'),
               ),
             ),
-            const SizedBox(width: NuviSpacing.md),
+            const SizedBox(width: NuviSpacing.sm),
             Expanded(
               child: _buildStatCard(
                 icon: Icons.location_on_outlined,
+                iconColor: const Color(0xFFCA933E),
                 count: '${customer?.addresses.length ?? 0}',
-                label: 'ADDRESSES',
+                label: 'ADDRESS',
                 onTap: () => context.push('/addresses'),
               ),
             ),
@@ -369,8 +392,9 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
         Text(
           'My Account',
           style: NuviTypography.textTheme.headlineMedium?.copyWith(
-            color: NuviColors.primary,
-            fontWeight: FontWeight.bold,
+            color: NuviColors.onSurface,
+            fontWeight: FontWeight.w600,
+            fontSize: 19,
           ),
         ),
         const SizedBox(height: NuviSpacing.md),
@@ -426,39 +450,46 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
     required String count,
     required String label,
     required VoidCallback onTap,
+    Color? iconColor,
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(NuviRadii.card),
+      borderRadius: BorderRadius.circular(16),
       child: Container(
         padding: const EdgeInsets.symmetric(
           vertical: NuviSpacing.md,
           horizontal: 4,
         ),
         decoration: BoxDecoration(
-          color: NuviColors.surfaceVariant.withValues(alpha: 0.35),
-          borderRadius: BorderRadius.circular(NuviRadii.card),
-          border: Border.all(color: NuviColors.border.withValues(alpha: 0.5)),
+          color: NuviColors.surfaceVariant,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: NuviColors.textTertiary.withValues(alpha: 0.1),
+              blurRadius: 2,
+              offset: const Offset(0, 1),
+            ),
+          ],
         ),
         child: Column(
           children: [
-            Icon(icon, size: 20, color: NuviColors.primary),
-            const SizedBox(height: NuviSpacing.xs),
+            Icon(icon, size: 18, color: iconColor ?? NuviColors.primary),
+            const SizedBox(height: 6),
             Text(
               count,
-              style: NuviTypography.textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: NuviColors.primary,
-                fontSize: 18,
+              style: NuviTypography.textTheme.labelLarge?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: NuviColors.onSurface,
+                fontSize: 15,
               ),
             ),
             const SizedBox(height: 2),
             Text(
               label,
-              style: NuviTypography.textTheme.labelSmall?.copyWith(
-                color: NuviColors.onSurface.withValues(alpha: 0.6),
-                fontSize: 8,
-                letterSpacing: 0,
+              style: NuviTypography.textTheme.bodySmall?.copyWith(
+                color: NuviColors.textSecondary,
+                fontSize: 10,
+                letterSpacing: 0.06,
               ),
               textAlign: TextAlign.center,
               maxLines: 1,
@@ -483,9 +514,15 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
       child: Container(
         padding: const EdgeInsets.all(NuviSpacing.md),
         decoration: BoxDecoration(
-          color: NuviColors.surfaceVariant.withValues(alpha: 0.3),
-          borderRadius: BorderRadius.circular(NuviRadii.card),
-          border: Border.all(color: NuviColors.border.withValues(alpha: 0.6)),
+          color: NuviColors.surfaceVariant,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: NuviColors.textTertiary.withValues(alpha: 0.1),
+              blurRadius: 2,
+              offset: const Offset(0, 1),
+            ),
+          ],
         ),
         child: Row(
           children: [
@@ -504,16 +541,16 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
                 children: [
                   Text(
                     title,
-                    style: NuviTypography.textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: NuviColors.primary,
+                    style: NuviTypography.textTheme.labelLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: NuviColors.onSurface,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
                     style: NuviTypography.textTheme.bodySmall?.copyWith(
-                      color: NuviColors.onSurface.withValues(alpha: 0.6),
+                      color: NuviColors.textSecondary,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,

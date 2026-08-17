@@ -96,33 +96,44 @@ class _CartScreenState extends ConsumerState<CartScreen>
                           const Icon(
                             Icons.shopping_bag,
                             color: NuviColors.secondary,
-                            size: 24,
+                            size: 18,
                           ),
                           const SizedBox(width: NuviSpacing.xs),
                           Text(
                             'Your Bag',
-                            style: NuviTypography.textTheme.headlineMedium
+                            style: NuviTypography.textTheme.labelLarge
                                 ?.copyWith(
-                                  color: NuviColors.primary,
-                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                  color: NuviColors.onSurface,
+                                  fontWeight: FontWeight.w800,
                                 ),
                           ),
                         ],
                       ),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 4,
+                          horizontal: 14,
+                          vertical: 6,
                         ),
                         decoration: BoxDecoration(
                           color: NuviColors.surfaceVariant,
                           borderRadius: BorderRadius.circular(NuviRadii.pill),
+                          boxShadow: [
+                            BoxShadow(
+                              color: NuviColors.textTertiary.withValues(
+                                alpha: 0.12,
+                              ),
+                              blurRadius: 3,
+                              offset: const Offset(0, 1),
+                            ),
+                          ],
                         ),
                         child: Text(
                           '${cartState.totalItemCount} Items',
-                          style: NuviTypography.textTheme.labelSmall?.copyWith(
-                            color: NuviColors.onSurface.withValues(alpha: 0.8),
-                            fontWeight: FontWeight.w600,
+                          style: NuviTypography.textTheme.labelLarge?.copyWith(
+                            fontSize: 12.5,
+                            color: NuviColors.onSurface,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ),
@@ -136,7 +147,7 @@ class _CartScreenState extends ConsumerState<CartScreen>
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: cartState.items.length,
                     separatorBuilder: (context, index) =>
-                        const Divider(color: NuviColors.border),
+                        const SizedBox(height: NuviSpacing.md),
                     itemBuilder: (context, index) {
                       final item = cartState.items[index];
                       return CartItemRow(

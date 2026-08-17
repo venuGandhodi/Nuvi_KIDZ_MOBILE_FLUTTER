@@ -6,6 +6,7 @@ import '../../../core/theme/nuvi_colors.dart';
 import '../../../core/theme/nuvi_spacing.dart';
 import '../../../core/theme/nuvi_typography.dart';
 import '../../../core/utils/nuvi_logger.dart';
+import '../../../core/widgets/nuvi_animations.dart';
 import '../../../core/widgets/nuvi_button.dart';
 import '../../../core/widgets/nuvi_input_field.dart';
 import '../../auth/domain/auth_exception.dart' as domain;
@@ -98,37 +99,48 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: NuviSpacing.xl),
-                // Logo placeholder
+                // Mascot avatar
                 Center(
-                  child: Container(
-                    width: 80,
-                    height: 80,
-                    decoration: const BoxDecoration(
-                      color: NuviColors.secondary,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(10),
-                      child: Image.asset(
-                        'assets/images/brand/nuvi_kidz_logo.png',
-                        fit: BoxFit.contain,
+                  child: NuviMascotAnimated(
+                    loop: NuviMascotLoop.float,
+                    child: Container(
+                      width: 96,
+                      height: 96,
+                      decoration: const BoxDecoration(
+                        color: NuviColors.primary,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(13),
+                        child: Image.asset(
+                          'assets/images/brand/nuvi_elephant_mascot.png',
+                          fit: BoxFit.contain,
+                        ),
                       ),
                     ),
                   ),
                 ),
                 const SizedBox(height: NuviSpacing.xl),
-                Text(
-                  'Welcome Back',
-                  style: NuviTypography.textTheme.displayMedium,
-                  textAlign: TextAlign.center,
+                NuviFadeUp(
+                  delay: const Duration(milliseconds: 150),
+                  child: Text(
+                    'Welcome Back',
+                    style: NuviTypography.textTheme.displayMedium?.copyWith(
+                      fontSize: 29,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
                 const SizedBox(height: NuviSpacing.sm),
-                Text(
-                  'Sign in to continue your Nuvi journey',
-                  style: NuviTypography.textTheme.bodyMedium?.copyWith(
-                    color: NuviColors.onSurface.withValues(alpha: 0.7),
+                NuviFadeUp(
+                  delay: const Duration(milliseconds: 250),
+                  child: Text(
+                    'Sign in to continue your Nuvi journey',
+                    style: NuviTypography.textTheme.bodyMedium?.copyWith(
+                      color: NuviColors.textSecondary,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: NuviSpacing.xxl),
                 NuviInputField(

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../theme/nuvi_colors.dart';
 import '../theme/nuvi_typography.dart';
+import 'nuvi_animations.dart';
 import 'nuvi_bottom_nav.dart';
 import 'nuvi_top_bar.dart';
 
@@ -72,15 +73,17 @@ class AppShell extends ConsumerWidget {
         ),
       );
     }
-    return Image.asset(
-      'assets/images/brand/nuvi_kidz_logo.png',
-      height: 48,
-      fit: BoxFit.contain,
-      errorBuilder: (context, error, stackTrace) => Text(
-        'Nuvi Kidz',
-        style: NuviTypography.textTheme.headlineMedium?.copyWith(
-          color: NuviColors.primary,
-          fontWeight: FontWeight.bold,
+    return NuviLogoAnimated(
+      child: Image.asset(
+        'assets/images/brand/nuvi_kidz_logo.png',
+        height: 48,
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) => Text(
+          'Nuvi Kidz',
+          style: NuviTypography.textTheme.headlineMedium?.copyWith(
+            color: NuviColors.primary,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
     );

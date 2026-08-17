@@ -59,20 +59,21 @@ class ProductColorSelector extends StatelessWidget {
                 duration: const Duration(milliseconds: 150),
                 width: swatchSize,
                 height: swatchSize,
-                margin: EdgeInsets.only(right: dense ? 8 : 12),
+                margin: EdgeInsets.symmetric(
+                  horizontal: isSelected ? 5 : 0,
+                ).copyWith(right: (isSelected ? 5 : 0) + (dense ? 8 : 12)),
                 decoration: BoxDecoration(
                   color: c.color,
                   shape: BoxShape.circle,
-                  border: Border.all(
-                    color: isSelected ? NuviColors.primary : NuviColors.border,
-                    width: isSelected ? 2.5 : 1,
-                  ),
+                  border: isSelected
+                      ? null
+                      : Border.all(color: NuviColors.border, width: 1),
                   boxShadow: isSelected
                       ? [
+                          BoxShadow(color: NuviColors.surface, spreadRadius: 2),
                           BoxShadow(
-                            color: NuviColors.primary.withValues(alpha: 0.2),
-                            blurRadius: 6,
-                            spreadRadius: 1,
+                            color: NuviColors.primary,
+                            spreadRadius: 3.5,
                           ),
                         ]
                       : null,

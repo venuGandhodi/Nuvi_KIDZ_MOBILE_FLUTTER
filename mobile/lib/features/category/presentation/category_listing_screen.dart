@@ -6,6 +6,7 @@ import '../../../core/theme/nuvi_colors.dart';
 import '../../../core/theme/nuvi_radii.dart';
 import '../../../core/theme/nuvi_spacing.dart';
 import '../../../core/theme/nuvi_typography.dart';
+import '../../../core/widgets/nuvi_icons.dart';
 import '../../../core/widgets/nuvi_product_card.dart';
 import '../../wishlist/presentation/wishlist_controller.dart';
 import 'category_controller.dart';
@@ -152,7 +153,6 @@ class _CategoryListingScreenState extends ConsumerState<CategoryListingScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _buildCategoryRail(menuState),
-          Container(width: 0.5, color: NuviColors.border),
           Expanded(
             child: hasChildren
                 ? _buildSubItemPane(selected)
@@ -194,15 +194,18 @@ class _CategoryListingScreenState extends ConsumerState<CategoryListingScreen> {
       ),
       decoration: BoxDecoration(
         color: NuviColors.surface.withValues(alpha: 0.95),
-        border: Border(
-          bottom: BorderSide(color: NuviColors.border.withValues(alpha: 0.5)),
-        ),
+        border: Border(bottom: BorderSide(color: NuviColors.border)),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisAlignment: showActions
+            ? MainAxisAlignment.spaceBetween
+            : MainAxisAlignment.center,
         children: [
           Expanded(
             child: Row(
+              mainAxisAlignment: showActions
+                  ? MainAxisAlignment.start
+                  : MainAxisAlignment.center,
               children: [
                 if (showBack)
                   GestureDetector(
@@ -220,9 +223,11 @@ class _CategoryListingScreenState extends ConsumerState<CategoryListingScreen> {
                   child: Text(
                     title,
                     style: NuviTypography.textTheme.headlineMedium?.copyWith(
-                      color: NuviColors.primary,
-                      fontSize: 18,
+                      color: NuviColors.onSurface,
+                      fontWeight: FontWeight.bold,
+                      fontSize: showActions ? 18 : 21,
                     ),
+                    textAlign: showActions ? TextAlign.start : TextAlign.center,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -366,13 +371,16 @@ class _CategoryListingScreenState extends ConsumerState<CategoryListingScreen> {
 
   Widget _buildCategoryRail(CategoryMenuState menuState) {
     if (menuState.categories.isEmpty) {
-      return const SizedBox(width: 72);
+      return const SizedBox(width: 104);
     }
 
-    return SizedBox(
-      width: 72,
+    return Container(
+      width: 104,
+      decoration: const BoxDecoration(
+        border: Border(right: BorderSide(color: NuviColors.borderStrong)),
+      ),
       child: ListView.builder(
-        padding: const EdgeInsets.symmetric(vertical: NuviSpacing.sm),
+        padding: const EdgeInsets.symmetric(vertical: NuviSpacing.md),
         itemCount: menuState.categories.length,
         itemBuilder: (context, index) {
           final category = menuState.categories[index];
@@ -387,9 +395,9 @@ class _CategoryListingScreenState extends ConsumerState<CategoryListingScreen> {
               child: Column(
                 children: [
                   Container(
-                    width: 48,
-                    height: 48,
-                    padding: const EdgeInsets.all(2),
+                    width: 60,
+                    height: 60,
+                    padding: const EdgeInsets.all(2.5),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
@@ -411,18 +419,18 @@ class _CategoryListingScreenState extends ConsumerState<CategoryListingScreen> {
                           : _railIconFallback(),
                     ),
                   ),
-                  const SizedBox(height: NuviSpacing.xs),
+                  const SizedBox(height: 6),
                   Text(
                     category.title,
                     textAlign: TextAlign.center,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: NuviTypography.textTheme.labelSmall?.copyWith(
-                      fontSize: 10,
-                      color: NuviColors.primary,
+                    style: NuviTypography.textTheme.labelLarge?.copyWith(
+                      fontSize: 11.5,
+                      color: NuviColors.onSurface,
                       fontWeight: isSelected
-                          ? FontWeight.bold
-                          : FontWeight.normal,
+                          ? FontWeight.w800
+                          : FontWeight.w700,
                     ),
                   ),
                 ],
@@ -498,14 +506,21 @@ class _CategoryListingScreenState extends ConsumerState<CategoryListingScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.search_off, size: 48, color: NuviColors.border),
+              Opacity(
+                opacity: 0.35,
+                child: NuviIcons.searchOff(
+                  color: NuviColors.onSurface,
+                  size: 46,
+                ),
+              ),
               const SizedBox(height: NuviSpacing.md),
               Text(
                 hasActiveFilters
                     ? 'No products match your filter criteria.'
                     : 'No products in this category yet.',
                 style: NuviTypography.textTheme.bodyMedium?.copyWith(
-                  color: NuviColors.onSurface.withValues(alpha: 0.7),
+                  fontSize: 14,
+                  color: NuviColors.textSecondary,
                 ),
                 textAlign: TextAlign.center,
               ),

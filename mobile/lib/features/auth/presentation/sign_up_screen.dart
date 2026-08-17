@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/nuvi_colors.dart';
 import '../../../core/theme/nuvi_spacing.dart';
 import '../../../core/theme/nuvi_typography.dart';
+import '../../../core/widgets/nuvi_animations.dart';
 import '../../../core/widgets/nuvi_button.dart';
 import '../../../core/widgets/nuvi_input_field.dart';
 import '../../auth/domain/auth_exception.dart' as domain;
@@ -94,32 +95,43 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
               children: [
                 const SizedBox(height: NuviSpacing.md),
                 Center(
-                  child: Container(
-                    width: 80,
-                    height: 80,
-                    decoration: const BoxDecoration(
-                      color: NuviColors.secondary,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(10),
-                      child: Image.asset(
-                        'assets/images/brand/nuvi_kidz_logo.png',
-                        fit: BoxFit.contain,
+                  child: NuviMascotAnimated(
+                    loop: NuviMascotLoop.wave,
+                    child: Container(
+                      width: 78,
+                      height: 78,
+                      decoration: const BoxDecoration(
+                        color: NuviColors.primary,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(11),
+                        child: Image.asset(
+                          'assets/images/brand/nuvi_elephant_mascot.png',
+                          fit: BoxFit.contain,
+                        ),
                       ),
                     ),
                   ),
                 ),
                 const SizedBox(height: NuviSpacing.lg),
-                Text(
-                  'Create Account',
-                  style: NuviTypography.textTheme.displayMedium,
+                NuviFadeUp(
+                  delay: const Duration(milliseconds: 150),
+                  child: Text(
+                    'Create Account',
+                    style: NuviTypography.textTheme.displayMedium?.copyWith(
+                      fontSize: 27,
+                    ),
+                  ),
                 ),
                 const SizedBox(height: NuviSpacing.sm),
-                Text(
-                  'Join Nuvi Kidz for exclusive perks and tiny styles.',
-                  style: NuviTypography.textTheme.bodyMedium?.copyWith(
-                    color: NuviColors.onSurface.withValues(alpha: 0.7),
+                NuviFadeUp(
+                  delay: const Duration(milliseconds: 250),
+                  child: Text(
+                    'Join Nuvi Kidz for exclusive perks and tiny styles.',
+                    style: NuviTypography.textTheme.bodyMedium?.copyWith(
+                      color: NuviColors.textSecondary,
+                    ),
                   ),
                 ),
                 const SizedBox(height: NuviSpacing.xxl),

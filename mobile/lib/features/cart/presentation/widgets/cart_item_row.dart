@@ -21,21 +21,32 @@ class CartItemRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final imagePath = item.product.imageUrl ?? item.product.assetPath;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: NuviSpacing.md),
+    return Container(
+      padding: const EdgeInsets.all(NuviSpacing.md),
+      decoration: BoxDecoration(
+        color: NuviColors.surfaceVariant,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: NuviColors.textTertiary.withValues(alpha: 0.1),
+            blurRadius: 2,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Product Thumbnail Image
           Container(
-            width: 96,
-            height: 96,
+            width: 76,
+            height: 76,
             decoration: BoxDecoration(
-              color: NuviColors.surfaceVariant,
-              borderRadius: BorderRadius.circular(NuviRadii.card / 2),
+              color: NuviColors.surface,
+              borderRadius: BorderRadius.circular(12),
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(NuviRadii.card / 2),
+              borderRadius: BorderRadius.circular(12),
               child: imagePath != null && imagePath.startsWith('http')
                   ? Image.network(
                       imagePath,
@@ -61,9 +72,10 @@ class CartItemRow extends StatelessWidget {
                     Expanded(
                       child: Text(
                         item.product.title,
-                        style: NuviTypography.textTheme.bodyLarge?.copyWith(
+                        style: NuviTypography.textTheme.labelLarge?.copyWith(
+                          fontSize: 14.5,
                           color: NuviColors.onSurface,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
                     ),
@@ -82,8 +94,9 @@ class CartItemRow extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     item.displayVariantInfo,
-                    style: NuviTypography.textTheme.labelSmall?.copyWith(
-                      color: NuviColors.onSurface.withValues(alpha: 0.6),
+                    style: NuviTypography.textTheme.bodyMedium?.copyWith(
+                      fontSize: 13,
+                      color: NuviColors.textSecondary,
                     ),
                   ),
                 ],
@@ -170,9 +183,10 @@ class CartItemRow extends StatelessWidget {
                     // Price Display
                     Text(
                       item.formattedLineTotal,
-                      style: NuviTypography.textTheme.bodyLarge?.copyWith(
+                      style: NuviTypography.textTheme.labelLarge?.copyWith(
+                        fontSize: 15,
                         color: NuviColors.accent,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
                   ],

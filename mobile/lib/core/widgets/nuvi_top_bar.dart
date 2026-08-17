@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/nuvi_colors.dart';
 import '../theme/nuvi_typography.dart';
+import 'nuvi_icons.dart';
 
 class NuviTopBar extends StatelessWidget implements PreferredSizeWidget {
   final Widget? leading;
@@ -99,10 +100,26 @@ class NuviTopBar extends StatelessWidget implements PreferredSizeWidget {
           ),
         if (showProfile)
           Padding(
-            padding: const EdgeInsets.only(right: 8.0),
-            child: IconButton(
-              icon: const Icon(Icons.person_outline, color: NuviColors.primary),
-              onPressed: onProfileTap,
+            padding: const EdgeInsets.only(right: 16.0),
+            child: GestureDetector(
+              onTap: onProfileTap,
+              child: Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: NuviColors.surfaceVariant,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: NuviColors.textTertiary.withValues(alpha: 0.15),
+                      blurRadius: 3,
+                      offset: const Offset(0, 1),
+                    ),
+                  ],
+                ),
+                alignment: Alignment.center,
+                child: NuviIcons.person(color: NuviColors.primary, size: 16),
+              ),
             ),
           ),
       ],

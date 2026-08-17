@@ -63,9 +63,10 @@ class HeroBannerSection extends StatelessWidget {
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
+                    stops: const [0.0, 0.78],
                     colors: [
-                      Colors.black.withValues(alpha: 0.15),
-                      NuviColors.primary.withValues(alpha: 0.85),
+                      const Color(0xFF9C8560).withValues(alpha: 0.05),
+                      NuviColors.primary.withValues(alpha: 0.82),
                     ],
                   ),
                 ),
@@ -83,6 +84,7 @@ class HeroBannerSection extends StatelessWidget {
                     style: NuviTypography.textTheme.displayMedium?.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
+                      fontSize: 28,
                       height: 1.15,
                     ),
                   ),
@@ -90,8 +92,9 @@ class HeroBannerSection extends StatelessWidget {
                   Text(
                     description,
                     style: NuviTypography.textTheme.bodyMedium?.copyWith(
-                      color: Colors.white.withValues(alpha: 0.95),
-                      height: 1.35,
+                      fontSize: 13.5,
+                      color: Colors.white.withValues(alpha: 0.93),
+                      height: 1.4,
                     ),
                   ),
                   const SizedBox(height: NuviSpacing.lg),
@@ -99,11 +102,11 @@ class HeroBannerSection extends StatelessWidget {
                     onPressed: onShopCollectionPressed,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: NuviColors.secondary,
-                      foregroundColor: NuviColors.primary,
+                      foregroundColor: NuviColors.onSecondary,
                       elevation: 2,
                       shadowColor: Colors.black.withValues(alpha: 0.25),
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
+                        horizontal: 26,
                         vertical: 14,
                       ),
                       shape: RoundedRectangleBorder(
@@ -113,8 +116,9 @@ class HeroBannerSection extends StatelessWidget {
                     child: Text(
                       buttonText,
                       style: NuviTypography.textTheme.labelLarge?.copyWith(
-                        color: NuviColors.primary,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: NuviColors.onSecondary,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
                   ),

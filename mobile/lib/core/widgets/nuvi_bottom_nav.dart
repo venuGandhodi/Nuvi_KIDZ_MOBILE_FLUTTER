@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme/nuvi_colors.dart';
 import '../theme/nuvi_radii.dart';
 import '../theme/nuvi_typography.dart';
+import 'nuvi_icons.dart';
 
 class NuviBottomNav extends StatelessWidget {
   final int currentIndex;
@@ -20,18 +21,18 @@ class NuviBottomNav extends StatelessWidget {
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(14, 6, 14, 10),
+          padding: const EdgeInsets.fromLTRB(10, 6, 10, 10),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 6.0,
+              vertical: 10.0,
+            ),
             decoration: BoxDecoration(
               color: NuviColors.surfaceVariant,
               borderRadius: BorderRadius.circular(NuviRadii.pill),
-              border: Border.all(
-                color: NuviColors.border.withValues(alpha: 0.6),
-              ),
               boxShadow: [
                 BoxShadow(
-                  color: NuviColors.primary.withValues(alpha: 0.08),
+                  color: NuviColors.textTertiary.withValues(alpha: 0.14),
                   blurRadius: 14,
                   offset: const Offset(0, 4),
                 ),
@@ -40,23 +41,24 @@ class NuviBottomNav extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildNavItem(0, Icons.home_outlined, Icons.home, 'Home'),
+                _buildNavItem(
+                  0,
+                  (color) => NuviIcons.home(color: color, size: 21),
+                  'Home',
+                ),
                 _buildNavItem(
                   1,
-                  Icons.receipt_long_outlined,
-                  Icons.receipt_long,
+                  (color) => NuviIcons.orders(color: color, size: 23),
                   'Orders',
                 ),
                 _buildNavItem(
                   2,
-                  Icons.shopping_cart_outlined,
-                  Icons.shopping_cart,
+                  (color) => NuviIcons.cart(color: color, size: 23),
                   'Cart',
                 ),
                 _buildNavItem(
                   3,
-                  Icons.favorite_outline,
-                  Icons.favorite,
+                  (color) => NuviIcons.wishlist(color: color, size: 23),
                   'Wishlist',
                 ),
               ],
@@ -69,44 +71,42 @@ class NuviBottomNav extends StatelessWidget {
 
   Widget _buildNavItem(
     int index,
-    IconData outlineIcon,
-    IconData filledIcon,
+    Widget Function(Color color) iconBuilder,
     String label,
   ) {
     final isSelected = currentIndex == index;
+    final inactiveColor = NuviColors.textSecondary;
+
     return GestureDetector(
       onTap: () => onTap(index),
       behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
-        decoration: BoxDecoration(
-          color: isSelected ? NuviColors.secondary : Colors.transparent,
-          borderRadius: BorderRadius.circular(NuviRadii.pill),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              isSelected ? filledIcon : outlineIcon,
-              color: isSelected
-                  ? NuviColors.onSecondary
-                  : NuviColors.onSurface.withValues(alpha: 0.7),
-              size: 22,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: 40,
+            height: 40,
+            child: isSelected
+                ? Container(
+                    decoration: const BoxDecoration(
+                      color: NuviColors.primary,
+                      shape: BoxShape.circle,
+                    ),
+                    alignment: Alignment.center,
+                    child: iconBuilder(NuviColors.onPrimary),
+                  )
+                : Center(child: iconBuilder(inactiveColor)),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            label,
+            style: NuviTypography.textTheme.bodySmall?.copyWith(
+              fontSize: 10.5,
+              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w700,
+              color: isSelected ? NuviColors.onSurface : inactiveColor,
             ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: NuviTypography.textTheme.bodySmall?.copyWith(
-                fontSize: 12,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                color: isSelected
-                    ? NuviColors.onSecondary
-                    : NuviColors.onSurface.withValues(alpha: 0.7),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

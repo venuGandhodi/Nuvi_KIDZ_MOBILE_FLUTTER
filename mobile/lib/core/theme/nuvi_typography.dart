@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'nuvi_colors.dart';
 
 class NuviTypography {
-  static const String headlineFont = 'Quicksand';
-  static const String bodyFont = 'BeVietnamPro';
+  static const String headlineFont = 'Poppins';
+  static const String bodyFont = 'Poppins';
 
   static TextTheme get textTheme {
     return const TextTheme(

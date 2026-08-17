@@ -93,7 +93,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           ),
         ),
         cartItemCount: cartState.totalItemCount,
-        onCartTap: () => context.push('/cart'),
+        onCartTap: () => context.go('/cart'),
       ),
       body: Column(
         children: [

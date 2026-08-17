@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/nuvi_colors.dart';
-import '../../../../core/theme/nuvi_radii.dart';
 import '../../../../core/theme/nuvi_spacing.dart';
 import '../../../../core/theme/nuvi_typography.dart';
 import '../../../../core/widgets/nuvi_button.dart';
@@ -35,9 +34,15 @@ class CartSummaryCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(NuviSpacing.lg),
       decoration: BoxDecoration(
-        color: NuviColors.surfaceVariant.withValues(alpha: 0.4),
-        borderRadius: BorderRadius.circular(NuviRadii.card),
-        border: Border.all(color: NuviColors.border.withValues(alpha: 0.5)),
+        color: NuviColors.surfaceVariant,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: NuviColors.textTertiary.withValues(alpha: 0.08),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -45,8 +50,9 @@ class CartSummaryCard extends StatelessWidget {
           Text(
             'Summary',
             style: NuviTypography.textTheme.headlineMedium?.copyWith(
-              color: NuviColors.primary,
+              color: NuviColors.onSurface,
               fontWeight: FontWeight.bold,
+              fontSize: 19,
             ),
           ),
           const SizedBox(height: NuviSpacing.md),
@@ -78,16 +84,18 @@ class CartSummaryCard extends StatelessWidget {
             children: [
               Text(
                 'Total',
-                style: NuviTypography.textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: NuviColors.primary,
+                style: NuviTypography.textTheme.labelLarge?.copyWith(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: NuviColors.onSurface,
                 ),
               ),
               Text(
                 _format(total),
                 style: NuviTypography.textTheme.headlineMedium?.copyWith(
+                  fontSize: 19,
                   color: NuviColors.accent,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w800,
                 ),
               ),
             ],
