@@ -8,6 +8,7 @@ import '../../../core/theme/nuvi_spacing.dart';
 import '../../../core/theme/nuvi_typography.dart';
 import '../../../core/utils/nuvi_logger.dart';
 import '../../../core/widgets/nuvi_button.dart';
+import '../../../core/widgets/nuvi_loading_indicator.dart';
 import '../../../core/widgets/nuvi_top_bar.dart';
 import '../../cart/presentation/cart_controller.dart';
 import '../../order/domain/shopify_order.dart';
@@ -155,7 +156,7 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
       ),
       body: isLoading
           ? const Center(
-              child: CircularProgressIndicator(color: NuviColors.primary),
+              child: NuviLoadingIndicator(),
             )
           : order == null
           ? _buildErrorState(

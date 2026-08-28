@@ -6,6 +6,7 @@ import '../../../core/theme/nuvi_colors.dart';
 import '../../../core/theme/nuvi_spacing.dart';
 import '../../../core/theme/nuvi_typography.dart';
 import '../../../core/widgets/nuvi_button.dart';
+import '../../../core/widgets/nuvi_loading_indicator.dart';
 import '../../../core/widgets/nuvi_top_bar.dart';
 import '../../cart/presentation/cart_controller.dart';
 import '../data/shopify_customer_repository.dart';
@@ -149,7 +150,7 @@ class _SavedAddressesScreenState extends ConsumerState<SavedAddressesScreen> {
   Widget _buildBody(BuildContext context, CustomerState state) {
     if (state.isLoading) {
       return const Center(
-        child: CircularProgressIndicator(color: NuviColors.primary),
+        child: NuviLoadingIndicator(),
       );
     }
 

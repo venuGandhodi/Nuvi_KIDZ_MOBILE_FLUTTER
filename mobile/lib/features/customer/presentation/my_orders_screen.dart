@@ -6,6 +6,7 @@ import '../../../core/theme/nuvi_colors.dart';
 import '../../../core/theme/nuvi_spacing.dart';
 import '../../../core/theme/nuvi_typography.dart';
 import '../../../core/widgets/nuvi_button.dart';
+import '../../../core/widgets/nuvi_loading_indicator.dart';
 import 'customer_controller.dart';
 import 'widgets/order_card.dart';
 
@@ -21,7 +22,7 @@ class MyOrdersScreen extends ConsumerWidget {
       color: NuviColors.surface,
       child: customerState.isLoading
           ? const Center(
-              child: CircularProgressIndicator(color: NuviColors.primary),
+              child: NuviLoadingIndicator(),
             )
           : RefreshIndicator(
               color: NuviColors.primary,

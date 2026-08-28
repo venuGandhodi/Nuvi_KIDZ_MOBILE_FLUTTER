@@ -6,6 +6,7 @@ import '../../../core/theme/nuvi_colors.dart';
 import '../../../core/theme/nuvi_spacing.dart';
 import '../../../core/theme/nuvi_typography.dart';
 import '../../../core/widgets/nuvi_button.dart';
+import '../../../core/widgets/nuvi_loading_indicator.dart';
 import '../../category/domain/menu_category.dart';
 import '../../category/presentation/category_menu_controller.dart';
 import '../../wishlist/presentation/wishlist_controller.dart';
@@ -45,7 +46,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     if (homeState.isLoading) {
       return const Center(
-        child: CircularProgressIndicator(color: NuviColors.primary),
+        child: NuviLoadingIndicator(),
       );
     }
 

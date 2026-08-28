@@ -6,6 +6,7 @@ import '../../../core/theme/nuvi_colors.dart';
 import '../../../core/theme/nuvi_spacing.dart';
 import '../../../core/theme/nuvi_typography.dart';
 import '../../../core/widgets/nuvi_button.dart';
+import '../../../core/widgets/nuvi_loading_indicator.dart';
 import '../../../core/widgets/nuvi_product_card.dart';
 import 'wishlist_controller.dart';
 
@@ -43,7 +44,7 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen> {
   ) {
     if (state.isLoading) {
       return const Center(
-        child: CircularProgressIndicator(color: NuviColors.primary),
+        child: NuviLoadingIndicator(),
       );
     }
 

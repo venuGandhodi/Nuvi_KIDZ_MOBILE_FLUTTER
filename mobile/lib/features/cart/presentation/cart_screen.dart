@@ -10,6 +10,7 @@ import '../../../core/theme/nuvi_spacing.dart';
 import '../../../core/theme/nuvi_typography.dart';
 import '../../../core/utils/nuvi_logger.dart';
 import '../../../core/widgets/nuvi_button.dart';
+import '../../../core/widgets/nuvi_loading_indicator.dart';
 import '../../checkout/data/shopify_checkout_service.dart';
 import 'cart_controller.dart';
 import 'widgets/cart_item_row.dart';
@@ -70,7 +71,7 @@ class _CartScreenState extends ConsumerState<CartScreen>
       color: NuviColors.surface,
       child: cartState.isLoading
           ? const Center(
-              child: CircularProgressIndicator(color: NuviColors.primary),
+              child: NuviLoadingIndicator(),
             )
           : cartState.items.isEmpty
           ? _buildEmptyState(context)

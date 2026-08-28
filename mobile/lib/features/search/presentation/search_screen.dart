@@ -7,6 +7,7 @@ import '../../../core/theme/nuvi_radii.dart';
 import '../../../core/theme/nuvi_spacing.dart';
 import '../../../core/theme/nuvi_typography.dart';
 import '../../../core/widgets/nuvi_button.dart';
+import '../../../core/widgets/nuvi_loading_indicator.dart';
 import '../../../core/widgets/nuvi_product_card.dart';
 import '../../../core/widgets/nuvi_top_bar.dart';
 import '../../cart/presentation/cart_controller.dart';
@@ -157,7 +158,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     // Loading Initial State
     if (state.isLoading) {
       return const Center(
-        child: CircularProgressIndicator(color: NuviColors.primary),
+        child: NuviLoadingIndicator(),
       );
     }
 
@@ -304,10 +305,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 return const Center(
                   child: Padding(
                     padding: EdgeInsets.all(NuviSpacing.md),
-                    child: CircularProgressIndicator(
-                      color: NuviColors.primary,
-                      strokeWidth: 2,
-                    ),
+                    child: NuviLoadingIndicator(),
                   ),
                 );
               }

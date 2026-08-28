@@ -7,6 +7,7 @@ import '../../../core/theme/nuvi_radii.dart';
 import '../../../core/theme/nuvi_spacing.dart';
 import '../../../core/theme/nuvi_typography.dart';
 import '../../../core/widgets/nuvi_icons.dart';
+import '../../../core/widgets/nuvi_loading_indicator.dart';
 import '../../../core/widgets/nuvi_product_card.dart';
 import '../../wishlist/presentation/wishlist_controller.dart';
 import 'category_controller.dart';
@@ -278,7 +279,7 @@ class _CategoryListingScreenState extends ConsumerState<CategoryListingScreen> {
         Expanded(
           child: state.isLoading
               ? const Center(
-                  child: CircularProgressIndicator(color: NuviColors.primary),
+                  child: NuviLoadingIndicator(),
                 )
               : state.errorMessage != null
               ? Center(

@@ -6,6 +6,7 @@ import '../../../core/theme/nuvi_colors.dart';
 import '../../../core/theme/nuvi_spacing.dart';
 import '../../../core/theme/nuvi_typography.dart';
 import '../../../core/widgets/nuvi_button.dart';
+import '../../../core/widgets/nuvi_loading_indicator.dart';
 import '../../../core/widgets/nuvi_pill_selector.dart';
 import '../../../core/widgets/nuvi_product_card.dart';
 import '../../../core/widgets/nuvi_top_bar.dart';
@@ -66,7 +67,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
           onCartTap: () => context.go('/cart'),
         ),
         body: const Center(
-          child: CircularProgressIndicator(color: NuviColors.primary),
+          child: NuviLoadingIndicator(),
         ),
       );
     }
