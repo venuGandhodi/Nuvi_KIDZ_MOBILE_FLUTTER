@@ -141,4 +141,358 @@ void main() {
       expect(products.first.price, equals('₹999'));
     });
   });
+
+  group('ShopifyHomeRepository getAgeFilters (Shopify Metaobject-driven)', () {
+    Map<String, dynamic> ageCategoryNode({
+      required String id,
+      required String label,
+      required String sortOrder,
+      String active = 'true',
+      bool includeImage = true,
+      bool includeCollection = false,
+    }) {
+      return {
+        'id': id,
+        'handle': label,
+        'fields': [
+          {'key': 'active', 'value': active},
+          {'key': 'age_label', 'value': label},
+          if (includeImage)
+            {
+              'key': 'image',
+              'value': 'gid://shopify/MediaImage/1',
+              'reference': {
+                'image': {'url': 'https://cdn.shopify.com/s/files/$id.png'},
+              },
+            },
+          {'key': 'sort_order', 'value': sortOrder},
+          if (includeCollection)
+            {
+              'key': 'collection',
+              'value': 'gid://shopify/Collection/1',
+              'reference': {'handle': '$label-clothing', 'title': label},
+            },
+        ],
+      };
+    }
+
+    test(
+      'returns all six Age Category entries when Shopify provides them',
+      () async {
+        final mockClient = MockClient((request) async {
+          return http.Response(
+            jsonEncode({
+              'data': {
+                'metaobjects': {
+                  'nodes': [
+                    ageCategoryNode(id: 'g1', label: '0-3m', sortOrder: '1'),
+                    ageCategoryNode(id: 'g2', label: '3-6m', sortOrder: '2'),
+                    ageCategoryNode(id: 'g3', label: '6-12m', sortOrder: '3'),
+                    ageCategoryNode(id: 'g4', label: '1-2y', sortOrder: '4'),
+                    ageCategoryNode(id: 'g5', label: '3-5y', sortOrder: '5'),
+                    ageCategoryNode(id: 'g6', label: '6-8y', sortOrder: '6'),
+                  ],
+                },
+              },
+            }),
+            200,
+          );
+        });
+
+        final repo = ShopifyHomeRepository(
+          client: ShopifyStorefrontClient(
+            domain: 'mock.myshopify.com',
+            httpClient: mockClient,
+          ),
+        );
+
+        final filters = await repo.getAgeFilters();
+        expect(filters.length, equals(6));
+        expect(filters.map((f) => f.label), [
+          '0-3m',
+          '3-6m',
+          '6-12m',
+          '1-2y',
+          '3-5y',
+          '6-8y',
+        ]);
+      },
+    );
+
+    test(
+      'orders entries ascending by Sort Order regardless of Shopify response order',
+      () async {
+        final mockClient = MockClient((request) async {
+          return http.Response(
+            jsonEncode({
+              'data': {
+                'metaobjects': {
+                  'nodes': [
+                    ageCategoryNode(id: 'g3', label: '6-12m', sortOrder: '3'),
+                    ageCategoryNode(id: 'g1', label: '0-3m', sortOrder: '1'),
+                    ageCategoryNode(id: 'g2', label: '3-6m', sortOrder: '2'),
+                  ],
+                },
+              },
+            }),
+            200,
+          );
+        });
+
+        final repo = ShopifyHomeRepository(
+          client: ShopifyStorefrontClient(
+            domain: 'mock.myshopify.com',
+            httpClient: mockClient,
+          ),
+        );
+
+        final filters = await repo.getAgeFilters();
+        expect(filters.map((f) => f.label), ['0-3m', '3-6m', '6-12m']);
+      },
+    );
+
+    test(
+      'reflects an updated Sort Order in the UI order without any code change',
+      () async {
+        // 3-6m now sorts before 0-3m purely because Shopify changed the
+        // stored Sort Order value — no hardcoded position exists in Flutter.
+        final mockClient = MockClient((request) async {
+          return http.Response(
+            jsonEncode({
+              'data': {
+                'metaobjects': {
+                  'nodes': [
+                    ageCategoryNode(id: 'g1', label: '0-3m', sortOrder: '2'),
+                    ageCategoryNode(id: 'g2', label: '3-6m', sortOrder: '1'),
+                  ],
+                },
+              },
+            }),
+            200,
+          );
+        });
+
+        final repo = ShopifyHomeRepository(
+          client: ShopifyStorefrontClient(
+            domain: 'mock.myshopify.com',
+            httpClient: mockClient,
+          ),
+        );
+
+        final filters = await repo.getAgeFilters();
+        expect(filters.first.label, equals('3-6m'));
+        expect(filters.last.label, equals('0-3m'));
+      },
+    );
+
+    test('filters out entries where Active is false', () async {
+      final mockClient = MockClient((request) async {
+        return http.Response(
+          jsonEncode({
+            'data': {
+              'metaobjects': {
+                'nodes': [
+                  ageCategoryNode(id: 'g1', label: '0-3m', sortOrder: '1'),
+                  ageCategoryNode(
+                    id: 'g2',
+                    label: '3-6m',
+                    sortOrder: '2',
+                    active: 'false',
+                  ),
+                ],
+              },
+            },
+          }),
+          200,
+        );
+      });
+
+      final repo = ShopifyHomeRepository(
+        client: ShopifyStorefrontClient(
+          domain: 'mock.myshopify.com',
+          httpClient: mockClient,
+        ),
+      );
+
+      final filters = await repo.getAgeFilters();
+      expect(filters.length, equals(1));
+      expect(filters.single.label, equals('0-3m'));
+    });
+
+    test('displays an entry once Active is true', () async {
+      final mockClient = MockClient((request) async {
+        return http.Response(
+          jsonEncode({
+            'data': {
+              'metaobjects': {
+                'nodes': [
+                  ageCategoryNode(id: 'g1', label: '0-3m', sortOrder: '1'),
+                ],
+              },
+            },
+          }),
+          200,
+        );
+      });
+
+      final repo = ShopifyHomeRepository(
+        client: ShopifyStorefrontClient(
+          domain: 'mock.myshopify.com',
+          httpClient: mockClient,
+        ),
+      );
+
+      final filters = await repo.getAgeFilters();
+      expect(filters.single.active, isTrue);
+    });
+
+    test(
+      'handles a missing image on an entry without crashing or dropping it',
+      () async {
+        final mockClient = MockClient((request) async {
+          return http.Response(
+            jsonEncode({
+              'data': {
+                'metaobjects': {
+                  'nodes': [
+                    ageCategoryNode(
+                      id: 'g1',
+                      label: '0-3m',
+                      sortOrder: '1',
+                      includeImage: false,
+                    ),
+                  ],
+                },
+              },
+            }),
+            200,
+          );
+        });
+
+        final repo = ShopifyHomeRepository(
+          client: ShopifyStorefrontClient(
+            domain: 'mock.myshopify.com',
+            httpClient: mockClient,
+          ),
+        );
+
+        final filters = await repo.getAgeFilters();
+        expect(filters.single.label, equals('0-3m'));
+        expect(filters.single.imageUrl, isNull);
+      },
+    );
+
+    test(
+      'handles a missing collection reference on one entry without failing the whole list',
+      () async {
+        final mockClient = MockClient((request) async {
+          return http.Response(
+            jsonEncode({
+              'data': {
+                'metaobjects': {
+                  'nodes': [
+                    ageCategoryNode(id: 'g1', label: '0-3m', sortOrder: '1'),
+                    ageCategoryNode(
+                      id: 'g2',
+                      label: '3-6m',
+                      sortOrder: '2',
+                      includeCollection: true,
+                    ),
+                  ],
+                },
+              },
+            }),
+            200,
+          );
+        });
+
+        final repo = ShopifyHomeRepository(
+          client: ShopifyStorefrontClient(
+            domain: 'mock.myshopify.com',
+            httpClient: mockClient,
+          ),
+        );
+
+        final filters = await repo.getAgeFilters();
+        expect(filters.length, equals(2));
+        expect(filters.first.collectionHandle, isNull);
+        expect(filters.last.collectionHandle, equals('3-6m-clothing'));
+      },
+    );
+
+    test(
+      'returns an empty list (not hardcoded data) when Shopify returns zero entries',
+      () async {
+        final mockClient = MockClient((request) async {
+          return http.Response(
+            jsonEncode({
+              'data': {
+                'metaobjects': {'nodes': <dynamic>[]},
+              },
+            }),
+            200,
+          );
+        });
+
+        final repo = ShopifyHomeRepository(
+          client: ShopifyStorefrontClient(
+            domain: 'mock.myshopify.com',
+            httpClient: mockClient,
+          ),
+        );
+
+        final filters = await repo.getAgeFilters();
+        expect(filters, isEmpty);
+      },
+    );
+
+    test(
+      'returns an empty list (not hardcoded data) when the Shopify request fails',
+      () async {
+        final mockClient = MockClient((request) async {
+          return http.Response('Internal Server Error', 500);
+        });
+
+        final repo = ShopifyHomeRepository(
+          client: ShopifyStorefrontClient(
+            domain: 'mock.myshopify.com',
+            httpClient: mockClient,
+          ),
+        );
+
+        final filters = await repo.getAgeFilters();
+        expect(filters, isEmpty);
+        // Explicitly not the old hardcoded fallback labels.
+        expect(filters.any((f) => f.label == '0-3m'), isFalse);
+      },
+    );
+
+    test('an entry beyond the original six automatically appears', () async {
+      final mockClient = MockClient((request) async {
+        return http.Response(
+          jsonEncode({
+            'data': {
+              'metaobjects': {
+                'nodes': [
+                  ageCategoryNode(id: 'g1', label: '0-3m', sortOrder: '1'),
+                  ageCategoryNode(id: 'g7', label: '8-10y', sortOrder: '7'),
+                ],
+              },
+            },
+          }),
+          200,
+        );
+      });
+
+      final repo = ShopifyHomeRepository(
+        client: ShopifyStorefrontClient(
+          domain: 'mock.myshopify.com',
+          httpClient: mockClient,
+        ),
+      );
+
+      final filters = await repo.getAgeFilters();
+      expect(filters.any((f) => f.label == '8-10y'), isTrue);
+    });
+  });
 }

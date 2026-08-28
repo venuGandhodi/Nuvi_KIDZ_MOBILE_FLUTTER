@@ -119,12 +119,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   context.push('/category/$handle');
                 },
               ),
-              const SizedBox(height: NuviSpacing.xl),
-              AgeFilterSection(
-                filters: homeState.ageFilters,
-                selectedFilterId: homeState.selectedAgeFilterId,
-                onFilterSelected: (id) => homeNotifier.selectAgeFilter(id),
-              ),
+              // Age categories are entirely Shopify-driven (Metaobject type
+              // "age_category"); when Shopify returns none (fetch failure or
+              // zero active entries), the section is hidden rather than
+              // showing stale/hardcoded placeholder data.
+              if (homeState.ageFilters.isNotEmpty) ...[
+                const SizedBox(height: NuviSpacing.xl),
+                AgeFilterSection(
+                  filters: homeState.ageFilters,
+                  selectedFilterId: homeState.selectedAgeFilterId,
+                  onFilterSelected: (id) {
+                    homeNotifier.selectAgeFilter(id);
+                    final matches = homeState.ageFilters.where(
+                      (f) => f.id == id,
+                    );
+                    if (matches.isNotEmpty) {
+                      final handle = matches.first.collectionHandle;
+                      if (handle != null && handle.isNotEmpty) {
+                        context.push('/category/$handle');
+                      }
+                    }
+                  },
+                ),
+              ],
               const SizedBox(height: NuviSpacing.xl),
               BestSellersSection(
                 products: homeState.bestSellers,

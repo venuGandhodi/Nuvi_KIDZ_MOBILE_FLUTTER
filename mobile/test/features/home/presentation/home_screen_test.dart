@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:nuvi_kidz/features/category/data/category_repository.dart';
 import 'package:nuvi_kidz/features/category/domain/category_detail.dart';
 import 'package:nuvi_kidz/features/category/domain/category_filter.dart';
@@ -33,8 +34,13 @@ class MockHomeRepo implements HomeRepository {
 
   @override
   Future<List<AgeFilter>> getAgeFilters() async => [
-    const AgeFilter(id: 'a1', label: '0-3m'),
-    const AgeFilter(id: 'a2', label: '3-6m'),
+    const AgeFilter(
+      id: 'a1',
+      label: '0-3m',
+      sortOrder: 1,
+      collectionHandle: 'newborn-clothing',
+    ),
+    const AgeFilter(id: 'a2', label: '3-6m', sortOrder: 2),
   ];
 
   @override
@@ -47,6 +53,11 @@ class MockHomeRepo implements HomeRepository {
       badgeText: 'NEW',
     ),
   ];
+}
+
+class MockHomeRepoNoAgeFilters extends MockHomeRepo {
+  @override
+  Future<List<AgeFilter>> getAgeFilters() async => [];
 }
 
 class MockCategoryMenuRepo implements CategoryRepository {
@@ -128,4 +139,73 @@ void main() {
     await tester.tap(pill, warnIfMissed: false);
     await tester.pumpAndSettle();
   });
+
+  testWidgets(
+    'Tapping an age category navigates to its Shopify collection handle',
+    (WidgetTester tester) async {
+      final router = GoRouter(
+        initialLocation: '/home',
+        routes: [
+          GoRoute(
+            path: '/home',
+            builder: (context, state) => const HomeScreen(),
+          ),
+          GoRoute(
+            path: '/category/:categoryId',
+            builder: (context, state) => Scaffold(
+              body: Text('Category: ${state.pathParameters['categoryId']}'),
+            ),
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            homeRepositoryProvider.overrideWithValue(MockHomeRepo()),
+            categoryRepositoryProvider.overrideWithValue(
+              MockCategoryMenuRepo(),
+            ),
+          ],
+          child: MaterialApp.router(routerConfig: router),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final ageTile = find.text('0-3m');
+      await tester.ensureVisible(ageTile);
+      await tester.pumpAndSettle();
+
+      await tester.tap(ageTile, warnIfMissed: false);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Category: newborn-clothing'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'HomeScreen hides the "Shop by age" section when Shopify returns no '
+    'active age categories, instead of showing hardcoded fallback data',
+    (WidgetTester tester) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            homeRepositoryProvider.overrideWithValue(
+              MockHomeRepoNoAgeFilters(),
+            ),
+            categoryRepositoryProvider.overrideWithValue(
+              MockCategoryMenuRepo(),
+            ),
+          ],
+          child: const MaterialApp(home: HomeScreen()),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Shop by age'), findsNothing);
+      // The rest of the screen still renders normally.
+      expect(find.text('Autumn Adventures\nAwait'), findsOneWidget);
+      expect(find.text('Bestsellers'), findsOneWidget);
+    },
+  );
 }
