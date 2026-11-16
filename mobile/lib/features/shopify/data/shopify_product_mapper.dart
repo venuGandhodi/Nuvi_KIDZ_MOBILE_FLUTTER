@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../category/domain/category_detail.dart';
 import '../../category/domain/menu_category.dart';
+import '../../home/domain/age_filter.dart';
 import '../../home/domain/category.dart';
 import '../../home/domain/home_hero.dart';
 import '../../home/domain/product.dart';
@@ -335,6 +336,70 @@ class ShopifyProductMapper {
       buttonText: buttonText,
       collectionHandle: collectionHandle,
       isActive: isActive,
+    );
+  }
+
+  /// Maps a single `age_category` metaobject node to [AgeFilter].
+  ///
+  /// Returns null when the node has no usable "Age Label" value, since a
+  /// blank/mis-configured entry must not surface as a nameless tile rather
+  /// than being silently skipped from the "Shop by age" section.
+  static AgeFilter? mapToAgeFilter(Map<String, dynamic> json) {
+    final id = json['id'] as String?;
+    if (id == null || id.isEmpty) return null;
+
+    String label = '';
+    String? imageUrl;
+    int sortOrder = 0;
+    String? collectionHandle;
+    bool active = true;
+
+    if (json['fields'] != null && json['fields'] is List) {
+      final fields = json['fields'] as List<dynamic>;
+      for (final field in fields) {
+        if (field is! Map<String, dynamic>) continue;
+
+        final key = field['key'] as String?;
+        final value = field['value'] as String?;
+        final reference = field['reference'] as Map<String, dynamic>?;
+
+        switch (key) {
+          case 'age_label':
+            if (value != null && value.isNotEmpty) label = value;
+            break;
+          case 'sort_order':
+            sortOrder = int.tryParse(value ?? '') ?? 0;
+            break;
+          case 'active':
+            active = value == 'true' || value == '1';
+            break;
+          case 'collection':
+            final handle = reference?['handle'] as String?;
+            if (handle != null && handle.isNotEmpty) {
+              collectionHandle = handle;
+            }
+            break;
+          case 'image':
+            final refImageUrl =
+                (reference?['image'] as Map<String, dynamic>?)?['url']
+                    as String?;
+            if (refImageUrl != null && refImageUrl.isNotEmpty) {
+              imageUrl = refImageUrl;
+            }
+            break;
+        }
+      }
+    }
+
+    if (label.isEmpty) return null;
+
+    return AgeFilter(
+      id: id,
+      label: label,
+      imageUrl: imageUrl,
+      sortOrder: sortOrder,
+      collectionHandle: collectionHandle,
+      active: active,
     );
   }
 

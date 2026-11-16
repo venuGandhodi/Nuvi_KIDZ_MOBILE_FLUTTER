@@ -340,6 +340,34 @@ class ShopifyQueries {
     }
   ''';
 
+  static const String getAgeCategories = r'''
+    query GetAgeCategories($first: Int = 20) {
+      metaobjects(type: "age_category", first: $first) {
+        nodes {
+          id
+          handle
+          fields {
+            key
+            value
+            reference {
+              ... on MediaImage {
+                image {
+                  url
+                  altText
+                }
+              }
+              ... on Collection {
+                id
+                handle
+                title
+              }
+            }
+          }
+        }
+      }
+    }
+  ''';
+
   static const String cartFragment = r'''
     fragment CartFields on Cart {
       id

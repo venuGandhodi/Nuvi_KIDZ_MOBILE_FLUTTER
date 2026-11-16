@@ -132,6 +132,107 @@ void main() {
       expect(hero.imageUrl, equals('https://cdn.shopify.com/s/files/hero.jpg'));
     });
 
+    test('mapToAgeFilter parses age_label, sort_order, active, image, and '
+        'collection fields correctly', () {
+      final sampleJson = {
+        'id': 'gid://shopify/Metaobject/199181271294',
+        'fields': [
+          {'key': 'active', 'value': 'true'},
+          {'key': 'age_label', 'value': '0-3m'},
+          {
+            'key': 'image',
+            'reference': {
+              'image': {'url': 'https://cdn.shopify.com/s/files/new_born.png'},
+            },
+          },
+          {'key': 'sort_order', 'value': '1'},
+          {
+            'key': 'collection',
+            'reference': {'handle': 'newborn-clothing', 'title': 'Newborn'},
+          },
+        ],
+      };
+
+      final filter = ShopifyProductMapper.mapToAgeFilter(sampleJson);
+
+      expect(filter, isNotNull);
+      expect(filter!.id, equals('gid://shopify/Metaobject/199181271294'));
+      expect(filter.label, equals('0-3m'));
+      expect(filter.sortOrder, equals(1));
+      expect(filter.active, isTrue);
+      expect(
+        filter.imageUrl,
+        equals('https://cdn.shopify.com/s/files/new_born.png'),
+      );
+      expect(filter.collectionHandle, equals('newborn-clothing'));
+    });
+
+    test('mapToAgeFilter handles a missing image field safely', () {
+      final sampleJson = {
+        'id': 'gid://shopify/Metaobject/2',
+        'fields': [
+          {'key': 'age_label', 'value': '3-6m'},
+          {'key': 'sort_order', 'value': '2'},
+          {'key': 'active', 'value': 'true'},
+        ],
+      };
+
+      final filter = ShopifyProductMapper.mapToAgeFilter(sampleJson);
+
+      expect(filter, isNotNull);
+      expect(filter!.label, equals('3-6m'));
+      expect(filter.imageUrl, isNull);
+    });
+
+    test('mapToAgeFilter handles a missing collection reference safely '
+        'without failing the entry', () {
+      final sampleJson = {
+        'id': 'gid://shopify/Metaobject/3',
+        'fields': [
+          {'key': 'age_label', 'value': '6-12m'},
+          {'key': 'sort_order', 'value': '3'},
+          {'key': 'active', 'value': 'true'},
+        ],
+      };
+
+      final filter = ShopifyProductMapper.mapToAgeFilter(sampleJson);
+
+      expect(filter, isNotNull);
+      expect(filter!.label, equals('6-12m'));
+      expect(filter.collectionHandle, isNull);
+    });
+
+    test('mapToAgeFilter treats active=false as inactive and defaults '
+        'sortOrder when missing', () {
+      final sampleJson = {
+        'id': 'gid://shopify/Metaobject/4',
+        'fields': [
+          {'key': 'age_label', 'value': '1-2y'},
+          {'key': 'active', 'value': 'false'},
+        ],
+      };
+
+      final filter = ShopifyProductMapper.mapToAgeFilter(sampleJson);
+
+      expect(filter, isNotNull);
+      expect(filter!.active, isFalse);
+      expect(filter.sortOrder, equals(0));
+    });
+
+    test('mapToAgeFilter returns null when age_label is missing', () {
+      final sampleJson = {
+        'id': 'gid://shopify/Metaobject/5',
+        'fields': [
+          {'key': 'sort_order', 'value': '1'},
+          {'key': 'active', 'value': 'true'},
+        ],
+      };
+
+      final filter = ShopifyProductMapper.mapToAgeFilter(sampleJson);
+
+      expect(filter, isNull);
+    });
+
     test('mapToCategory extracts collection image when present', () {
       final sampleCategoryJson = {
         'id': 'gid://shopify/Collection/1234',
