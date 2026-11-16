@@ -237,7 +237,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
             Expanded(
               child: _buildStatCard(
                 icon: Icons.favorite_outline,
-                iconColor: const Color(0xFFB06B60),
+                iconColor: NuviTone.peach.accent,
                 count: '${wishlistState.wishlistProductIds.length}',
                 label: 'WISHLIST',
                 onTap: () => context.go('/wishlist'),
@@ -247,7 +247,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
             Expanded(
               child: _buildStatCard(
                 icon: Icons.work_outline,
-                iconColor: const Color(0xFF7B865D),
+                iconColor: NuviColors.leaf,
                 count: '0',
                 label: 'ORDERS',
                 onTap: () => context.push('/sign-in'),
@@ -257,7 +257,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
             Expanded(
               child: _buildStatCard(
                 icon: Icons.location_on_outlined,
-                iconColor: const Color(0xFFCA933E),
+                iconColor: NuviColors.amber,
                 count: '0',
                 label: 'ADDRESS',
                 onTap: () => context.push('/sign-in'),
@@ -358,7 +358,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
             Expanded(
               child: _buildStatCard(
                 icon: Icons.favorite_outline,
-                iconColor: const Color(0xFFB06B60),
+                iconColor: NuviTone.peach.accent,
                 count: '${wishlistState.wishlistProductIds.length}',
                 label: 'WISHLIST',
                 onTap: () => context.go('/wishlist'),
@@ -368,7 +368,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
             Expanded(
               child: _buildStatCard(
                 icon: Icons.work_outline,
-                iconColor: const Color(0xFF7B865D),
+                iconColor: NuviColors.leaf,
                 count: '${customerState.orders.length}',
                 label: 'ORDERS',
                 onTap: () => context.go('/orders'),
@@ -378,7 +378,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
             Expanded(
               child: _buildStatCard(
                 icon: Icons.location_on_outlined,
-                iconColor: const Color(0xFFCA933E),
+                iconColor: NuviColors.amber,
                 count: '${customer?.addresses.length ?? 0}',
                 label: 'ADDRESS',
                 onTap: () => context.push('/addresses'),
