@@ -117,62 +117,6 @@ class _NuviMascotAnimatedState extends State<NuviMascotAnimated>
   }
 }
 
-/// Subtle floating/breathing loop for the Home header logo — matches the
-/// design handoff's logoFloat keyframe (translateY ±3px, rotate ±1.5deg,
-/// scale 1<->1.04, 3.8s ease-in-out), with a short entrance beforehand.
-class NuviLogoAnimated extends StatefulWidget {
-  final Widget child;
-
-  const NuviLogoAnimated({super.key, required this.child});
-
-  @override
-  State<NuviLogoAnimated> createState() => _NuviLogoAnimatedState();
-}
-
-class _NuviLogoAnimatedState extends State<NuviLogoAnimated>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 3800),
-    );
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      if (!MediaQuery.of(context).disableAnimations) {
-        _controller.repeat();
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        final wave = math.sin(_controller.value * 2 * math.pi);
-        return Transform.translate(
-          offset: Offset(0, -3.0 * wave),
-          child: Transform.rotate(
-            angle: 0.026 * wave, // ~1.5deg
-            child: Transform.scale(scale: 1.0 + 0.02 * wave, child: child),
-          ),
-        );
-      },
-      child: widget.child,
-    );
-  }
-}
-
 /// One-shot fade-up entrance for text (opacity 0->1, translateY 10px->0),
 /// with an optional stagger delay before it starts.
 class NuviFadeUp extends StatefulWidget {

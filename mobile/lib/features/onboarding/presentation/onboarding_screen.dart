@@ -88,7 +88,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const creamBackground = Color(0xFFFDFBF7);
+    const creamBackground = NuviColors.cream;
     final isLastPage = _currentPage == _pages.length - 1;
 
     return Scaffold(
@@ -162,8 +162,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                           page.scriptTagline,
                           style: NuviTypography.textTheme.headlineSmall
                               ?.copyWith(
-                                color: const Color(0xFFB85D43),
-                                fontFamily: 'Quicksand',
+                                color: NuviTone.peach.accent,
+                                fontFamily: NuviTypography.headlineFont,
                                 fontStyle: FontStyle.italic,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 20,
@@ -215,8 +215,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   height: 7,
                   decoration: BoxDecoration(
                     color: _currentPage == index
-                        ? const Color(0xFFD49B35)
-                        : const Color(0xFFD9D9D9),
+                        ? NuviColors.gold
+                        : NuviColors.borderStrong,
                     borderRadius: BorderRadius.circular(NuviRadii.pill),
                   ),
                 ),

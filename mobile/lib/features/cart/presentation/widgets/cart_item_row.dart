@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+
 import '../../../../core/theme/nuvi_colors.dart';
 import '../../../../core/theme/nuvi_radii.dart';
 import '../../../../core/theme/nuvi_spacing.dart';
-import '../../../../core/theme/nuvi_typography.dart';
+import '../../../../core/theme/nuvi_theme_ext.dart';
+import '../../../../core/widgets/nuvi_icon_button.dart';
+import '../../../../core/widgets/nuvi_quantity_selector.dart';
+import '../../../../core/widgets/nuvi_skeleton.dart';
 import '../../domain/cart_item.dart';
 
 class CartItemRow extends StatelessWidget {
@@ -19,174 +23,88 @@ class CartItemRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final x = context.nuvi;
     final imagePath = item.product.imageUrl ?? item.product.assetPath;
 
     return Container(
-      padding: const EdgeInsets.all(NuviSpacing.md),
+      padding: const EdgeInsets.all(NuviSpacing.s12),
       decoration: BoxDecoration(
-        color: NuviColors.surfaceVariant,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: NuviColors.textTertiary.withValues(alpha: 0.1),
-            blurRadius: 2,
-            offset: const Offset(0, 1),
-          ),
-        ],
+        color: NuviBagColors.card,
+        borderRadius: BorderRadius.circular(NuviRadii.card),
+        border: Border.all(color: NuviBagColors.line),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Product Thumbnail Image
-          Container(
-            width: 76,
-            height: 76,
-            decoration: BoxDecoration(
-              color: NuviColors.surface,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: imagePath != null && imagePath.startsWith('http')
-                  ? Image.network(
-                      imagePath,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) =>
-                          const Icon(Icons.image, color: NuviColors.border),
-                    )
-                  : const Icon(Icons.image, color: NuviColors.border),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(NuviRadii.small),
+            child: NuviImage(
+              url: imagePath,
+              width: 82,
+              height: 100,
+              tile: NuviTile.peach,
             ),
           ),
-          const SizedBox(width: NuviSpacing.md),
-
-          // Details & Actions Column
+          const SizedBox(width: NuviSpacing.s12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Title and Remove Button Row
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
-                      child: Text(
-                        item.product.title,
-                        style: NuviTypography.textTheme.labelLarge?.copyWith(
-                          fontSize: 14.5,
-                          color: NuviColors.onSurface,
-                          fontWeight: FontWeight.w800,
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          item.product.title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: x.nunito(
+                            14.5,
+                            weight: FontWeight.w800,
+                            color: NuviBagColors.ink,
+                          ),
                         ),
                       ),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.close, size: 20),
-                      color: NuviColors.onSurface.withValues(alpha: 0.5),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
+                    NuviIconButton(
+                      icon: Icons.delete_outline_rounded,
+                      iconSize: 20,
+                      size: 32,
+                      color: NuviBagColors.muted,
+                      semanticLabel: 'Remove ${item.product.title}',
                       onPressed: onRemove,
                     ),
                   ],
                 ),
-
-                // Variant Text
-                if (item.displayVariantInfo.isNotEmpty) ...[
-                  const SizedBox(height: 2),
+                if (item.displayVariantInfo.isNotEmpty)
                   Text(
                     item.displayVariantInfo,
-                    style: NuviTypography.textTheme.bodyMedium?.copyWith(
-                      fontSize: 13,
-                      color: NuviColors.textSecondary,
-                    ),
+                    style: x.nunito(12.5, color: NuviBagColors.muted),
                   ),
-                ],
-                const SizedBox(height: NuviSpacing.md),
-
-                // Quantity Selector & Price Row
+                const SizedBox(height: NuviSpacing.sm),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Quantity Control Pill
-                    Container(
-                      decoration: BoxDecoration(
-                        color: NuviColors.surfaceVariant.withValues(alpha: 0.5),
-                        borderRadius: BorderRadius.circular(NuviRadii.pill),
-                        border: Border.all(
-                          color: NuviColors.border.withValues(alpha: 0.6),
-                        ),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 4,
-                        vertical: 2,
-                      ),
-                      child: Row(
-                        children: [
-                          InkWell(
-                            borderRadius: BorderRadius.circular(NuviRadii.pill),
-                            onTap: () {
-                              if (item.quantity > 1) {
-                                onQuantityChanged(item.quantity - 1);
-                              } else {
-                                onRemove();
-                              }
-                            },
-                            child: const SizedBox(
-                              width: 28,
-                              height: 28,
-                              child: Center(
-                                child: Text(
-                                  '-',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: NuviColors.primary,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          SizedBox(
-                            width: 28,
-                            child: Center(
-                              child: Text(
-                                '${item.quantity}',
-                                style: NuviTypography.textTheme.bodyMedium
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                      color: NuviColors.primary,
-                                    ),
-                              ),
-                            ),
-                          ),
-                          InkWell(
-                            borderRadius: BorderRadius.circular(NuviRadii.pill),
-                            onTap: () => onQuantityChanged(item.quantity + 1),
-                            child: const SizedBox(
-                              width: 28,
-                              height: 28,
-                              child: Center(
-                                child: Text(
-                                  '+',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: NuviColors.primary,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                    NuviQuantityStepper(
+                      value: item.quantity,
+                      borderColor: NuviBagColors.line,
+                      onDecrease: () {
+                        if (item.quantity > 1) {
+                          onQuantityChanged(item.quantity - 1);
+                        } else {
+                          onRemove();
+                        }
+                      },
+                      onIncrease: () => onQuantityChanged(item.quantity + 1),
                     ),
-
-                    // Price Display
+                    const Spacer(),
                     Text(
                       item.formattedLineTotal,
-                      style: NuviTypography.textTheme.labelLarge?.copyWith(
-                        fontSize: 15,
-                        color: NuviColors.accent,
-                        fontWeight: FontWeight.w800,
+                      style: x.bagSerif(
+                        17,
+                        weight: FontWeight.w600,
+                        color: NuviBagColors.ink,
                       ),
                     ),
                   ],

@@ -1,112 +1,130 @@
 import 'package:flutter/material.dart';
-import '../theme/nuvi_colors.dart';
-import '../theme/nuvi_radii.dart';
-import '../theme/nuvi_typography.dart';
-import 'nuvi_icons.dart';
 
+import '../theme/nuvi_colors.dart';
+import '../theme/nuvi_motion.dart';
+import '../theme/nuvi_theme_ext.dart';
+import 'nuvi_badge.dart';
+import 'nuvi_icons.dart';
+import 'nuvi_pressable.dart';
+
+/// White tab bar with a hairline top: ink icons, active = ink Baloo label +
+/// small gold dot; count badges on Wishlist and Bag.
 class NuviBottomNav extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
+  final int cartCount;
+  final int wishlistCount;
 
   const NuviBottomNav({
     super.key,
     required this.currentIndex,
     required this.onTap,
+    this.cartCount = 0,
+    this.wishlistCount = 0,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: NuviColors.surface,
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        color: NuviColors.white,
+        border: Border(top: BorderSide(color: NuviColors.line)),
+      ),
       child: SafeArea(
         top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(10, 6, 10, 10),
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 6.0,
-              vertical: 10.0,
-            ),
-            decoration: BoxDecoration(
-              color: NuviColors.surfaceVariant,
-              borderRadius: BorderRadius.circular(NuviRadii.pill),
-              boxShadow: [
-                BoxShadow(
-                  color: NuviColors.textTertiary.withValues(alpha: 0.14),
-                  blurRadius: 14,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildNavItem(
-                  0,
-                  (color) => NuviIcons.home(color: color, size: 21),
-                  'Home',
-                ),
-                _buildNavItem(
-                  1,
-                  (color) => NuviIcons.orders(color: color, size: 23),
-                  'Orders',
-                ),
-                _buildNavItem(
-                  2,
-                  (color) => NuviIcons.cart(color: color, size: 23),
-                  'Cart',
-                ),
-                _buildNavItem(
-                  3,
-                  (color) => NuviIcons.wishlist(color: color, size: 23),
-                  'Wishlist',
-                ),
-              ],
-            ),
+        child: SizedBox(
+          height: 60,
+          child: Row(
+            children: [
+              _item(
+                context,
+                0,
+                (c) => NuviIcons.home(color: c, size: 22),
+                'Home',
+              ),
+              _item(
+                context,
+                1,
+                (c) => NuviIcons.orders(color: c, size: 22),
+                'Orders',
+              ),
+              _item(
+                context,
+                2,
+                (c) => NuviIcons.bag(color: c, size: 23),
+                'Bag',
+                badge: cartCount,
+              ),
+              _item(
+                context,
+                3,
+                (c) => NuviIcons.wishlist(color: c, size: 22),
+                'Wishlist',
+                badge: wishlistCount,
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _buildNavItem(
+  Widget _item(
+    BuildContext context,
     int index,
-    Widget Function(Color color) iconBuilder,
-    String label,
-  ) {
-    final isSelected = currentIndex == index;
-    final inactiveColor = NuviColors.textSecondary;
-
-    return GestureDetector(
-      onTap: () => onTap(index),
-      behavior: HitTestBehavior.opaque,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SizedBox(
-            width: 40,
-            height: 40,
-            child: isSelected
-                ? Container(
-                    decoration: const BoxDecoration(
-                      color: NuviColors.primary,
-                      shape: BoxShape.circle,
-                    ),
-                    alignment: Alignment.center,
-                    child: iconBuilder(NuviColors.onPrimary),
-                  )
-                : Center(child: iconBuilder(inactiveColor)),
-          ),
-          const SizedBox(height: 5),
-          Text(
-            label,
-            style: NuviTypography.textTheme.bodySmall?.copyWith(
-              fontSize: 10.5,
-              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w700,
-              color: isSelected ? NuviColors.onSurface : inactiveColor,
+    Widget Function(Color color) icon,
+    String label, {
+    int badge = 0,
+  }) {
+    final x = context.nuvi;
+    final selected = currentIndex == index;
+    final color = selected ? NuviColors.ink : NuviColors.inkMuted;
+    return Expanded(
+      child: NuviPressable(
+        onTap: () => onTap(index),
+        semanticLabel: badge > 0 ? '$label, $badge items' : label,
+        child: Semantics(
+          selected: selected,
+          child: ExcludeSemantics(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    icon(color),
+                    if (badge > 0)
+                      Positioned(
+                        top: -7,
+                        right: -12,
+                        child: NuviCountBadge(count: badge),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  label,
+                  style: selected
+                      ? x.tabLabel.copyWith(
+                          color: NuviColors.ink,
+                          fontWeight: FontWeight.w700,
+                        )
+                      : x.nunito(11, weight: FontWeight.w600, color: color),
+                ),
+                const SizedBox(height: 2),
+                AnimatedContainer(
+                  duration: NuviMotion.of(context, NuviMotion.fast),
+                  width: selected ? 5 : 0,
+                  height: selected ? 5 : 0,
+                  decoration: BoxDecoration(
+                    color: x.gold,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }

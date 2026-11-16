@@ -115,8 +115,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                           'Tiny styles, big smiles ♡',
                           style: NuviTypography.textTheme.headlineMedium
                               ?.copyWith(
-                                color: const Color(0xFFF6EAD8),
-                                fontFamily: 'Quicksand',
+                                color: NuviColors.moonCream,
+                                fontFamily: NuviTypography.headlineFont,
                                 fontWeight: FontWeight.w600,
                                 fontSize: 22,
                                 letterSpacing: 0.5,
@@ -136,7 +136,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                     child: Text(
                       'Tap to continue',
                       style: NuviTypography.textTheme.bodySmall?.copyWith(
-                        color: Colors.white.withValues(alpha: 0.45),
+                        color: NuviColors.white.withValues(alpha: 0.45),
                         fontSize: 13,
                         letterSpacing: 0.8,
                       ),

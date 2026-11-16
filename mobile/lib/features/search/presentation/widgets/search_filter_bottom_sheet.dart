@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/nuvi_colors.dart';
-import '../../../../core/theme/nuvi_radii.dart';
 import '../../../../core/theme/nuvi_spacing.dart';
-import '../../../../core/theme/nuvi_typography.dart';
+import '../../../../core/theme/nuvi_theme_ext.dart';
+import '../../../../core/widgets/nuvi_bottom_sheet.dart';
 import '../../../../core/widgets/nuvi_button.dart';
+import '../../../../core/widgets/nuvi_chip.dart';
+import '../../../../core/widgets/nuvi_size_pill.dart';
 import '../../domain/search_filter_state.dart';
 
 class SearchFilterBottomSheet extends StatefulWidget {
@@ -21,10 +22,8 @@ class SearchFilterBottomSheet extends StatefulWidget {
     required SearchFilterState initialFilter,
     required ValueChanged<SearchFilterState> onApply,
   }) {
-    return showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+    return showNuviSheet(
+      context,
       builder: (context) => SearchFilterBottomSheet(
         initialFilter: initialFilter,
         onApply: onApply,
@@ -85,244 +84,116 @@ class _SearchFilterBottomSheetState extends State<SearchFilterBottomSheet> {
     Navigator.of(context).pop();
   }
 
+  Widget _group(String title, Widget child) {
+    final x = context.nuvi;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: NuviSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: x.baloo(15.5, weight: FontWeight.w700)),
+          const SizedBox(height: NuviSpacing.xs),
+          child,
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: NuviColors.surface,
-      borderRadius: const BorderRadius.vertical(
-        top: Radius.circular(NuviRadii.card),
+    final x = context.nuvi;
+    return NuviSheet(
+      title: 'Filters & Sort',
+      titleAction: NuviTextAction(text: 'Reset All', onTap: _reset),
+      footer: Row(
+        children: [
+          Expanded(
+            child: NuviButton(
+              text: 'Cancel',
+              type: NuviButtonType.outline,
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ),
+          const SizedBox(width: NuviSpacing.s12),
+          Expanded(
+            child: NuviButton(
+              text: 'Apply Filters',
+              type: NuviButtonType.primary,
+              onPressed: _apply,
+            ),
+          ),
+        ],
       ),
-      child: Padding(
-        padding: EdgeInsets.only(
-          top: NuviSpacing.lg,
-          left: NuviSpacing.lg,
-          right: NuviSpacing.lg,
-          bottom: MediaQuery.of(context).viewInsets.bottom + NuviSpacing.xl,
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _group(
+            'Sort By',
+            Wrap(
+              spacing: NuviSpacing.sm,
+              children: SearchSortOption.values.map((sort) {
+                return NuviChip(
+                  label: sort.label,
+                  selected: _selectedSort == sort,
+                  onTap: () => setState(() => _selectedSort = sort),
+                );
+              }).toList(),
+            ),
+          ),
+          _group(
+            'Category',
+            Wrap(
+              spacing: NuviSpacing.sm,
+              children: _categories.map((category) {
+                final isSelected = _selectedCategory == category;
+                return NuviChip(
+                  label: category,
+                  selected: isSelected,
+                  onTap: () => setState(() {
+                    _selectedCategory = isSelected ? null : category;
+                  }),
+                );
+              }).toList(),
+            ),
+          ),
+          _group(
+            'Size',
+            Wrap(
+              spacing: NuviSpacing.xs,
+              children: _sizes.map((size) {
+                final isSelected = _selectedSize == size;
+                return NuviSizePill(
+                  label: size,
+                  selected: isSelected,
+                  onTap: () => setState(() {
+                    _selectedSize = isSelected ? null : size;
+                  }),
+                );
+              }).toList(),
+            ),
+          ),
+          Row(
             children: [
-              // Handle bar & Header
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: NuviColors.border,
-                    borderRadius: BorderRadius.circular(NuviRadii.pill),
-                  ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'In Stock Only',
+                      style: x.baloo(15.5, weight: FontWeight.w700),
+                    ),
+                    Text('Hide currently unavailable styles', style: x.small),
+                  ],
                 ),
               ),
-              const SizedBox(height: NuviSpacing.md),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Filters & Sort',
-                    style: NuviTypography.textTheme.headlineMedium?.copyWith(
-                      color: NuviColors.primary,
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: _reset,
-                    child: Text(
-                      'Reset All',
-                      style: NuviTypography.textTheme.labelMedium?.copyWith(
-                        color: NuviColors.accent,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const Divider(color: NuviColors.border),
-              const SizedBox(height: NuviSpacing.sm),
-
-              // Sort Section
-              Text(
-                'Sort By',
-                style: NuviTypography.textTheme.labelLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: NuviColors.primary,
-                ),
-              ),
-              const SizedBox(height: NuviSpacing.sm),
-              Wrap(
-                spacing: NuviSpacing.xs,
-                runSpacing: NuviSpacing.xs,
-                children: SearchSortOption.values.map((sort) {
-                  final isSelected = _selectedSort == sort;
-                  return ChoiceChip(
-                    label: Text(sort.label),
-                    selected: isSelected,
-                    selectedColor: NuviColors.secondary,
-                    backgroundColor: NuviColors.surfaceVariant,
-                    labelStyle: TextStyle(
-                      color: isSelected
-                          ? NuviColors.onSecondary
-                          : NuviColors.onSurface,
-                      fontSize: 12,
-                      fontWeight: isSelected
-                          ? FontWeight.bold
-                          : FontWeight.normal,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(NuviRadii.pill),
-                      side: BorderSide(
-                        color: isSelected
-                            ? NuviColors.secondary
-                            : NuviColors.border,
-                      ),
-                    ),
-                    onSelected: (selected) {
-                      if (selected) {
-                        setState(() => _selectedSort = sort);
-                      }
-                    },
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: NuviSpacing.lg),
-
-              // Category Section
-              Text(
-                'Category',
-                style: NuviTypography.textTheme.labelLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: NuviColors.primary,
-                ),
-              ),
-              const SizedBox(height: NuviSpacing.sm),
-              Wrap(
-                spacing: NuviSpacing.xs,
-                runSpacing: NuviSpacing.xs,
-                children: _categories.map((category) {
-                  final isSelected = _selectedCategory == category;
-                  return FilterChip(
-                    label: Text(category),
-                    selected: isSelected,
-                    selectedColor: NuviColors.secondary,
-                    backgroundColor: NuviColors.surfaceVariant,
-                    labelStyle: TextStyle(
-                      color: isSelected
-                          ? NuviColors.onSecondary
-                          : NuviColors.onSurface,
-                      fontSize: 12,
-                      fontWeight: isSelected
-                          ? FontWeight.bold
-                          : FontWeight.normal,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(NuviRadii.pill),
-                      side: BorderSide(
-                        color: isSelected
-                            ? NuviColors.secondary
-                            : NuviColors.border,
-                      ),
-                    ),
-                    onSelected: (selected) {
-                      setState(() {
-                        _selectedCategory = selected ? category : null;
-                      });
-                    },
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: NuviSpacing.lg),
-
-              // Size Section
-              Text(
-                'Size',
-                style: NuviTypography.textTheme.labelLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: NuviColors.primary,
-                ),
-              ),
-              const SizedBox(height: NuviSpacing.sm),
-              Wrap(
-                spacing: NuviSpacing.xs,
-                runSpacing: NuviSpacing.xs,
-                children: _sizes.map((size) {
-                  final isSelected = _selectedSize == size;
-                  return FilterChip(
-                    label: Text(size),
-                    selected: isSelected,
-                    selectedColor: NuviColors.secondary,
-                    backgroundColor: NuviColors.surfaceVariant,
-                    labelStyle: TextStyle(
-                      color: isSelected
-                          ? NuviColors.onSecondary
-                          : NuviColors.onSurface,
-                      fontSize: 12,
-                      fontWeight: isSelected
-                          ? FontWeight.bold
-                          : FontWeight.normal,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(NuviRadii.pill),
-                      side: BorderSide(
-                        color: isSelected
-                            ? NuviColors.secondary
-                            : NuviColors.border,
-                      ),
-                    ),
-                    onSelected: (selected) {
-                      setState(() {
-                        _selectedSize = selected ? size : null;
-                      });
-                    },
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: NuviSpacing.lg),
-
-              // In-stock switch
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(
-                  'In Stock Only',
-                  style: NuviTypography.textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: NuviColors.primary,
-                  ),
-                ),
-                subtitle: Text(
-                  'Hide currently unavailable styles',
-                  style: NuviTypography.textTheme.bodySmall?.copyWith(
-                    color: NuviColors.onSurface.withValues(alpha: 0.6),
-                  ),
-                ),
+              Switch.adaptive(
                 value: _inStockOnly,
-                activeThumbColor: NuviColors.secondary,
+                activeTrackColor: x.gold,
                 onChanged: (val) => setState(() => _inStockOnly = val),
-              ),
-              const SizedBox(height: NuviSpacing.xl),
-
-              // Actions
-              Row(
-                children: [
-                  Expanded(
-                    child: NuviButton(
-                      text: 'Cancel',
-                      type: NuviButtonType.secondary,
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
-                  ),
-                  const SizedBox(width: NuviSpacing.md),
-                  Expanded(
-                    child: NuviButton(
-                      text: 'Apply Filters',
-                      type: NuviButtonType.primary,
-                      onPressed: _apply,
-                    ),
-                  ),
-                ],
               ),
             ],
           ),
-        ),
+        ],
       ),
     );
   }

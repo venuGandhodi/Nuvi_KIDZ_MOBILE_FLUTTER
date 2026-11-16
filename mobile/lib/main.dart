@@ -2,13 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'core/theme/nuvi_festival.dart';
+import 'core/theme/nuvi_font_licenses.dart';
 import 'core/theme/nuvi_theme.dart';
 import 'core/router/app_router.dart';
 import 'core/utils/nuvi_logger.dart';
+import 'core/widgets/nuvi_festival_overlay.dart';
 
 void main() async {
   nuviLog('NUVI-APP', 'main() START');
   WidgetsFlutterBinding.ensureInitialized();
+  registerNuviFontLicenses();
 
   nuviLog('NUVI-APP', 'Loading environment START');
   try {
@@ -60,12 +64,24 @@ class NuviKidzApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
+    final festival = ref.watch(activeFestivalProvider);
 
     return MaterialApp.router(
       title: 'Nuvi Kidz',
-      theme: NuviTheme.lightTheme,
+      theme: NuviTheme.build(festival),
+      themeMode: ThemeMode.light,
       routerConfig: router,
       debugShowCheckedModeBanner: false,
+      builder: (context, child) => MediaQuery.withClampedTextScaling(
+        maxScaleFactor: 1.3,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            ?child,
+            if (festival != null) NuviFestivalOverlay(festival: festival),
+          ],
+        ),
+      ),
     );
   }
 }

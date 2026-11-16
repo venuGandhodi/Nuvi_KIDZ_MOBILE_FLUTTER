@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../theme/nuvi_colors.dart';
-import '../theme/nuvi_decorations.dart';
-import '../theme/nuvi_typography.dart';
 
+import 'nuvi_chip.dart';
+
+/// Selectable pill; renders as a [NuviChip].
 class NuviPillSelector extends StatelessWidget {
   final String label;
   final bool isSelected;
@@ -21,36 +21,13 @@ class NuviPillSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    BoxDecoration decoration = isSelected
-        ? NuviDecorations.pillSelected
-        : NuviDecorations.pillUnselected;
-
-    Color textColor = isSelected ? NuviColors.onPrimary : NuviColors.onSurface;
-
-    if (isDisabled) {
-      decoration = BoxDecoration(
-        color: Colors.transparent,
-        borderRadius: NuviDecorations.pillUnselected.borderRadius,
-        border: Border.all(color: NuviColors.border.withValues(alpha: 0.5)),
-      );
-      textColor = textColor.withValues(alpha: 0.5);
-    }
-
-    return GestureDetector(
-      onTap: isDisabled ? null : onTap,
-      child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: dense ? 14 : 20,
-          vertical: dense ? 6 : 10,
-        ),
-        decoration: decoration,
-        child: Text(
-          label,
-          style: NuviTypography.textTheme.labelLarge?.copyWith(
-            color: textColor,
-            fontSize: dense ? 12 : null,
-          ),
-        ),
+    return Opacity(
+      opacity: isDisabled ? 0.5 : 1,
+      child: NuviChip(
+        label: label,
+        selected: isSelected,
+        dense: dense,
+        onTap: isDisabled ? null : onTap,
       ),
     );
   }

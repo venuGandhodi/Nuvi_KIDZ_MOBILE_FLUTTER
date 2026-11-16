@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
 import '../theme/nuvi_colors.dart';
-import '../theme/nuvi_typography.dart';
+import '../theme/nuvi_theme_ext.dart';
+import 'nuvi_icon_button.dart';
 import 'nuvi_icons.dart';
 
+/// Cream header for screens outside the app shell: back chevron, Baloo
+/// title, optional bag (with count) and account actions.
 class NuviTopBar extends StatelessWidget implements PreferredSizeWidget {
   final Widget? leading;
   final Widget? title;
@@ -31,97 +36,47 @@ class NuviTopBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final x = context.nuvi;
     Widget? leadingWidget = leading;
     if (leadingWidget == null && showBackButton) {
-      leadingWidget = IconButton(
-        icon: const Icon(Icons.arrow_back, color: NuviColors.primary),
+      leadingWidget = NuviIconButton(
+        icon: Icons.arrow_back_ios_new_rounded,
+        iconSize: 19,
+        semanticLabel: 'Back',
         onPressed: onBackTap ?? () => Navigator.of(context).maybePop(),
       );
     }
 
     return AppBar(
-      backgroundColor: Colors.transparent,
+      backgroundColor: NuviColors.cream,
+      surfaceTintColor: Colors.transparent,
+      systemOverlayStyle: SystemUiOverlayStyle.dark,
       elevation: 0,
+      scrolledUnderElevation: 0,
       leading: leadingWidget,
+      leadingWidth: 56,
       automaticallyImplyLeading: false,
-      title:
-          title ??
-          Text(
-            'Nuvi Kidz',
-            style: NuviTypography.textTheme.headlineMedium?.copyWith(
-              color: NuviColors.primary,
-            ),
-          ),
+      titleSpacing: leadingWidget == null ? 16 : 0,
+      title: DefaultTextStyle.merge(
+        style: x.h3,
+        child: title ?? Text('Nuvi Kidz', style: x.h3),
+      ),
       centerTitle: centerTitle,
       actions: [
         if (showCart)
-          Padding(
-            padding: const EdgeInsets.only(right: 8.0),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                IconButton(
-                  icon: const Icon(
-                    Icons.shopping_cart_outlined,
-                    color: NuviColors.primary,
-                  ),
-                  onPressed: onCartTap,
-                ),
-                if (cartItemCount > 0)
-                  Positioned(
-                    right: 4,
-                    top: 6,
-                    child: Container(
-                      padding: const EdgeInsets.all(2),
-                      decoration: const BoxDecoration(
-                        color: NuviColors.secondary,
-                        shape: BoxShape.circle,
-                      ),
-                      constraints: const BoxConstraints(
-                        minWidth: 18,
-                        minHeight: 18,
-                      ),
-                      child: Center(
-                        child: Text(
-                          '$cartItemCount',
-                          style: const TextStyle(
-                            color: NuviColors.onSecondary,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            height: 1.0,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
+          NuviIconButton(
+            semanticLabel: 'Bag',
+            badgeCount: cartItemCount,
+            onPressed: onCartTap,
+            child: NuviIcons.bag(color: NuviColors.ink, size: 22),
           ),
         if (showProfile)
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: GestureDetector(
-              onTap: onProfileTap,
-              child: Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: NuviColors.surfaceVariant,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: NuviColors.textTertiary.withValues(alpha: 0.15),
-                      blurRadius: 3,
-                      offset: const Offset(0, 1),
-                    ),
-                  ],
-                ),
-                alignment: Alignment.center,
-                child: NuviIcons.person(color: NuviColors.primary, size: 16),
-              ),
-            ),
+          NuviIconButton(
+            semanticLabel: 'Account',
+            onPressed: onProfileTap,
+            child: NuviIcons.person(color: NuviColors.ink, size: 22),
           ),
+        const SizedBox(width: 8),
       ],
     );
   }

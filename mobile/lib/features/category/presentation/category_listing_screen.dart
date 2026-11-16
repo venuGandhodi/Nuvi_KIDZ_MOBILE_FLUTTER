@@ -3,11 +3,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/nuvi_colors.dart';
+import '../../../core/theme/nuvi_decorations.dart';
+import '../../../core/theme/nuvi_motion.dart';
 import '../../../core/theme/nuvi_radii.dart';
 import '../../../core/theme/nuvi_spacing.dart';
-import '../../../core/theme/nuvi_typography.dart';
-import '../../../core/widgets/nuvi_icons.dart';
+import '../../../core/theme/nuvi_theme_ext.dart';
+import '../../../core/widgets/nuvi_badge.dart';
+import '../../../core/widgets/nuvi_chip.dart';
+import '../../../core/widgets/nuvi_decor.dart';
+import '../../../core/widgets/nuvi_empty_state.dart';
+import '../../../core/widgets/nuvi_icon_button.dart';
+import '../../../core/widgets/nuvi_loading_indicator.dart';
+import '../../../core/widgets/nuvi_pressable.dart';
 import '../../../core/widgets/nuvi_product_card.dart';
+import '../../../core/widgets/nuvi_section_header.dart';
+import '../../../core/widgets/nuvi_skeleton.dart';
 import '../../wishlist/presentation/wishlist_controller.dart';
 import 'category_controller.dart';
 import 'category_menu_controller.dart';
@@ -137,10 +147,28 @@ class _CategoryListingScreenState extends ConsumerState<CategoryListingScreen> {
     );
   }
 
+  void _removeFilter(
+    FilterState current, {
+    String? category,
+    String? age,
+    bool stock = false,
+  }) {
+    final next = FilterState(
+      selectedCategoryIds: {...current.selectedCategoryIds}..remove(category),
+      selectedAgeFilters: {...current.selectedAgeFilters}..remove(age),
+      selectedPriceRange: current.selectedPriceRange,
+      inStockOnly: stock ? false : current.inStockOnly,
+    );
+    ref.read(categoryControllerProvider.notifier).applyFilter(next);
+  }
+
   @override
   Widget build(BuildContext context) {
     if (widget.flat) {
-      return _buildFlatScaffold(context);
+      return Material(
+        color: NuviColors.cream,
+        child: _buildProductPane(context, title: null, flat: true),
+      );
     }
 
     final menuState = ref.watch(categoryMenuControllerProvider);
@@ -148,7 +176,7 @@ class _CategoryListingScreenState extends ConsumerState<CategoryListingScreen> {
     final hasChildren = selected != null && selected.items.isNotEmpty;
 
     return Material(
-      color: NuviColors.surface,
+      color: NuviColors.cream,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -159,8 +187,7 @@ class _CategoryListingScreenState extends ConsumerState<CategoryListingScreen> {
                 : _buildProductPane(
                     context,
                     title: selected?.title,
-                    showBack: false,
-                    showActions: true,
+                    flat: false,
                   ),
           ),
         ],
@@ -168,272 +195,105 @@ class _CategoryListingScreenState extends ConsumerState<CategoryListingScreen> {
     );
   }
 
-  Widget _buildFlatScaffold(BuildContext context) {
-    return Material(
-      color: NuviColors.surface,
-      child: _buildProductPane(
-        context,
-        title: null,
-        showBack: true,
-        showActions: true,
-      ),
-    );
-  }
-
-  Widget _buildHeader({
-    required String title,
-    required bool showBack,
-    required bool showActions,
-  }) {
-    final state = ref.watch(categoryControllerProvider);
-
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: NuviSpacing.md,
-        vertical: NuviSpacing.sm,
-      ),
-      decoration: BoxDecoration(
-        color: NuviColors.surface.withValues(alpha: 0.95),
-        border: Border(bottom: BorderSide(color: NuviColors.border)),
-      ),
-      child: Row(
-        mainAxisAlignment: showActions
-            ? MainAxisAlignment.spaceBetween
-            : MainAxisAlignment.center,
-        children: [
-          Expanded(
-            child: Row(
-              mainAxisAlignment: showActions
-                  ? MainAxisAlignment.start
-                  : MainAxisAlignment.center,
-              children: [
-                if (showBack)
-                  GestureDetector(
-                    onTap: () => context.pop(),
-                    child: const Padding(
-                      padding: EdgeInsets.only(right: NuviSpacing.xs),
-                      child: Icon(
-                        Icons.arrow_back,
-                        size: 20,
-                        color: NuviColors.primary,
-                      ),
-                    ),
-                  ),
-                Flexible(
-                  child: Text(
-                    title,
-                    style: NuviTypography.textTheme.headlineMedium?.copyWith(
-                      color: NuviColors.onSurface,
-                      fontWeight: FontWeight.bold,
-                      fontSize: showActions ? 18 : 21,
-                    ),
-                    textAlign: showActions ? TextAlign.start : TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (showActions)
-            Row(
-              children: [
-                _buildActionButton(
-                  icon: Icons.tune,
-                  label: 'Filter',
-                  isActive: !state.filterState.isEmpty,
-                  onTap: _openFilterSheet,
-                ),
-                const SizedBox(width: NuviSpacing.xs),
-                _buildActionButton(
-                  icon: Icons.swap_vert,
-                  label: 'Sort',
-                  isActive: state.sortOption != SortOption.featured,
-                  onTap: _openSortSheet,
-                ),
-              ],
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildProductPane(
-    BuildContext context, {
-    required String? title,
-    required bool showBack,
-    required bool showActions,
-  }) {
-    final state = ref.watch(categoryControllerProvider);
-    final notifier = ref.read(categoryControllerProvider.notifier);
-    final headerTitle = title ?? state.categoryDetail?.title ?? 'Products';
-
-    return Column(
-      children: [
-        _buildHeader(
-          title: headerTitle,
-          showBack: showBack,
-          showActions: showActions,
-        ),
-        Expanded(
-          child: state.isLoading
-              ? const Center(
-                  child: CircularProgressIndicator(color: NuviColors.primary),
-                )
-              : state.errorMessage != null
-              ? Center(
-                  child: Text(
-                    state.errorMessage!,
-                    style: NuviTypography.textTheme.bodyMedium,
-                  ),
-                )
-              : _buildProductGrid(context, state, notifier),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSubItemPane(MenuCategory selected) {
-    return Column(
-      children: [
-        _buildHeader(
-          title: selected.title,
-          showBack: false,
-          showActions: false,
-        ),
-        Expanded(child: _buildSubItemGrid(selected.items)),
-      ],
-    );
-  }
-
-  Widget _buildSubItemGrid(List<MenuCategory> items) {
-    return GridView.builder(
-      padding: const EdgeInsets.all(NuviSpacing.md),
-      itemCount: items.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        childAspectRatio: 0.82,
-        crossAxisSpacing: NuviSpacing.md,
-        mainAxisSpacing: NuviSpacing.md,
-      ),
-      itemBuilder: (context, index) {
-        final item = items[index];
-        return GestureDetector(
-          onTap: () => _onSubItemTap(item),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                item.imageUrl != null
-                    ? Image.network(
-                        item.imageUrl!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) =>
-                            _subItemImageFallback(),
-                      )
-                    : _subItemImageFallback(),
-                Positioned(
-                  left: 6,
-                  bottom: 6,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: NuviColors.surfaceVariant,
-                      borderRadius: BorderRadius.circular(NuviRadii.pill),
-                    ),
-                    child: Text(
-                      item.title,
-                      style: NuviTypography.textTheme.labelMedium?.copyWith(
-                        color: NuviColors.primary,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _subItemImageFallback() {
-    return Container(
-      color: NuviColors.surfaceVariant,
-      child: const Icon(Icons.child_care, color: NuviColors.primary, size: 32),
-    );
-  }
-
+  // ── Left rail ──────────────────────────────────────────────────────────
   Widget _buildCategoryRail(CategoryMenuState menuState) {
     if (menuState.categories.isEmpty) {
-      return const SizedBox(width: 104);
+      return const SizedBox(width: 88);
     }
-
+    final x = context.nuvi;
     return Container(
-      width: 104,
-      decoration: const BoxDecoration(
-        border: Border(right: BorderSide(color: NuviColors.borderStrong)),
+      width: 88,
+      decoration: BoxDecoration(
+        color: x.sageSoft,
+        border: const Border(right: BorderSide(color: NuviColors.line)),
       ),
       child: ListView.builder(
-        padding: const EdgeInsets.symmetric(vertical: NuviSpacing.md),
+        padding: const EdgeInsets.symmetric(vertical: NuviSpacing.sm),
         itemCount: menuState.categories.length,
         itemBuilder: (context, index) {
           final category = menuState.categories[index];
           final isSelected = category.id == menuState.selectedCategoryId;
-          return GestureDetector(
+          final highlighted = category.title.toLowerCase().contains('sale');
+          return NuviPressable(
             onTap: () => _onRailCategoryTap(category),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                vertical: NuviSpacing.sm,
-                horizontal: NuviSpacing.xs,
-              ),
-              child: Column(
-                children: [
-                  Container(
-                    width: 60,
-                    height: 60,
-                    padding: const EdgeInsets.all(2.5),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: isSelected
-                            ? NuviColors.secondary
+            semanticLabel: category.title,
+            child: Semantics(
+              selected: isSelected,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(6, 3, 6, 3),
+                child: Stack(
+                  children: [
+                    AnimatedContainer(
+                      duration: NuviMotion.of(context, NuviMotion.fast),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 10,
+                        horizontal: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: highlighted
+                            ? x.goldSoft
+                            : isSelected
+                            ? NuviColors.white
                             : Colors.transparent,
-                        width: 2,
+                        borderRadius: BorderRadius.circular(18),
+                        boxShadow: isSelected ? NuviShadows.floating : null,
+                        border: highlighted
+                            ? Border.all(color: x.gold, width: 1.5)
+                            : null,
+                      ),
+                      child: Column(
+                        children: [
+                          Container(
+                            width: 50,
+                            height: 50,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: NuviGradients.tile(
+                                NuviGradients.forLabel(category.title, index),
+                              ),
+                            ),
+                            clipBehavior: Clip.antiAlias,
+                            child: NuviImage(
+                              url: category.imageUrl,
+                              tile: NuviGradients.forLabel(
+                                category.title,
+                                index,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            category.title,
+                            textAlign: TextAlign.center,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: isSelected
+                                ? x.baloo(12.5, weight: FontWeight.w700)
+                                : x.nunito(
+                                    11.5,
+                                    weight: FontWeight.w700,
+                                    color: NuviColors.inkMuted,
+                                    height: 1.2,
+                                  ),
+                          ),
+                        ],
                       ),
                     ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(NuviRadii.pill),
-                      child: category.imageUrl != null
-                          ? Image.network(
-                              category.imageUrl!,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  _railIconFallback(),
-                            )
-                          : _railIconFallback(),
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    category.title,
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: NuviTypography.textTheme.labelLarge?.copyWith(
-                      fontSize: 11.5,
-                      color: NuviColors.onSurface,
-                      fontWeight: isSelected
-                          ? FontWeight.w800
-                          : FontWeight.w700,
-                    ),
-                  ),
-                ],
+                    if (isSelected)
+                      Positioned(
+                        left: 0,
+                        top: 18,
+                        bottom: 18,
+                        child: Container(
+                          width: 4,
+                          decoration: BoxDecoration(
+                            color: x.gold,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
           );
@@ -442,44 +302,280 @@ class _CategoryListingScreenState extends ConsumerState<CategoryListingScreen> {
     );
   }
 
-  Widget _railIconFallback() {
-    return Container(
-      color: NuviColors.surfaceVariant,
-      child: const Icon(Icons.child_care, color: NuviColors.primary, size: 20),
+  // ── Sub-category explorer ──────────────────────────────────────────────
+  Widget _buildSubItemPane(MenuCategory selected) {
+    final x = context.nuvi;
+    final tiles = <MenuCategory>[
+      if (selected.collectionHandle != null)
+        MenuCategory(
+          id: selected.id,
+          title: 'All ${selected.title}',
+          imageUrl: selected.imageUrl,
+          collectionHandle: selected.collectionHandle,
+        ),
+      ...selected.items,
+    ];
+    return CustomScrollView(
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(14, 16, 14, 4),
+          sliver: SliverToBoxAdapter(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                NuviEyebrow('Shop by category', lines: false),
+                const SizedBox(height: 4),
+                Text(selected.title, style: x.h2),
+              ],
+            ),
+          ),
+        ),
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(14, 12, 14, 32),
+          sliver: SliverGrid.builder(
+            itemCount: tiles.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              childAspectRatio: 0.72,
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 14,
+            ),
+            itemBuilder: (context, index) {
+              final item = tiles[index];
+              final tile = NuviGradients.forLabel(item.title, index);
+              return NuviPressable(
+                onTap: () => _onSubItemTap(item),
+                semanticLabel: item.title,
+                child: Column(
+                  children: [
+                    AspectRatio(
+                      aspectRatio: 1,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: NuviGradients.tile(tile),
+                          borderRadius: BorderRadius.circular(NuviRadii.image),
+                          boxShadow: NuviShadows.productCard,
+                        ),
+                        clipBehavior: Clip.antiAlias,
+                        child: NuviImage(url: item.imageUrl, tile: tile),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      item.title,
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: x.nunito(12, weight: FontWeight.w700, height: 1.2),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 
-  Widget _buildActionButton({
-    required IconData icon,
-    required String label,
-    required bool isActive,
-    required VoidCallback onTap,
+  // ── Collection (products) ──────────────────────────────────────────────
+  Widget _buildProductPane(
+    BuildContext context, {
+    required String? title,
+    required bool flat,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: isActive ? NuviColors.secondary : Colors.transparent,
-          borderRadius: BorderRadius.circular(NuviRadii.pill),
-          border: Border.all(
-            color: isActive ? NuviColors.secondary : NuviColors.border,
-          ),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              size: 16,
-              color: isActive ? NuviColors.onSecondary : NuviColors.onSurface,
+    final state = ref.watch(categoryControllerProvider);
+    final notifier = ref.read(categoryControllerProvider.notifier);
+    final headerTitle = title ?? state.categoryDetail?.title ?? 'Products';
+
+    if (state.isLoading) {
+      return Column(
+        children: [
+          if (flat) _buildBackBar(headerTitle, null),
+          const Expanded(child: Center(child: NuviLoadingIndicator())),
+        ],
+      );
+    }
+
+    if (state.errorMessage != null) {
+      return Column(
+        children: [
+          if (flat) _buildBackBar(headerTitle, null),
+          Expanded(
+            child: NuviEmptyState(
+              title: 'Hmm, that didn’t load',
+              message: state.errorMessage,
             ),
-            const SizedBox(width: 4),
-            Text(
-              label,
-              style: NuviTypography.textTheme.labelLarge?.copyWith(
-                fontSize: 12,
-                color: isActive ? NuviColors.onSecondary : NuviColors.onSurface,
-                fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+          ),
+        ],
+      );
+    }
+
+    final bottomPadding =
+        kBottomNavigationBarHeight +
+        MediaQuery.of(context).padding.bottom +
+        32.0;
+
+    return CustomScrollView(
+      slivers: [
+        SliverToBoxAdapter(
+          child: flat
+              ? _buildBackBar(headerTitle, state.products.length)
+              : _buildBanner(headerTitle, state),
+        ),
+        SliverPersistentHeader(
+          pinned: true,
+          delegate: _ToolbarDelegate(height: 60, child: _buildToolbar(state)),
+        ),
+        if (!state.filterState.isEmpty)
+          SliverToBoxAdapter(child: _buildActiveFilters(state.filterState)),
+        if (state.products.isEmpty)
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: NuviEmptyState(
+              title: state.filterState.isEmpty
+                  ? 'No products in this category yet.'
+                  : 'No little styles found here yet',
+              message: state.filterState.isEmpty ? null : 'Try another filter.',
+              actionLabel: state.filterState.isEmpty ? null : 'Reset Filters',
+              onAction: () => notifier.resetFilters(),
+              mascotSize: 96,
+            ),
+          )
+        else
+          SliverPadding(
+            padding: EdgeInsets.fromLTRB(12, 8, 12, bottomPadding),
+            sliver: SliverGrid.builder(
+              itemCount: state.products.length,
+              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: 220,
+                childAspectRatio: 0.56,
+                crossAxisSpacing: NuviSpacing.gridGap,
+                mainAxisSpacing: NuviSpacing.gridGap,
+              ),
+              itemBuilder: (context, index) {
+                final product = state.products[index];
+                final isFav = ref
+                    .watch(wishlistControllerProvider)
+                    .isWishlisted(product.id);
+                return NuviProductCard(
+                  title: product.title,
+                  price: product.price,
+                  salePrice: product.salePrice,
+                  compareAtPrice: product.compareAtPrice,
+                  rating: product.rating,
+                  isFavorite: isFav,
+                  badgeText: product.badgeText,
+                  imageUrl: product.imageUrl,
+                  colorSwatches: product.colorSwatches,
+                  tile: NuviTile.values[index % NuviTile.values.length],
+                  onFavoriteToggle: () {
+                    ref
+                        .read(wishlistControllerProvider.notifier)
+                        .toggleWishlist(product);
+                  },
+                  onTap: () {
+                    context.push('/product/${product.id}');
+                  },
+                );
+              },
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildBackBar(String title, int? count) {
+    final x = context.nuvi;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 4, 16, 4),
+      child: Row(
+        children: [
+          NuviIconButton(
+            icon: Icons.chevron_left_rounded,
+            iconSize: 26,
+            semanticLabel: 'Back',
+            onPressed: () => context.pop(),
+          ),
+          Flexible(
+            child: Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: x.h3,
+            ),
+          ),
+          if (count != null) ...[
+            const SizedBox(width: 6),
+            Text('· $count products', style: x.small),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBanner(String title, CategoryState state) {
+    final x = context.nuvi;
+    final detail = state.categoryDetail;
+    final description = detail?.description;
+    return ClipPath(
+      clipper: const NuviWaveClipper(depth: 10, waves: 3),
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: NuviGradients.tile(NuviTile.lavender),
+        ),
+        child: Stack(
+          children: [
+            if (detail?.imageUrl != null)
+              Positioned.fill(
+                child: Opacity(
+                  opacity: 0.22,
+                  child: NuviImage(
+                    url: detail!.imageUrl,
+                    tile: NuviTile.lavender,
+                  ),
+                ),
+              ),
+            Positioned(
+              top: 18,
+              right: 22,
+              child: NuviSparkle(size: 18, color: x.gold),
+            ),
+            Positioned(
+              top: 52,
+              right: 52,
+              child: NuviSparkle(size: 10, color: x.peach),
+            ),
+            Positioned(
+              bottom: 26,
+              right: 18,
+              child: NuviLeaf(size: 24, color: x.sage, angle: -0.4),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 16, 56, 34),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Home  ›  Collections',
+                    style: x.nunito(
+                      11.5,
+                      weight: FontWeight.w700,
+                      color: NuviColors.inkMuted,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(title, style: x.h1),
+                  if (description != null && description.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      description,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: x.nunito(13.5, color: NuviColors.inkMuted),
+                    ),
+                  ],
+                ],
               ),
             ),
           ],
@@ -488,97 +584,170 @@ class _CategoryListingScreenState extends ConsumerState<CategoryListingScreen> {
     );
   }
 
-  Widget _buildProductGrid(
-    BuildContext context,
-    CategoryState state,
-    CategoryController notifier,
-  ) {
-    final bottomPadding =
-        kBottomNavigationBarHeight +
-        MediaQuery.of(context).padding.bottom +
-        32.0;
-
-    if (state.products.isEmpty) {
-      final hasActiveFilters = !state.filterState.isEmpty;
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(NuviSpacing.xl),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Opacity(
-                opacity: 0.35,
-                child: NuviIcons.searchOff(
-                  color: NuviColors.onSurface,
-                  size: 46,
-                ),
-              ),
-              const SizedBox(height: NuviSpacing.md),
-              Text(
-                hasActiveFilters
-                    ? 'No products match your filter criteria.'
-                    : 'No products in this category yet.',
-                style: NuviTypography.textTheme.bodyMedium?.copyWith(
-                  fontSize: 14,
-                  color: NuviColors.textSecondary,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              if (hasActiveFilters) ...[
-                const SizedBox(height: NuviSpacing.md),
-                TextButton(
-                  onPressed: () => notifier.resetFilters(),
-                  child: Text(
-                    'Reset Filters',
-                    style: NuviTypography.textTheme.labelLarge?.copyWith(
-                      color: NuviColors.secondary,
-                    ),
-                  ),
-                ),
-              ],
-            ],
+  Widget _buildToolbar(CategoryState state) {
+    final x = context.nuvi;
+    final f = state.filterState;
+    final activeCount =
+        f.selectedCategoryIds.length +
+        f.selectedAgeFilters.length +
+        (f.inStockOnly ? 1 : 0) +
+        (f.selectedPriceRange != null ? 1 : 0);
+    return Container(
+      color: NuviColors.cream,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Row(
+        children: [
+          _ToolbarPill(
+            icon: Icons.tune_rounded,
+            label: 'Filter',
+            count: activeCount,
+            onTap: _openFilterSheet,
           ),
-        ),
-      );
-    }
-
-    return GridView.builder(
-      padding: EdgeInsets.only(
-        left: NuviSpacing.md,
-        right: NuviSpacing.md,
-        top: NuviSpacing.md,
-        bottom: bottomPadding,
+          const SizedBox(width: 8),
+          _ToolbarPill(
+            label: 'Sort',
+            trailing: Icons.keyboard_arrow_down_rounded,
+            active: state.sortOption != SortOption.featured,
+            onTap: _openSortSheet,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              '${state.products.length} Products',
+              maxLines: 1,
+              textAlign: TextAlign.end,
+              overflow: TextOverflow.ellipsis,
+              style: x.nunito(
+                12.5,
+                weight: FontWeight.w700,
+                color: NuviColors.inkMuted,
+              ),
+            ),
+          ),
+        ],
       ),
-      itemCount: state.products.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        childAspectRatio: 0.62,
-        crossAxisSpacing: NuviSpacing.md,
-        mainAxisSpacing: NuviSpacing.md,
-      ),
-      itemBuilder: (context, index) {
-        final product = state.products[index];
-        final wishlistState = ref.watch(wishlistControllerProvider);
-        final isFav = wishlistState.isWishlisted(product.id);
-        return NuviProductCard(
-          title: product.title,
-          price: product.price,
-          salePrice: product.salePrice,
-          rating: product.rating,
-          isFavorite: isFav,
-          badgeText: product.badgeText,
-          imageUrl: product.imageUrl,
-          colorSwatches: product.colorSwatches,
-          onFavoriteToggle: () {
-            ref
-                .read(wishlistControllerProvider.notifier)
-                .toggleWishlist(product);
-          },
-          onTap: () {
-            context.push('/product/${product.id}');
-          },
-        );
-      },
     );
   }
+
+  Widget _buildActiveFilters(FilterState f) {
+    final chips = <Widget>[
+      for (final id in f.selectedCategoryIds)
+        NuviChip(
+          label: kCategoryFilterOptions[id] ?? id,
+          dense: true,
+          selected: true,
+          onRemove: () => _removeFilter(f, category: id),
+        ),
+      for (final age in f.selectedAgeFilters)
+        NuviChip(
+          label: age,
+          dense: true,
+          selected: true,
+          onRemove: () => _removeFilter(f, age: age),
+        ),
+      if (f.inStockOnly)
+        NuviChip(
+          label: 'In stock',
+          dense: true,
+          selected: true,
+          onRemove: () => _removeFilter(f, stock: true),
+        ),
+    ];
+    return SizedBox(
+      height: 46,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        itemCount: chips.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 6),
+        itemBuilder: (_, i) => chips[i],
+      ),
+    );
+  }
+}
+
+class _ToolbarPill extends StatelessWidget {
+  final IconData? icon;
+  final IconData? trailing;
+  final String label;
+  final int count;
+  final bool active;
+  final VoidCallback onTap;
+
+  const _ToolbarPill({
+    this.icon,
+    this.trailing,
+    required this.label,
+    this.count = 0,
+    this.active = false,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final x = context.nuvi;
+    final on = active || count > 0;
+    return NuviPressable(
+      onTap: onTap,
+      child: Container(
+        height: 40,
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        decoration: BoxDecoration(
+          color: on ? x.goldSoft : NuviColors.card,
+          borderRadius: BorderRadius.circular(NuviRadii.pill),
+          border: Border.all(color: on ? x.gold : NuviColors.line, width: 1.5),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[
+              Icon(icon, size: 17, color: NuviColors.ink),
+              const SizedBox(width: 6),
+            ],
+            Text(label, style: x.baloo(14, weight: FontWeight.w600)),
+            if (count > 0) ...[
+              const SizedBox(width: 6),
+              NuviCountBadge(count: count),
+            ],
+            if (trailing != null) ...[
+              const SizedBox(width: 2),
+              Icon(trailing, size: 18, color: NuviColors.ink),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ToolbarDelegate extends SliverPersistentHeaderDelegate {
+  final double height;
+  final Widget child;
+
+  _ToolbarDelegate({required this.height, required this.child});
+
+  @override
+  double get minExtent => height;
+
+  @override
+  double get maxExtent => height;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        boxShadow: overlapsContent || shrinkOffset > 0
+            ? NuviShadows.header
+            : null,
+      ),
+      child: SizedBox.expand(child: child),
+    );
+  }
+
+  @override
+  bool shouldRebuild(covariant _ToolbarDelegate oldDelegate) => true;
 }

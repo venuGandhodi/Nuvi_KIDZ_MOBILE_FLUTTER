@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
-import '../theme/nuvi_colors.dart';
-import '../theme/nuvi_radii.dart';
-import '../theme/nuvi_typography.dart';
 
-enum NuviButtonType { primary, secondary, social }
+import '../theme/nuvi_colors.dart';
+import '../theme/nuvi_motion.dart';
+import '../theme/nuvi_radii.dart';
+import '../theme/nuvi_spacing.dart';
+import '../theme/nuvi_theme_ext.dart';
+import 'nuvi_pressable.dart';
+
+/// primary = gold fill, dark = ink fill, outline = 1.5pt ink border,
+/// leaf = Add to Bag green, bag = bag-screen olive. `secondary` and `social`
+/// are kept as outline aliases for existing call sites.
+enum NuviButtonType { primary, secondary, social, dark, outline, leaf, bag }
 
 class NuviButton extends StatelessWidget {
   final String text;
@@ -12,6 +19,8 @@ class NuviButton extends StatelessWidget {
   final bool isLoading;
   final bool isFullWidth;
   final Widget? icon;
+  final Widget? trailingIcon;
+  final double height;
 
   const NuviButton({
     super.key,
@@ -21,6 +30,8 @@ class NuviButton extends StatelessWidget {
     this.isLoading = false,
     this.isFullWidth = true,
     this.icon,
+    this.trailingIcon,
+    this.height = NuviSpacing.buttonHeight,
   });
 
   const NuviButton.primary({
@@ -30,6 +41,8 @@ class NuviButton extends StatelessWidget {
     this.isLoading = false,
     this.isFullWidth = true,
     this.icon,
+    this.trailingIcon,
+    this.height = NuviSpacing.buttonHeight,
   }) : type = NuviButtonType.primary;
 
   const NuviButton.secondary({
@@ -39,6 +52,8 @@ class NuviButton extends StatelessWidget {
     this.isLoading = false,
     this.isFullWidth = true,
     this.icon,
+    this.trailingIcon,
+    this.height = NuviSpacing.buttonHeight,
   }) : type = NuviButtonType.secondary;
 
   const NuviButton.social({
@@ -48,90 +63,140 @@ class NuviButton extends StatelessWidget {
     this.onPressed,
     this.isLoading = false,
     this.isFullWidth = true,
+    this.trailingIcon,
+    this.height = NuviSpacing.buttonHeight,
   }) : type = NuviButtonType.social;
 
   bool get isDisabled => onPressed == null || isLoading;
 
   @override
   Widget build(BuildContext context) {
-    Color backgroundColor;
-    Color textColor;
-    BorderSide borderSide = BorderSide.none;
+    final x = context.nuvi;
+    Color background;
+    Color foreground;
+    BorderSide border = BorderSide.none;
 
     switch (type) {
       case NuviButtonType.primary:
-        backgroundColor = NuviColors.primary;
-        textColor = NuviColors.onPrimary;
-        break;
+        background = x.gold;
+        foreground = x.onGold;
+      case NuviButtonType.dark:
+        background = NuviColors.ink;
+        foreground = NuviColors.cream;
+      case NuviButtonType.leaf:
+        background = x.leaf;
+        foreground = NuviColors.cream;
+      case NuviButtonType.bag:
+        background = x.bagAccent;
+        foreground = NuviColors.white;
       case NuviButtonType.secondary:
-        backgroundColor = Colors.transparent;
-        textColor = NuviColors.primary;
-        borderSide = const BorderSide(color: NuviColors.primary, width: 1);
-        break;
       case NuviButtonType.social:
-        backgroundColor = Colors.transparent;
-        textColor = NuviColors.onSurface;
-        borderSide = const BorderSide(color: NuviColors.primary, width: 1);
-        break;
+      case NuviButtonType.outline:
+        background = Colors.transparent;
+        foreground = NuviColors.ink;
+        border = const BorderSide(color: NuviColors.ink, width: 1.5);
     }
 
-    if (isDisabled && type == NuviButtonType.primary) {
-      backgroundColor = NuviColors.primary.withValues(alpha: 0.5);
-    } else if (isDisabled) {
-      textColor = textColor.withValues(alpha: 0.5);
-      if (borderSide != BorderSide.none) {
-        borderSide = BorderSide(
-          color: borderSide.color.withValues(alpha: 0.5),
-          width: 1,
-        );
-      }
-    }
-
-    final buttonStyle = ElevatedButton.styleFrom(
-      backgroundColor: backgroundColor,
-      foregroundColor: textColor,
-      elevation: 0,
-      shadowColor: Colors.transparent,
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(NuviRadii.pill),
-        side: borderSide,
-      ),
-    );
-
-    Widget content = Row(
+    final content = Row(
       mainAxisSize: isFullWidth ? MainAxisSize.max : MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         if (isLoading)
           Padding(
-            padding: const EdgeInsets.only(right: 8.0),
+            padding: const EdgeInsets.only(right: NuviSpacing.sm),
             child: SizedBox(
               width: 16,
               height: 16,
               child: CircularProgressIndicator(
                 strokeWidth: 2,
-                color: textColor,
+                color: foreground,
               ),
             ),
           )
         else if (icon != null)
-          Padding(padding: const EdgeInsets.only(right: 8.0), child: icon!),
-        Text(
-          text,
-          style: NuviTypography.textTheme.labelLarge?.copyWith(
-            color: textColor,
+          Padding(
+            padding: const EdgeInsets.only(right: NuviSpacing.sm),
+            child: IconTheme(
+              data: IconThemeData(color: foreground, size: 18),
+              child: icon!,
+            ),
+          ),
+        Flexible(
+          child: Text(
+            text,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: x.button.copyWith(color: foreground),
           ),
         ),
+        if (trailingIcon != null && !isLoading)
+          Padding(
+            padding: const EdgeInsets.only(left: NuviSpacing.sm),
+            child: IconTheme(
+              data: IconThemeData(color: foreground, size: 18),
+              child: trailingIcon!,
+            ),
+          ),
       ],
     );
 
-    return SizedBox(
-      width: isFullWidth ? double.infinity : null,
-      child: ElevatedButton(
-        onPressed: isDisabled ? null : onPressed,
-        style: buttonStyle,
-        child: content,
+    return NuviPressable(
+      onTap: isDisabled ? null : onPressed,
+      child: AnimatedOpacity(
+        opacity: isDisabled && !isLoading ? 0.5 : 1,
+        duration: NuviMotion.of(context, NuviMotion.fast),
+        child: Container(
+          width: isFullWidth ? double.infinity : null,
+          constraints: BoxConstraints(minHeight: height),
+          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
+          decoration: BoxDecoration(
+            color: background,
+            borderRadius: BorderRadius.circular(NuviRadii.pill),
+            border: Border.fromBorderSide(border),
+          ),
+          child: content,
+        ),
+      ),
+    );
+  }
+}
+
+/// Underlined text action ("View all ›", "Continue Shopping").
+class NuviTextAction extends StatelessWidget {
+  final String text;
+  final VoidCallback? onTap;
+  final Color? color;
+  final bool chevron;
+
+  const NuviTextAction({
+    super.key,
+    required this.text,
+    this.onTap,
+    this.color,
+    this.chevron = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final x = context.nuvi;
+    return NuviPressable(
+      onTap: onTap,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(
+          minHeight: NuviSpacing.minTouchTarget,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(text, style: x.baloo(14, color: color ?? NuviColors.ink)),
+            if (chevron)
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 18,
+                color: color ?? NuviColors.ink,
+              ),
+          ],
+        ),
       ),
     );
   }

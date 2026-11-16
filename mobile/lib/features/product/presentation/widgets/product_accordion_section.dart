@@ -1,205 +1,188 @@
 import 'package:flutter/material.dart';
+
 import '../../../../core/theme/nuvi_colors.dart';
 import '../../../../core/theme/nuvi_radii.dart';
 import '../../../../core/theme/nuvi_spacing.dart';
-import '../../../../core/theme/nuvi_typography.dart';
+import '../../../../core/theme/nuvi_theme_ext.dart';
+import '../../../../core/widgets/nuvi_accordion.dart';
 import '../../domain/product_review.dart';
 
-class ProductAccordionSection extends StatefulWidget {
+/// Product information accordions, all closed by default. Returns and
+/// Payment carry the same policy copy the page already shows.
+class ProductAccordionSection extends StatelessWidget {
   final String? description;
   final List<String>? fabricAndCare;
-  final List<ProductReview>? reviews;
 
   const ProductAccordionSection({
     super.key,
     this.description,
     this.fabricAndCare,
-    this.reviews,
   });
 
   @override
-  State<ProductAccordionSection> createState() =>
-      _ProductAccordionSectionState();
-}
-
-class _ProductAccordionSectionState extends State<ProductAccordionSection> {
-  bool _isDescriptionExpanded = true;
-  bool _isFabricExpanded = false;
-  bool _isReviewsExpanded = false;
-
-  @override
   Widget build(BuildContext context) {
+    final x = context.nuvi;
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Description Accordion
-        if (widget.description != null) ...[
-          _buildAccordionTile(
+        const Divider(height: 1, color: NuviColors.line),
+        if (description != null)
+          NuviAccordion(
             title: 'Product Details',
-            isExpanded: _isDescriptionExpanded,
-            onTap: () => setState(
-              () => _isDescriptionExpanded = !_isDescriptionExpanded,
-            ),
-            content: Text(
-              widget.description!,
-              style: NuviTypography.textTheme.bodyMedium?.copyWith(
-                color: NuviColors.onSurface.withValues(alpha: 0.8),
-                height: 1.4,
-              ),
-            ),
+            icon: Icons.description_outlined,
+            content: Text(description!, style: x.bodyMuted),
           ),
-          const SizedBox(height: NuviSpacing.sm),
-        ],
-
-        // Fabric & Care Accordion
-        if (widget.fabricAndCare != null &&
-            widget.fabricAndCare!.isNotEmpty) ...[
-          _buildAccordionTile(
+        if (fabricAndCare != null && fabricAndCare!.isNotEmpty)
+          NuviAccordion(
             title: 'Fabric & Care',
-            isExpanded: _isFabricExpanded,
-            onTap: () => setState(() => _isFabricExpanded = !_isFabricExpanded),
+            icon: Icons.local_laundry_service_outlined,
             content: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: widget.fabricAndCare!.map((item) {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 6.0),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '• ',
-                        style: NuviTypography.textTheme.bodyMedium?.copyWith(
-                          color: NuviColors.primary,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Expanded(
-                        child: Text(
-                          item,
-                          style: NuviTypography.textTheme.bodyMedium?.copyWith(
-                            color: NuviColors.onSurface.withValues(alpha: 0.8),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
-          const SizedBox(height: NuviSpacing.sm),
-        ],
-
-        // Reviews Accordion
-        if (widget.reviews != null && widget.reviews!.isNotEmpty) ...[
-          _buildAccordionTile(
-            title: 'Reviews (${widget.reviews!.length})',
-            isExpanded: _isReviewsExpanded,
-            onTap: () =>
-                setState(() => _isReviewsExpanded = !_isReviewsExpanded),
-            content: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: widget.reviews!.map((rev) {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: NuviSpacing.sm),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: fabricAndCare!
+                  .map(
+                    (item) => Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            rev.author,
-                            style: NuviTypography.textTheme.labelLarge
-                                ?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: NuviColors.primary,
-                                ),
-                          ),
-                          Text(
-                            rev.date,
-                            style: NuviTypography.textTheme.bodySmall?.copyWith(
-                              color: NuviColors.onSurface.withValues(
-                                alpha: 0.5,
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8, right: 8),
+                            child: Container(
+                              width: 5,
+                              height: 5,
+                              decoration: BoxDecoration(
+                                color: x.gold,
+                                shape: BoxShape.circle,
                               ),
                             ),
                           ),
+                          Expanded(child: Text(item, style: x.bodyMuted)),
                         ],
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        '"${rev.comment}"',
-                        style: NuviTypography.textTheme.bodyMedium?.copyWith(
-                          fontStyle: FontStyle.italic,
-                          color: NuviColors.onSurface.withValues(alpha: 0.85),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
+                    ),
+                  )
+                  .toList(),
             ),
           ),
-        ],
+        NuviAccordion(
+          title: 'Returns',
+          icon: Icons.autorenew_rounded,
+          content: Text(
+            'Easy 7-day returns and 7-day exchanges.',
+            style: x.bodyMuted,
+          ),
+        ),
+        NuviAccordion(
+          title: 'Payment',
+          icon: Icons.payments_outlined,
+          content: Text(
+            'Pay securely online, or choose Cash on Delivery where available.',
+            style: x.bodyMuted,
+          ),
+        ),
       ],
     );
   }
+}
 
-  Widget _buildAccordionTile({
-    required String title,
-    required bool isExpanded,
-    required VoidCallback onTap,
-    required Widget content,
-  }) {
+/// Reviews summary: average, stars, count and the latest reviews.
+class ProductReviewsSummary extends StatelessWidget {
+  final double rating;
+  final int reviewCount;
+  final List<ProductReview> reviews;
+
+  const ProductReviewsSummary({
+    super.key,
+    required this.rating,
+    required this.reviewCount,
+    required this.reviews,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final x = context.nuvi;
     return Container(
+      padding: const EdgeInsets.all(NuviSpacing.md),
       decoration: BoxDecoration(
-        color: NuviColors.surface,
-        borderRadius: BorderRadius.circular(NuviRadii.card / 2),
-        border: Border.all(color: NuviColors.border.withValues(alpha: 0.6)),
+        color: NuviColors.cardPdp,
+        borderRadius: BorderRadius.circular(NuviRadii.cardLarge),
+        border: Border.all(color: NuviColors.line),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(NuviRadii.card / 2),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: NuviSpacing.sm,
-                vertical: NuviSpacing.xs,
+          Text('Reviews', style: x.h3.copyWith(color: NuviColors.pdpInk)),
+          const SizedBox(height: NuviSpacing.s12),
+          Row(
+            children: [
+              Text(
+                rating.toStringAsFixed(1),
+                style: x.baloo(
+                  34,
+                  weight: FontWeight.w800,
+                  color: NuviColors.pdpInk,
+                ),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              const SizedBox(width: NuviSpacing.s12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    style: NuviTypography.textTheme.labelLarge?.copyWith(
-                      fontSize: 12,
-                      color: NuviColors.primary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  AnimatedRotation(
-                    turns: isExpanded ? 0.5 : 0.0,
-                    duration: const Duration(milliseconds: 200),
-                    child: const Icon(
-                      Icons.expand_more,
-                      color: NuviColors.primary,
-                      size: 18,
-                    ),
-                  ),
+                  NuviStars(rating: rating, size: 18),
+                  Text('Based on $reviewCount reviews', style: x.small),
                 ],
               ),
-            ),
+            ],
           ),
-          if (isExpanded)
-            Padding(
-              padding: const EdgeInsets.only(
-                left: NuviSpacing.sm,
-                right: NuviSpacing.sm,
-                bottom: NuviSpacing.sm,
-              ),
-              child: content,
+          for (final review in reviews.take(2)) ...[
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: NuviSpacing.s12),
+              child: Divider(height: 1, color: NuviColors.line),
             ),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    review.author,
+                    style: x.nunito(14, weight: FontWeight.w800),
+                  ),
+                ),
+                Text(review.date, style: x.small),
+              ],
+            ),
+            const SizedBox(height: 2),
+            NuviStars(rating: review.rating, size: 14),
+            const SizedBox(height: 4),
+            Text(review.comment, style: x.bodyMuted),
+          ],
         ],
+      ),
+    );
+  }
+}
+
+class NuviStars extends StatelessWidget {
+  final double rating;
+  final double size;
+
+  const NuviStars({super.key, required this.rating, this.size = 16});
+
+  @override
+  Widget build(BuildContext context) {
+    final x = context.nuvi;
+    return Semantics(
+      label: '${rating.toStringAsFixed(1)} out of 5 stars',
+      child: ExcludeSemantics(
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: List.generate(5, (i) {
+            final icon = rating >= i + 1
+                ? Icons.star_rounded
+                : rating >= i + 0.5
+                ? Icons.star_half_rounded
+                : Icons.star_outline_rounded;
+            return Icon(icon, size: size, color: x.gold);
+          }),
+        ),
       ),
     );
   }

@@ -5,11 +5,15 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/theme/nuvi_colors.dart';
+import '../../../core/theme/nuvi_decorations.dart';
 import '../../../core/theme/nuvi_radii.dart';
 import '../../../core/theme/nuvi_spacing.dart';
-import '../../../core/theme/nuvi_typography.dart';
+import '../../../core/theme/nuvi_theme_ext.dart';
 import '../../../core/utils/nuvi_logger.dart';
 import '../../../core/widgets/nuvi_button.dart';
+import '../../../core/widgets/nuvi_empty_state.dart';
+import '../../../core/widgets/nuvi_loading_indicator.dart';
+import '../../../core/widgets/nuvi_toast.dart';
 import '../../checkout/data/shopify_checkout_service.dart';
 import 'cart_controller.dart';
 import 'widgets/cart_item_row.dart';
@@ -47,6 +51,31 @@ class _CartScreenState extends ConsumerState<CartScreen>
     }
   }
 
+  Future<void> _startCheckout(
+    CartState cartState,
+    CartController notifier,
+  ) async {
+    if (cartState.items.isEmpty || cartState.isCheckingOut) {
+      return;
+    }
+
+    String? userEmail;
+    try {
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user != null && user.email != null && user.email!.isNotEmpty) {
+        userEmail = user.email;
+        nuviLog('NUVI-CHECKOUT', 'Supabase session present=true');
+        nuviLog('NUVI-CHECKOUT', 'Buyer email available=true');
+      } else {
+        nuviLog('NUVI-CHECKOUT', 'Supabase session present=false');
+      }
+    } catch (_) {
+      nuviLog('NUVI-CHECKOUT', 'Supabase instance not initialized/available');
+    }
+
+    await notifier.launchInAppCheckout(userEmail: userEmail);
+  }
+
   @override
   Widget build(BuildContext context) {
     ref.listen<CartState>(cartControllerProvider, (previous, next) {
@@ -54,208 +83,182 @@ class _CartScreenState extends ConsumerState<CartScreen>
         context.go('/order-confirmation', extra: next.lastCompletedOrderId);
       } else if (next.errorMessage != null &&
           next.errorMessage != previous?.errorMessage) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.errorMessage!),
-            backgroundColor: NuviColors.error,
-          ),
-        );
+        NuviToast.show(context, message: next.errorMessage!, success: false);
       }
     });
 
+    final x = context.nuvi;
     final cartState = ref.watch(cartControllerProvider);
     final notifier = ref.read(cartControllerProvider.notifier);
 
-    return Material(
-      color: NuviColors.surface,
-      child: cartState.isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: NuviColors.primary),
-            )
-          : cartState.items.isEmpty
-          ? _buildEmptyState(context)
-          : SingleChildScrollView(
-              padding: EdgeInsets.only(
-                left: NuviSpacing.md,
-                right: NuviSpacing.md,
-                top: NuviSpacing.sm,
-                bottom:
-                    kBottomNavigationBarHeight +
-                    MediaQuery.of(context).padding.bottom +
-                    32.0,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header: Your Bag & Badge
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.shopping_bag,
-                            color: NuviColors.secondary,
-                            size: 18,
-                          ),
-                          const SizedBox(width: NuviSpacing.xs),
-                          Text(
-                            'Your Bag',
-                            style: NuviTypography.textTheme.labelLarge
-                                ?.copyWith(
-                                  fontSize: 15,
-                                  color: NuviColors.onSurface,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                          ),
-                        ],
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: NuviColors.surfaceVariant,
-                          borderRadius: BorderRadius.circular(NuviRadii.pill),
-                          boxShadow: [
-                            BoxShadow(
-                              color: NuviColors.textTertiary.withValues(
-                                alpha: 0.12,
-                              ),
-                              blurRadius: 3,
-                              offset: const Offset(0, 1),
-                            ),
-                          ],
-                        ),
-                        child: Text(
-                          '${cartState.totalItemCount} Items',
-                          style: NuviTypography.textTheme.labelLarge?.copyWith(
-                            fontSize: 12.5,
-                            color: NuviColors.onSurface,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: NuviSpacing.md),
+    if (cartState.isLoading) {
+      return const Material(
+        color: NuviColors.cream,
+        child: Center(child: NuviLoadingIndicator()),
+      );
+    }
 
-                  // Cart Items List
-                  ListView.separated(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: cartState.items.length,
-                    separatorBuilder: (context, index) =>
-                        const SizedBox(height: NuviSpacing.md),
-                    itemBuilder: (context, index) {
-                      final item = cartState.items[index];
-                      return CartItemRow(
+    if (cartState.items.isEmpty) {
+      return Material(
+        color: NuviColors.cream,
+        child: NuviEmptyState(
+          title: 'Your bag is empty',
+          message:
+              'Your bag is feeling light — looks like you haven\'t added any tiny styles yet.',
+          actionLabel: 'START SHOPPING',
+          onAction: () => context.go('/category/toddler'),
+        ),
+      );
+    }
+
+    return DecoratedBox(
+      decoration: const BoxDecoration(gradient: NuviBagColors.background),
+      child: Material(
+        type: MaterialType.transparency,
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(
+                  NuviSpacing.gutter,
+                  NuviSpacing.sm,
+                  NuviSpacing.gutter,
+                  NuviSpacing.lg,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      'NUVI KIDZ',
+                      style: x
+                          .nunito(
+                            11,
+                            weight: FontWeight.w800,
+                            color: NuviBagColors.muted,
+                          )
+                          .copyWith(letterSpacing: 1.2),
+                    ),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        Text('Your Bag', style: x.bagHeadingStyle),
+                        const Spacer(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: NuviBagColors.card,
+                            borderRadius: BorderRadius.circular(NuviRadii.pill),
+                            border: Border.all(color: NuviBagColors.line),
+                          ),
+                          child: Text(
+                            '${cartState.totalItemCount} Items',
+                            style: x.nunito(
+                              12.5,
+                              weight: FontWeight.w800,
+                              color: NuviBagColors.ink,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: NuviSpacing.md),
+                    for (final item in cartState.items) ...[
+                      CartItemRow(
                         item: item,
                         onQuantityChanged: (newQty) =>
                             notifier.updateQuantity(item.id, newQty),
                         onRemove: () => notifier.removeItem(item.id),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: NuviSpacing.xl),
-
-                  // Summary Card
-                  CartSummaryCard(
-                    subtotal: cartState.subtotal,
-                    shipping: cartState.shippingCost,
-                    tax: cartState.estimatedTax,
-                    total: cartState.grandTotal,
-                    currencyCode: cartState.currencyCode,
-                    onCheckout: () async {
-                      if (cartState.items.isEmpty || cartState.isCheckingOut) {
-                        return;
-                      }
-
-                      String? userEmail;
-                      try {
-                        final user = Supabase.instance.client.auth.currentUser;
-                        if (user != null &&
-                            user.email != null &&
-                            user.email!.isNotEmpty) {
-                          userEmail = user.email;
-                          nuviLog(
-                            'NUVI-CHECKOUT',
-                            'Supabase session present=true',
-                          );
-                          nuviLog(
-                            'NUVI-CHECKOUT',
-                            'Buyer email available=true',
-                          );
-                        } else {
-                          nuviLog(
-                            'NUVI-CHECKOUT',
-                            'Supabase session present=false',
-                          );
-                        }
-                      } catch (_) {
-                        nuviLog(
-                          'NUVI-CHECKOUT',
-                          'Supabase instance not initialized/available',
-                        );
-                      }
-
-                      await notifier.launchInAppCheckout(userEmail: userEmail);
-                    },
-                  ),
-                ],
+                      ),
+                      const SizedBox(height: NuviSpacing.s12),
+                    ],
+                    const SizedBox(height: NuviSpacing.sm),
+                    CartSummaryCard(
+                      subtotal: cartState.subtotal,
+                      shipping: cartState.shippingCost,
+                      tax: cartState.estimatedTax,
+                      total: cartState.grandTotal,
+                      currencyCode: cartState.currencyCode,
+                    ),
+                  ],
+                ),
               ),
             ),
-    );
-  }
-
-  Widget _buildEmptyState(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(NuviSpacing.xl),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: const BoxDecoration(
-                color: NuviColors.surfaceVariant,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.shopping_bag_outlined,
-                size: 40,
-                color: NuviColors.primary,
-              ),
-            ),
-            const SizedBox(height: NuviSpacing.lg),
-            Text(
-              'Your bag is empty',
-              style: NuviTypography.textTheme.headlineMedium?.copyWith(
-                color: NuviColors.primary,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: NuviSpacing.xs),
-            Text(
-              "Looks like you haven't added any tiny styles yet.",
-              style: NuviTypography.textTheme.bodyMedium?.copyWith(
-                color: NuviColors.onSurface.withValues(alpha: 0.6),
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: NuviSpacing.xl),
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 260),
-              child: NuviButton(
-                text: 'START SHOPPING',
-                type: NuviButtonType.primary,
-                onPressed: () => context.go('/category/toddler'),
-              ),
+            _CheckoutFooter(
+              total: cartState.formattedTotal,
+              isBusy: cartState.isCheckingOut,
+              onCheckout: () => _startCheckout(cartState, notifier),
+              onContinue: () => context.go('/home'),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _CheckoutFooter extends StatelessWidget {
+  final String total;
+  final bool isBusy;
+  final VoidCallback onCheckout;
+  final VoidCallback onContinue;
+
+  const _CheckoutFooter({
+    required this.total,
+    required this.isBusy,
+    required this.onCheckout,
+    required this.onContinue,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final x = context.nuvi;
+    return Container(
+      padding: EdgeInsets.fromLTRB(
+        NuviSpacing.gutter,
+        NuviSpacing.s12,
+        NuviSpacing.gutter,
+        MediaQuery.paddingOf(context).bottom + NuviSpacing.xs,
+      ),
+      decoration: const BoxDecoration(
+        color: NuviBagColors.card,
+        border: Border(top: BorderSide(color: NuviBagColors.line)),
+        boxShadow: NuviShadows.bottomBar,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Text(
+                'Total',
+                style: x.nunito(
+                  14,
+                  weight: FontWeight.w700,
+                  color: NuviBagColors.muted,
+                ),
+              ),
+              const Spacer(),
+              Text(total, style: x.bagSerif(22, weight: FontWeight.w600)),
+            ],
+          ),
+          const SizedBox(height: NuviSpacing.s12),
+          NuviButton(
+            text: 'CHECKOUT',
+            type: NuviButtonType.bag,
+            isLoading: isBusy,
+            icon: const Icon(Icons.lock_outline_rounded),
+            trailingIcon: const Icon(Icons.arrow_forward_rounded),
+            onPressed: onCheckout,
+          ),
+          NuviTextAction(
+            text: 'Continue Shopping',
+            color: NuviBagColors.olive,
+            onTap: onContinue,
+          ),
+        ],
       ),
     );
   }

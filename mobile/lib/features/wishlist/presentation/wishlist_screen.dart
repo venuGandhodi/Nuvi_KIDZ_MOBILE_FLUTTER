@@ -4,8 +4,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/nuvi_colors.dart';
 import '../../../core/theme/nuvi_spacing.dart';
-import '../../../core/theme/nuvi_typography.dart';
-import '../../../core/widgets/nuvi_button.dart';
+import '../../../core/theme/nuvi_theme_ext.dart';
+import '../../../core/widgets/nuvi_empty_state.dart';
+import '../../../core/widgets/nuvi_section_header.dart';
+import '../../../core/widgets/nuvi_loading_indicator.dart';
 import '../../../core/widgets/nuvi_product_card.dart';
 import 'wishlist_controller.dart';
 
@@ -31,7 +33,7 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen> {
     final wishlistNotifier = ref.read(wishlistControllerProvider.notifier);
 
     return Material(
-      color: NuviColors.surface,
+      color: NuviColors.cream,
       child: _buildBody(context, wishlistState, wishlistNotifier),
     );
   }
@@ -41,131 +43,87 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen> {
     WishlistState state,
     WishlistController notifier,
   ) {
+    final x = context.nuvi;
     if (state.isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(color: NuviColors.primary),
-      );
+      return const Center(child: NuviLoadingIndicator());
     }
 
     if (state.errorMessage != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(NuviSpacing.xl),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.error_outline,
-                size: 48,
-                color: NuviColors.accent,
-              ),
-              const SizedBox(height: NuviSpacing.md),
-              Text(
-                state.errorMessage!,
-                style: NuviTypography.textTheme.headlineSmall?.copyWith(
-                  color: NuviColors.primary,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: NuviSpacing.lg),
-              NuviButton(
-                text: 'Try Again',
-                type: NuviButtonType.primary,
-                onPressed: () => notifier.loadWishlist(),
-              ),
-            ],
-          ),
-        ),
+      return NuviEmptyState(
+        title: state.errorMessage!,
+        actionLabel: 'Try Again',
+        onAction: () => notifier.loadWishlist(),
       );
     }
 
     if (state.wishlistProducts.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(NuviSpacing.xl),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 80,
-                height: 80,
-                decoration: const BoxDecoration(
-                  color: NuviColors.surfaceVariant,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.favorite_border,
-                  size: 40,
-                  color: NuviColors.border,
-                ),
-              ),
-              const SizedBox(height: NuviSpacing.lg),
-              Text(
-                'Your Wishlist is Empty',
-                style: NuviTypography.textTheme.headlineMedium?.copyWith(
-                  color: NuviColors.primary,
-                ),
-              ),
-              const SizedBox(height: NuviSpacing.sm),
-              Text(
-                'Save your favorite tiny styles by tapping the heart icon while exploring.',
-                style: NuviTypography.textTheme.bodyMedium?.copyWith(
-                  color: NuviColors.onSurface.withValues(alpha: 0.7),
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: NuviSpacing.xxl),
-              NuviButton(
-                text: 'Explore Products',
-                type: NuviButtonType.primary,
-                onPressed: () => context.go('/home'),
-              ),
-            ],
-          ),
-        ),
+      return NuviEmptyState(
+        title: 'Your Wishlist is Empty',
+        message:
+            'Save your favorite tiny styles by tapping the heart icon while exploring.',
+        actionLabel: 'Explore Products',
+        onAction: () => context.go('/home'),
       );
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: NuviSpacing.lg,
-            vertical: NuviSpacing.sm,
+    final count = state.wishlistProducts.length;
+    return CustomScrollView(
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(
+            NuviSpacing.gutter,
+            NuviSpacing.sm,
+            NuviSpacing.gutter,
+            NuviSpacing.s12,
           ),
-          child: Text(
-            '${state.wishlistProducts.length} ${state.wishlistProducts.length == 1 ? 'saved style' : 'saved styles'}',
-            style: NuviTypography.textTheme.labelMedium?.copyWith(
-              color: NuviColors.onSurface.withValues(alpha: 0.7),
-              fontWeight: FontWeight.bold,
+          sliver: SliverToBoxAdapter(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const NuviEyebrow('Saved for later', lines: false),
+                const SizedBox(height: 4),
+                Text('Wishlist', style: x.h1),
+                const SizedBox(height: 2),
+                Text(
+                  '$count ${count == 1 ? 'saved style' : 'saved styles'}',
+                  style: x.nunito(
+                    13,
+                    weight: FontWeight.w700,
+                    color: NuviColors.inkMuted,
+                  ),
+                ),
+              ],
             ),
           ),
         ),
-        Expanded(
-          child: GridView.builder(
-            padding: const EdgeInsets.symmetric(
-              horizontal: NuviSpacing.lg,
-              vertical: NuviSpacing.sm,
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(
+            NuviSpacing.gutter,
+            0,
+            NuviSpacing.gutter,
+            NuviSpacing.xl,
+          ),
+          sliver: SliverGrid.builder(
+            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: 220,
+              crossAxisSpacing: NuviSpacing.gridGap,
+              mainAxisSpacing: NuviSpacing.gridGap,
+              childAspectRatio: 0.56,
             ),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: NuviSpacing.md,
-              mainAxisSpacing: NuviSpacing.md,
-              childAspectRatio: 0.65,
-            ),
-            itemCount: state.wishlistProducts.length,
+            itemCount: count,
             itemBuilder: (context, index) {
               final product = state.wishlistProducts[index];
               return NuviProductCard(
                 title: product.title,
                 price: product.price,
                 salePrice: product.salePrice,
+                compareAtPrice: product.compareAtPrice,
                 rating: product.rating,
                 badgeText: product.badgeText,
                 imageUrl: product.imageUrl,
                 colorSwatches: product.colorSwatches,
                 isFavorite: true,
+                tile: NuviTile.values[index % NuviTile.values.length],
                 onFavoriteToggle: () => notifier.toggleWishlist(product),
                 onTap: () => context.push('/product/${product.id}'),
               );

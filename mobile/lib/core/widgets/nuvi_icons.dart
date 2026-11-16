@@ -43,6 +43,30 @@ class NuviIcons {
     );
   }
 
+  static Widget bag({required Color color, double size = 22}) {
+    return SvgPicture.string(
+      '<svg width="24" height="24" viewBox="0 0 24 24" fill="none">'
+      '<path d="M5.5 8h13l-1 11.2a2 2 0 0 1-2 1.8h-7a2 2 0 0 1-2-1.8L5.5 8z" stroke="#000" stroke-width="1.8" stroke-linejoin="round"/>'
+      '<path d="M9 10V6.5a3 3 0 0 1 6 0V10" stroke="#000" stroke-width="1.8" stroke-linecap="round"/>'
+      '</svg>',
+      width: size,
+      height: size,
+      colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+    );
+  }
+
+  static Widget search({required Color color, double size = 22}) {
+    return SvgPicture.string(
+      '<svg width="24" height="24" viewBox="0 0 24 24" fill="none">'
+      '<circle cx="10.5" cy="10.5" r="6.5" stroke="#000" stroke-width="1.9"/>'
+      '<path d="M15.5 15.5l4.5 4.5" stroke="#000" stroke-width="1.9" stroke-linecap="round"/>'
+      '</svg>',
+      width: size,
+      height: size,
+      colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+    );
+  }
+
   static Widget wishlist({required Color color, double size = 23}) {
     return SvgPicture.string(
       '<svg width="24" height="24" viewBox="0 0 24 24" fill="none">'

@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/nuvi_colors.dart';
 import '../../../../core/theme/nuvi_radii.dart';
 import '../../../../core/theme/nuvi_spacing.dart';
-import '../../../../core/theme/nuvi_typography.dart';
+import '../../../../core/theme/nuvi_theme_ext.dart';
+import '../../../../core/widgets/nuvi_button.dart';
+import '../../../../core/widgets/nuvi_pressable.dart';
+import '../../../../core/widgets/nuvi_skeleton.dart';
 import '../../../order/domain/shopify_order.dart';
 
 class OrderCard extends StatelessWidget {
@@ -38,143 +41,132 @@ class OrderCard extends StatelessWidget {
         : '${money.currencyCode} $formatted';
   }
 
-  Color _statusColor(String? status) {
-    if (status == null) return NuviColors.onSurface.withValues(alpha: 0.6);
+  (Color, Color) _statusColors(NuviThemeX x, String status) {
     final upper = status.toUpperCase();
-    if (upper == 'PAID' || upper == 'FULFILLED') {
-      return NuviColors.success;
-    }
-    if (upper == 'PENDING' || upper == 'UNFULFILLED') {
-      return NuviColors.secondary;
+    if (upper == 'FULFILLED' || upper == 'PAID') {
+      return (x.sageSoft, NuviColors.leafDark);
     }
     if (upper == 'REFUNDED' || upper == 'VOIDED') {
-      return NuviColors.error;
+      return (NuviColors.saleSoft, NuviColors.sale);
     }
-    return NuviColors.primary;
+    return (x.goldSoft, NuviColors.amber);
+  }
+
+  Widget _pill(NuviThemeX x, String status) {
+    final (bg, fg) = _statusColors(x, status);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(NuviRadii.pill),
+      ),
+      child: Text(
+        status.toUpperCase(),
+        style: x.nunito(11, weight: FontWeight.w800, color: fg),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final x = context.nuvi;
     final itemCount = order.lineItems.fold<int>(
       0,
       (sum, item) => sum + item.quantity,
     );
+    final thumbs = order.lineItems.take(4).toList();
+    final extra = order.lineItems.length - thumbs.length;
 
-    return InkWell(
+    return NuviPressable(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(NuviRadii.card),
+      pressedScale: 0.99,
       child: Container(
         padding: const EdgeInsets.all(NuviSpacing.md),
         decoration: BoxDecoration(
-          color: NuviColors.surfaceVariant.withValues(alpha: 0.4),
-          borderRadius: BorderRadius.circular(NuviRadii.card),
-          border: Border.all(color: NuviColors.border.withValues(alpha: 0.8)),
+          color: NuviColors.orderCard,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: NuviColors.orderBorder),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Top Row: Order Name & Total
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  order.name.isNotEmpty
-                      ? order.name
-                      : 'Order #${order.orderNumber ?? ""}',
-                  style: NuviTypography.textTheme.headlineMedium?.copyWith(
-                    color: NuviColors.primary,
-                    fontWeight: FontWeight.bold,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(order.name, style: x.h3),
+                      const SizedBox(height: 2),
+                      Text(_formatDate(order.processedAt), style: x.small),
+                    ],
                   ),
                 ),
-                Text(
-                  _formatPrice(order.currentTotalPrice),
-                  style: NuviTypography.textTheme.headlineMedium?.copyWith(
-                    color: NuviColors.accent,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
-
-            // Date & Items Count
-            Text(
-              '${_formatDate(order.processedAt)} • $itemCount ${itemCount == 1 ? "item" : "items"}',
-              style: NuviTypography.textTheme.bodyMedium?.copyWith(
-                color: NuviColors.onSurface.withValues(alpha: 0.6),
-              ),
-            ),
-            const SizedBox(height: NuviSpacing.sm),
-
-            const Divider(color: NuviColors.border),
-            const SizedBox(height: NuviSpacing.xs),
-
-            // Bottom Row: Status Badges & View Details
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 4,
+                  alignment: WrapAlignment.end,
                   children: [
                     if (order.financialStatus != null)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: _statusColor(
-                            order.financialStatus,
-                          ).withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(NuviRadii.pill),
-                        ),
-                        child: Text(
-                          order.financialStatus!.toUpperCase(),
-                          style: NuviTypography.textTheme.labelSmall?.copyWith(
-                            color: _statusColor(order.financialStatus),
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    const SizedBox(width: NuviSpacing.xs),
+                      _pill(x, order.financialStatus!),
                     if (order.fulfillmentStatus != null)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: _statusColor(
-                            order.fulfillmentStatus,
-                          ).withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(NuviRadii.pill),
-                        ),
-                        child: Text(
-                          order.fulfillmentStatus!.toUpperCase(),
-                          style: NuviTypography.textTheme.labelSmall?.copyWith(
-                            color: _statusColor(order.fulfillmentStatus),
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-                Row(
-                  children: [
-                    Text(
-                      'Details',
-                      style: NuviTypography.textTheme.bodyMedium?.copyWith(
-                        color: NuviColors.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const Icon(
-                      Icons.chevron_right,
-                      size: 18,
-                      color: NuviColors.primary,
-                    ),
+                      _pill(x, order.fulfillmentStatus!),
                   ],
                 ),
               ],
+            ),
+            if (thumbs.isNotEmpty) ...[
+              const SizedBox(height: NuviSpacing.s12),
+              Row(
+                children: [
+                  for (final line in thumbs)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: ClipOval(
+                        child: NuviImage(
+                          url: line.imageUrl,
+                          width: 46,
+                          height: 46,
+                          tile: NuviTile.peach,
+                        ),
+                      ),
+                    ),
+                  if (extra > 0)
+                    Container(
+                      width: 46,
+                      height: 46,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: x.sageSoft,
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        '+$extra',
+                        style: x.baloo(14, weight: FontWeight.w700),
+                      ),
+                    ),
+                ],
+              ),
+            ],
+            const SizedBox(height: NuviSpacing.s12),
+            Row(
+              children: [
+                Text(
+                  '$itemCount ${itemCount == 1 ? 'item' : 'items'}',
+                  style: x.small,
+                ),
+                const Spacer(),
+                Text('Total ', style: x.small),
+                Text(_formatPrice(order.currentTotalPrice), style: x.price),
+              ],
+            ),
+            const SizedBox(height: NuviSpacing.s12),
+            NuviButton(
+              text: 'View Order',
+              type: NuviButtonType.dark,
+              height: 42,
+              onPressed: onTap,
             ),
           ],
         ),

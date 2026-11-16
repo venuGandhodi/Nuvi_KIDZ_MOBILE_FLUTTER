@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:flutter/services.dart';
+
 import '../../../../core/theme/nuvi_colors.dart';
 import '../../../../core/theme/nuvi_radii.dart';
 import '../../../../core/theme/nuvi_spacing.dart';
-import '../../../../core/theme/nuvi_typography.dart';
+import '../../../../core/theme/nuvi_theme_ext.dart';
 import '../../../../core/widgets/nuvi_button.dart';
 import '../../domain/delivery_serviceability.dart';
 import '../delivery_serviceability_controller.dart';
@@ -69,244 +71,256 @@ class _ProductDeliveryInfoSectionState
     }
   }
 
-  Future<void> _openPincodeSheet() async {
-    final controller = TextEditingController(text: _pincode);
-    final result = await showModalBottomSheet<String>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: NuviColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(NuviRadii.card),
-        ),
-      ),
-      builder: (sheetContext) {
-        String? errorText;
-        return StatefulBuilder(
-          builder: (sheetContext, setSheetState) {
-            return Padding(
-              padding: EdgeInsets.only(
-                left: NuviSpacing.lg,
-                right: NuviSpacing.lg,
-                top: NuviSpacing.lg,
-                bottom:
-                    MediaQuery.of(sheetContext).viewInsets.bottom +
-                    NuviSpacing.lg,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Check delivery date',
-                    style: NuviTypography.textTheme.headlineMedium?.copyWith(
-                      color: NuviColors.primary,
-                    ),
-                  ),
-                  const SizedBox(height: NuviSpacing.md),
-                  TextField(
-                    controller: controller,
-                    keyboardType: TextInputType.number,
-                    maxLength: 6,
-                    decoration: InputDecoration(
-                      hintText: 'Enter 6-digit pincode',
-                      counterText: '',
-                      errorText: errorText,
-                    ),
-                  ),
-                  const SizedBox(height: NuviSpacing.md),
-                  NuviButton.primary(
-                    text: 'Check',
-                    onPressed: () {
-                      final value = controller.text.trim();
-                      if (!RegExp(r'^\d{6}$').hasMatch(value)) {
-                        setSheetState(
-                          () => errorText = 'Enter a valid 6-digit pincode.',
-                        );
-                        return;
-                      }
-                      Navigator.of(sheetContext).pop(value);
-                    },
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
+  final TextEditingController _pinController = TextEditingController();
+  String? _errorText;
 
-    if (result != null && mounted) {
-      _runCheck(result);
+  @override
+  void dispose() {
+    _pinController.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final value = _pinController.text.trim();
+    if (!RegExp(r'^\d{6}$').hasMatch(value)) {
+      setState(() => _errorText = 'Enter a valid 6-digit pincode.');
+      return;
     }
+    setState(() => _errorText = null);
+    FocusScope.of(context).unfocus();
+    _runCheck(value);
   }
 
   @override
   Widget build(BuildContext context) {
+    final x = context.nuvi;
     return Container(
       padding: const EdgeInsets.all(NuviSpacing.md),
       decoration: BoxDecoration(
-        color: NuviColors.surface,
-        borderRadius: BorderRadius.circular(NuviRadii.card / 2),
-        border: Border.all(color: NuviColors.border.withValues(alpha: 0.6)),
+        color: NuviColors.cardPdp,
+        borderRadius: BorderRadius.circular(NuviRadii.cardLarge),
+        border: Border.all(color: NuviColors.line),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Expanded(child: _buildHeadline()),
-              GestureDetector(
-                onTap: _state == _CheckState.checking
-                    ? null
-                    : _openPincodeSheet,
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: x.goldSoft,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.local_shipping_outlined,
+                  size: 19,
+                  color: NuviColors.ink,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
                 child: Text(
-                  _state == _CheckState.initial ? 'Enter Pincode' : 'Change',
-                  style: NuviTypography.textTheme.bodySmall?.copyWith(
-                    color: NuviColors.accent,
-                    decoration: TextDecoration.underline,
+                  'Check delivery',
+                  style: x.baloo(
+                    16,
+                    weight: FontWeight.w700,
+                    color: NuviColors.pdpInk,
                   ),
                 ),
               ),
             ],
           ),
+          const SizedBox(height: NuviSpacing.s12),
+          Container(
+            height: 48,
+            padding: const EdgeInsets.only(left: 16, right: 4),
+            decoration: BoxDecoration(
+              color: NuviColors.card,
+              borderRadius: BorderRadius.circular(NuviRadii.pill),
+              border: Border.all(
+                color: _errorText != null ? NuviColors.sale : NuviColors.line,
+                width: 1.5,
+              ),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _pinController,
+                    keyboardType: TextInputType.number,
+                    textInputAction: TextInputAction.done,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(6),
+                    ],
+                    onSubmitted: (_) => _submit(),
+                    style: x.nunito(15, weight: FontWeight.w700),
+                    decoration: const InputDecoration(
+                      hintText: 'Enter 6-digit pincode',
+                      filled: false,
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      isDense: true,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                ),
+                NuviButton(
+                  text: _state == _CheckState.checking ? 'Checking' : 'Check',
+                  type: NuviButtonType.dark,
+                  isFullWidth: false,
+                  height: 40,
+                  isLoading: _state == _CheckState.checking,
+                  onPressed: _state == _CheckState.checking ? null : _submit,
+                ),
+              ],
+            ),
+          ),
+          if (_errorText != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 6, left: 14),
+              child: Text(
+                _errorText!,
+                style: x.nunito(
+                  12.5,
+                  weight: FontWeight.w700,
+                  color: NuviColors.sale,
+                ),
+              ),
+            ),
+          const SizedBox(height: NuviSpacing.s12),
+          if (_pincode != null && _state != _CheckState.initial) ...[
+            Text('Pincode $_pincode', style: x.small),
+            const SizedBox(height: 4),
+          ],
+          _buildHeadline(),
           const SizedBox(height: 4),
           _buildSubtext(),
-          const SizedBox(height: NuviSpacing.sm),
-          Divider(color: NuviColors.border.withValues(alpha: 0.6), height: 1),
-          const SizedBox(height: NuviSpacing.sm),
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _DeliveryInfoItem(
-                icon: Icons.replay_outlined,
-                label: '7 Day Return',
-              ),
-              _DeliveryInfoItem(
-                icon: Icons.swap_horiz,
-                label: '7 Day Exchange',
-              ),
-              _DeliveryInfoItem(
-                icon: Icons.currency_rupee,
-                label: 'Cash on Delivery',
-              ),
-            ],
-          ),
         ],
       ),
     );
   }
 
-  Widget _buildHeadline() {
-    final style = NuviTypography.textTheme.labelLarge?.copyWith(
-      fontSize: 12,
-      color: NuviColors.primary,
-      fontWeight: FontWeight.bold,
-    );
-
-    switch (_state) {
-      case _CheckState.initial:
-        return Text('Check delivery availability', style: style);
-      case _CheckState.checking:
-        return Text('Checking delivery availability...', style: style);
-      case _CheckState.serviceable:
-        final date = _result?.estimatedDeliveryDate;
-        return Text(
-          date != null
-              ? 'Get it by ${_formatDate(date)}'
-              : 'Delivery available to this pincode',
-          style: style,
-        );
-      case _CheckState.notServiceable:
-        return Text(
-          'Sorry, we currently cannot deliver to this pincode.',
-          style: style,
-        );
-      case _CheckState.unavailable:
-        return Text(
-          'Unable to check delivery right now. Please try again.',
-          style: style,
-        );
-    }
-  }
-
-  Widget _buildSubtext() {
-    final smallStyle = NuviTypography.textTheme.bodySmall?.copyWith(
-      color: NuviColors.onSurface.withValues(alpha: 0.6),
-      fontSize: 11,
-    );
-
-    if (_state == _CheckState.serviceable && _result != null) {
-      return Row(
-        children: [
-          _AvailabilityBadge(label: 'COD', available: _result!.codAvailable),
-          const SizedBox(width: NuviSpacing.sm),
-          _AvailabilityBadge(
-            label: 'Prepaid',
-            available: _result!.prepaidAvailable,
-          ),
-        ],
-      );
-    }
-
-    return Text(
-      'Select pincode and size to get the exact delivery date',
-      style: smallStyle,
-    );
-  }
-}
-
-class _AvailabilityBadge extends StatelessWidget {
-  final String label;
-  final bool available;
-
-  const _AvailabilityBadge({required this.label, required this.available});
-
-  @override
-  Widget build(BuildContext context) {
-    final color = available ? NuviColors.success : NuviColors.error;
+  Widget _resultLine(String text, {bool? ok}) {
+    final x = context.nuvi;
     return Row(
-      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(
-          available ? Icons.check_circle : Icons.cancel,
-          size: 12,
-          color: color,
-        ),
-        const SizedBox(width: 3),
-        Text(
-          available ? '$label available' : '$label unavailable',
-          style: NuviTypography.textTheme.bodySmall?.copyWith(
-            color: color,
-            fontSize: 10,
+        if (ok != null) ...[
+          Icon(
+            ok ? Icons.check_circle_rounded : Icons.cancel_rounded,
+            size: 18,
+            color: ok ? NuviColors.leaf : NuviColors.sale,
+          ),
+          const SizedBox(width: 6),
+        ],
+        Expanded(
+          child: Text(
+            text,
+            style: x.nunito(
+              13.5,
+              weight: FontWeight.w700,
+              color: NuviColors.pdpInk,
+            ),
           ),
         ),
       ],
     );
   }
+
+  Widget _buildHeadline() {
+    switch (_state) {
+      case _CheckState.initial:
+        return _resultLine('Check delivery availability');
+      case _CheckState.checking:
+        return _resultLine('Checking delivery availability...');
+      case _CheckState.serviceable:
+        final date = _result?.estimatedDeliveryDate;
+        return _resultLine(
+          date != null
+              ? 'Get it by ${_formatDate(date)}'
+              : 'Delivery available to this pincode',
+          ok: true,
+        );
+      case _CheckState.notServiceable:
+        return _resultLine(
+          'Sorry, we currently cannot deliver to this pincode.',
+          ok: false,
+        );
+      case _CheckState.unavailable:
+        return _resultLine(
+          'Unable to check delivery right now. Please try again.',
+          ok: false,
+        );
+    }
+  }
+
+  Widget _buildSubtext() {
+    final x = context.nuvi;
+    if (_state == _CheckState.serviceable && _result != null) {
+      return Column(
+        children: [
+          _resultLine(
+            _result!.codAvailable ? 'COD available' : 'COD unavailable',
+            ok: _result!.codAvailable,
+          ),
+          const SizedBox(height: 2),
+          _resultLine(
+            _result!.prepaidAvailable
+                ? 'Prepaid available'
+                : 'Prepaid unavailable',
+            ok: _result!.prepaidAvailable,
+          ),
+        ],
+      );
+    }
+    return Text(
+      'Select pincode and size to get the exact delivery date',
+      style: x.small,
+    );
+  }
 }
 
-class _DeliveryInfoItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
+/// One-line promises: returns, exchange, cash on delivery.
+class ProductPromisesRow extends StatelessWidget {
+  const ProductPromisesRow({super.key});
 
-  const _DeliveryInfoItem({required this.icon, required this.label});
+  static const _items = [
+    (Icons.autorenew_rounded, '7 Day Return'),
+    (Icons.swap_horiz_rounded, '7 Day Exchange'),
+    (Icons.payments_outlined, 'Cash on Delivery'),
+  ];
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    final x = context.nuvi;
+    return Row(
       children: [
-        Icon(icon, size: 18, color: NuviColors.primary),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          textAlign: TextAlign.center,
-          style: NuviTypography.textTheme.bodySmall?.copyWith(
-            color: NuviColors.onSurface.withValues(alpha: 0.7),
-            fontSize: 10,
+        for (final (icon, label) in _items)
+          Expanded(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, size: 17, color: NuviColors.pdpInk),
+                const SizedBox(width: 4),
+                Flexible(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: x.nunito(
+                      11.5,
+                      weight: FontWeight.w700,
+                      color: NuviColors.pdpInk,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
       ],
     );
   }
