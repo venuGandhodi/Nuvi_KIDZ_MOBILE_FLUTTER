@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/nuvi_colors.dart';
-import '../../../../core/theme/nuvi_spacing.dart';
-import '../../../../core/theme/nuvi_typography.dart';
+import '../../../../core/theme/nuvi_theme_ext.dart';
+import '../../../../core/widgets/nuvi_bottom_sheet.dart';
+import '../../../../core/widgets/nuvi_pressable.dart';
 import '../../domain/category_filter.dart';
 
 class CategorySortSheet extends StatelessWidget {
@@ -16,61 +17,43 @@ class CategorySortSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: Container(
-        decoration: const BoxDecoration(
-          color: NuviColors.surface,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        padding: EdgeInsets.only(
-          top: NuviSpacing.lg,
-          left: NuviSpacing.lg,
-          right: NuviSpacing.lg,
-          bottom: MediaQuery.of(context).padding.bottom + NuviSpacing.lg,
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Sort By',
-                style: NuviTypography.textTheme.headlineMedium?.copyWith(
-                  color: NuviColors.primary,
+    final x = context.nuvi;
+    return NuviSheet(
+      title: 'Sort By',
+      child: Column(
+        children: SortOption.values.map((option) {
+          final isSelected = option == currentSort;
+          return NuviPressable(
+            onTap: () {
+              onSelectSort(option);
+              Navigator.pop(context);
+            },
+            pressedScale: 0.99,
+            child: Semantics(
+              selected: isSelected,
+              child: Container(
+                constraints: const BoxConstraints(minHeight: 52),
+                decoration: const BoxDecoration(
+                  border: Border(bottom: BorderSide(color: NuviColors.line)),
                 ),
-              ),
-              const SizedBox(height: NuviSpacing.md),
-              ...SortOption.values.map((option) {
-                final isSelected = option == currentSort;
-                return Material(
-                  color: Colors.transparent,
-                  child: ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(
-                      option.label,
-                      style: NuviTypography.textTheme.labelLarge?.copyWith(
-                        color: isSelected
-                            ? NuviColors.secondary
-                            : NuviColors.onSurface,
-                        fontWeight: isSelected
-                            ? FontWeight.bold
-                            : FontWeight.normal,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        option.label,
+                        style: isSelected
+                            ? x.baloo(15.5, weight: FontWeight.w700)
+                            : x.nunito(15, weight: FontWeight.w600),
                       ),
                     ),
-                    trailing: isSelected
-                        ? const Icon(Icons.check, color: NuviColors.secondary)
-                        : null,
-                    onTap: () {
-                      onSelectSort(option);
-                      Navigator.pop(context);
-                    },
-                  ),
-                );
-              }),
-            ],
-          ),
-        ),
+                    if (isSelected)
+                      Icon(Icons.check_circle_rounded, color: x.goldText),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }).toList(),
       ),
     );
   }

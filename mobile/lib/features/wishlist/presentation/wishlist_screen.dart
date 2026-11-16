@@ -43,9 +43,7 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen> {
     WishlistController notifier,
   ) {
     if (state.isLoading) {
-      return const Center(
-        child: NuviLoadingIndicator(),
-      );
+      return const Center(child: NuviLoadingIndicator());
     }
 
     if (state.errorMessage != null) {

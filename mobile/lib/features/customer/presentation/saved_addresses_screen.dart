@@ -149,9 +149,7 @@ class _SavedAddressesScreenState extends ConsumerState<SavedAddressesScreen> {
 
   Widget _buildBody(BuildContext context, CustomerState state) {
     if (state.isLoading) {
-      return const Center(
-        child: NuviLoadingIndicator(),
-      );
+      return const Center(child: NuviLoadingIndicator());
     }
 
     if (state.syncStatus == CustomerSyncStatus.notLinked) {

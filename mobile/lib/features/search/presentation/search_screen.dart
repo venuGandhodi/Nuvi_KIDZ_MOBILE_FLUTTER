@@ -5,9 +5,13 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/nuvi_colors.dart';
 import '../../../core/theme/nuvi_radii.dart';
 import '../../../core/theme/nuvi_spacing.dart';
-import '../../../core/theme/nuvi_typography.dart';
-import '../../../core/widgets/nuvi_button.dart';
+import '../../../core/theme/nuvi_theme_ext.dart';
+import '../../../core/widgets/nuvi_chip.dart';
+import '../../../core/widgets/nuvi_decor.dart';
+import '../../../core/widgets/nuvi_empty_state.dart';
+import '../../../core/widgets/nuvi_icons.dart';
 import '../../../core/widgets/nuvi_loading_indicator.dart';
+import '../../../core/widgets/nuvi_pressable.dart';
 import '../../../core/widgets/nuvi_product_card.dart';
 import '../../../core/widgets/nuvi_top_bar.dart';
 import '../../cart/presentation/cart_controller.dart';
@@ -78,67 +82,57 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final x = context.nuvi;
     final searchState = ref.watch(searchControllerProvider);
     final searchNotifier = ref.read(searchControllerProvider.notifier);
     final cartState = ref.watch(cartControllerProvider);
 
     return Scaffold(
-      backgroundColor: NuviColors.surface,
+      backgroundColor: NuviColors.cream,
       appBar: NuviTopBar(
         showBackButton: true,
-        title: Text(
-          'Search',
-          style: NuviTypography.textTheme.headlineMedium?.copyWith(
-            color: NuviColors.primary,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        title: const Text('Search'),
         cartItemCount: cartState.totalItemCount,
         onCartTap: () => context.go('/cart'),
       ),
       body: Column(
         children: [
-          // Search Input Bar
           Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: NuviSpacing.lg,
-              vertical: NuviSpacing.sm,
+            padding: const EdgeInsets.fromLTRB(
+              NuviSpacing.gutter,
+              NuviSpacing.xs,
+              NuviSpacing.gutter,
+              NuviSpacing.s12,
             ),
             child: TextField(
               controller: _searchController,
               textInputAction: TextInputAction.search,
               onChanged: (val) => searchNotifier.search(val),
               onSubmitted: (val) => searchNotifier.searchImmediately(val),
+              style: x.body,
               decoration: InputDecoration(
                 hintText: 'Search products, colors, and styles',
-                hintStyle: NuviTypography.textTheme.bodyMedium?.copyWith(
-                  color: NuviColors.onSurface.withValues(alpha: 0.5),
+                prefixIcon: Padding(
+                  padding: const EdgeInsets.only(left: 14, right: 8),
+                  child: NuviIcons.search(color: NuviColors.ink, size: 20),
                 ),
-                prefixIcon: const Icon(Icons.search, color: NuviColors.primary),
+                prefixIconConstraints: const BoxConstraints(minWidth: 42),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
-                        icon: const Icon(Icons.clear, color: NuviColors.border),
+                        tooltip: 'Clear search',
+                        icon: const Icon(
+                          Icons.clear,
+                          color: NuviColors.inkMuted,
+                        ),
                         onPressed: () {
                           _searchController.clear();
                           searchNotifier.clearSearch();
                         },
                       )
                     : null,
-                filled: true,
-                fillColor: NuviColors.surfaceVariant,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: NuviSpacing.md,
-                  vertical: NuviSpacing.sm,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(NuviRadii.pill),
-                  borderSide: BorderSide.none,
-                ),
               ),
             ),
           ),
-
-          // Content Area
           Expanded(child: _buildBody(context, searchState, searchNotifier)),
         ],
       ),
@@ -150,178 +144,126 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     SearchState state,
     NuviSearchController notifier,
   ) {
-    // Initial State: Quick Suggestions
+    final x = context.nuvi;
     if (state.isInitialState && state.products.isEmpty && !state.isLoading) {
       return _buildInitialState();
     }
 
-    // Loading Initial State
     if (state.isLoading) {
-      return const Center(
-        child: NuviLoadingIndicator(),
-      );
+      return const Center(child: NuviLoadingIndicator());
     }
 
-    // Error State
     if (state.errorMessage != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(NuviSpacing.xl),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.error_outline,
-                size: 48,
-                color: NuviColors.accent,
-              ),
-              const SizedBox(height: NuviSpacing.md),
-              Text(
-                state.errorMessage!,
-                style: NuviTypography.textTheme.bodyMedium?.copyWith(
-                  color: NuviColors.primary,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: NuviSpacing.lg),
-              NuviButton(
-                text: 'Try Again',
-                type: NuviButtonType.primary,
-                onPressed: () => notifier.retry(),
-              ),
-            ],
-          ),
-        ),
+      return NuviEmptyState(
+        title: 'Something went wrong',
+        message: state.errorMessage,
+        actionLabel: 'Try Again',
+        onAction: () => notifier.retry(),
       );
     }
 
-    // Empty Results State
     if (state.products.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(NuviSpacing.xl),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.search_off_outlined,
-                size: 64,
-                color: NuviColors.border,
-              ),
-              const SizedBox(height: NuviSpacing.md),
-              Text(
-                'No products found',
-                style: NuviTypography.textTheme.headlineMedium?.copyWith(
-                  color: NuviColors.primary,
-                ),
-              ),
-              const SizedBox(height: NuviSpacing.xs),
-              Text(
-                'We couldn\'t find anything matching "${state.query}". Try a different keyword or browse categories.',
-                style: NuviTypography.textTheme.bodyMedium?.copyWith(
-                  color: NuviColors.onSurface.withValues(alpha: 0.7),
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: NuviSpacing.xl),
-              NuviButton(
-                text: 'Clear Search',
-                type: NuviButtonType.primary,
-                onPressed: () {
-                  _searchController.clear();
-                  notifier.clearSearch();
-                },
-              ),
-            ],
-          ),
-        ),
+      return NuviEmptyState(
+        title: 'No products found',
+        message:
+            'We couldn\'t find anything matching "${state.query}". Try a different keyword or browse categories.',
+        actionLabel: 'Clear Search',
+        onAction: () {
+          _searchController.clear();
+          notifier.clearSearch();
+        },
       );
     }
 
-    // Results State
+    final filterCount = state.selectedFilters.activeFilterCount;
     return Column(
       children: [
-        // Results count and filter/sort actions
         Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: NuviSpacing.lg,
-            vertical: NuviSpacing.xs,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: NuviSpacing.gutter),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                '${state.products.length} ${state.products.length == 1 ? 'style' : 'styles'} found',
-                style: NuviTypography.textTheme.labelMedium?.copyWith(
-                  color: NuviColors.onSurface.withValues(alpha: 0.7),
-                  fontWeight: FontWeight.bold,
+              Expanded(
+                child: Text(
+                  '${state.products.length} ${state.products.length == 1 ? 'style' : 'styles'} found',
+                  style: x.nunito(
+                    13,
+                    weight: FontWeight.w700,
+                    color: NuviColors.inkMuted,
+                  ),
                 ),
               ),
-              OutlinedButton.icon(
-                icon: const Icon(
-                  Icons.tune,
-                  size: 16,
-                  color: NuviColors.primary,
-                ),
-                label: Text(
-                  state.selectedFilters.activeFilterCount > 0
-                      ? 'Filters (${state.selectedFilters.activeFilterCount})'
-                      : 'Filters & Sort',
-                  style: NuviTypography.textTheme.labelSmall?.copyWith(
-                    color: NuviColors.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: NuviColors.border),
-                  shape: RoundedRectangleBorder(
+              NuviPressable(
+                onTap: _openFilters,
+                child: Container(
+                  height: 40,
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  decoration: BoxDecoration(
+                    color: filterCount > 0 ? x.goldSoft : NuviColors.card,
                     borderRadius: BorderRadius.circular(NuviRadii.pill),
+                    border: Border.all(
+                      color: filterCount > 0 ? x.gold : NuviColors.line,
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.tune_rounded,
+                        size: 17,
+                        color: NuviColors.ink,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        filterCount > 0
+                            ? 'Filters ($filterCount)'
+                            : 'Filters & Sort',
+                        style: x.baloo(14),
+                      ),
+                    ],
                   ),
                 ),
-                onPressed: _openFilters,
               ),
             ],
           ),
         ),
-        const SizedBox(height: NuviSpacing.xs),
-
-        // Product Grid
+        const SizedBox(height: NuviSpacing.sm),
         Expanded(
           child: GridView.builder(
             controller: _scrollController,
-            padding: const EdgeInsets.symmetric(
-              horizontal: NuviSpacing.lg,
-              vertical: NuviSpacing.sm,
+            padding: const EdgeInsets.fromLTRB(
+              NuviSpacing.gutter,
+              NuviSpacing.xs,
+              NuviSpacing.gutter,
+              NuviSpacing.xl,
             ),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: NuviSpacing.md,
-              mainAxisSpacing: NuviSpacing.md,
-              childAspectRatio: 0.65,
+            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: 220,
+              crossAxisSpacing: NuviSpacing.gridGap,
+              mainAxisSpacing: NuviSpacing.gridGap,
+              childAspectRatio: 0.56,
             ),
             itemCount: state.products.length + (state.isLoadingMore ? 1 : 0),
             itemBuilder: (context, index) {
               if (index >= state.products.length) {
-                return const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(NuviSpacing.md),
-                    child: NuviLoadingIndicator(),
-                  ),
-                );
+                return const Center(child: NuviLoadingIndicator());
               }
 
               final product = state.products[index];
-              final wishlistState = ref.watch(wishlistControllerProvider);
-              final isFav = wishlistState.isWishlisted(product.id);
+              final isFav = ref
+                  .watch(wishlistControllerProvider)
+                  .isWishlisted(product.id);
               return NuviProductCard(
                 title: product.title,
                 price: product.price,
                 salePrice: product.salePrice,
+                compareAtPrice: product.compareAtPrice,
                 rating: product.rating,
                 badgeText: product.badgeText,
                 imageUrl: product.imageUrl,
                 colorSwatches: product.colorSwatches,
                 isFavorite: isFav,
+                tile: NuviTile.values[index % NuviTile.values.length],
                 onFavoriteToggle: () {
                   ref
                       .read(wishlistControllerProvider.notifier)
@@ -337,38 +279,38 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   }
 
   Widget _buildInitialState() {
-    return Padding(
-      padding: const EdgeInsets.all(NuviSpacing.lg),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Quick Suggestions',
-            style: NuviTypography.textTheme.labelLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: NuviSpacing.sm),
-          Wrap(
-            spacing: NuviSpacing.xs,
-            runSpacing: NuviSpacing.xs,
-            children: _quickSuggestions.map((suggestion) {
-              return ActionChip(
-                label: Text(suggestion),
-                backgroundColor: NuviColors.surfaceVariant,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(NuviRadii.pill),
-                  side: const BorderSide(color: NuviColors.border),
-                ),
-                labelStyle: NuviTypography.textTheme.labelMedium?.copyWith(
-                  color: NuviColors.primary,
-                ),
-                onPressed: () => _onSuggestionTap(suggestion),
-              );
-            }).toList(),
-          ),
-        ],
+    final x = context.nuvi;
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(
+        NuviSpacing.gutter,
+        NuviSpacing.sm,
+        NuviSpacing.gutter,
+        NuviSpacing.xl,
       ),
+      children: [
+        Text('Quick Suggestions', style: x.h3),
+        const SizedBox(height: NuviSpacing.sm),
+        Wrap(
+          spacing: NuviSpacing.sm,
+          children: _quickSuggestions.map((suggestion) {
+            return NuviChip(
+              label: suggestion,
+              icon: Icons.north_west_rounded,
+              onTap: () => _onSuggestionTap(suggestion),
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: NuviSpacing.xl),
+        const Center(
+          child: Opacity(opacity: 0.9, child: NuviMascot(size: 120)),
+        ),
+        const SizedBox(height: NuviSpacing.sm),
+        Text(
+          'Find the perfect little outfit',
+          textAlign: TextAlign.center,
+          style: x.bodyMuted,
+        ),
+      ],
     );
   }
 }

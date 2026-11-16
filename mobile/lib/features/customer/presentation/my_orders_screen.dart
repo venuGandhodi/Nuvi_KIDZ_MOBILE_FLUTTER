@@ -21,9 +21,7 @@ class MyOrdersScreen extends ConsumerWidget {
     return Material(
       color: NuviColors.surface,
       child: customerState.isLoading
-          ? const Center(
-              child: NuviLoadingIndicator(),
-            )
+          ? const Center(child: NuviLoadingIndicator())
           : RefreshIndicator(
               color: NuviColors.primary,
               onRefresh: () =>

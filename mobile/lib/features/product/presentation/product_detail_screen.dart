@@ -66,9 +66,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
           cartItemCount: cartState.totalItemCount,
           onCartTap: () => context.go('/cart'),
         ),
-        body: const Center(
-          child: NuviLoadingIndicator(),
-        ),
+        body: const Center(child: NuviLoadingIndicator()),
       );
     }
 

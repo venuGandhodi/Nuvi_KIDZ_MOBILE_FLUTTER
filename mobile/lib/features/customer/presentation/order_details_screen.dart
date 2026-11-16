@@ -155,9 +155,7 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
         onCartTap: () => context.go('/cart'),
       ),
       body: isLoading
-          ? const Center(
-              child: NuviLoadingIndicator(),
-            )
+          ? const Center(child: NuviLoadingIndicator())
           : order == null
           ? _buildErrorState(
               context,

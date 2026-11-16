@@ -70,9 +70,7 @@ class _CartScreenState extends ConsumerState<CartScreen>
     return Material(
       color: NuviColors.surface,
       child: cartState.isLoading
-          ? const Center(
-              child: NuviLoadingIndicator(),
-            )
+          ? const Center(child: NuviLoadingIndicator())
           : cartState.items.isEmpty
           ? _buildEmptyState(context)
           : SingleChildScrollView(
