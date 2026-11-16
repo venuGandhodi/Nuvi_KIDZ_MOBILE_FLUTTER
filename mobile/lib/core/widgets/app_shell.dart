@@ -1,18 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/cart/presentation/cart_controller.dart';
+import '../../features/wishlist/presentation/wishlist_controller.dart';
 import '../theme/nuvi_colors.dart';
-import '../theme/nuvi_typography.dart';
-import 'nuvi_animations.dart';
+import 'nuvi_announcement_bar.dart';
 import 'nuvi_bottom_nav.dart';
-import 'nuvi_top_bar.dart';
+import 'nuvi_header.dart';
 
-class AppShell extends ConsumerWidget {
+class AppShell extends ConsumerStatefulWidget {
   final Widget child;
   final GoRouterState state;
 
   const AppShell({super.key, required this.child, required this.state});
+
+  @override
+  ConsumerState<AppShell> createState() => _AppShellState();
+}
+
+class _AppShellState extends ConsumerState<AppShell> {
+  final ValueNotifier<bool> _scrolled = ValueNotifier(false);
 
   // -1 = no bottom-tab matches (e.g. Shop/Profile, reached via the category
   // circles or the header profile icon rather than a footer tab).
@@ -29,101 +38,107 @@ class AppShell extends ConsumerWidget {
     return -1;
   }
 
-  // Home and Shop keep the left-aligned brand logo (centerTitle: false in
-  // build()); Orders/Cart/Wishlist/Profile get a plain centered text title.
-  bool _showsLogoTitle(String location) {
-    return !location.startsWith('/account') &&
-        !location.startsWith('/orders') &&
-        !location.startsWith('/cart') &&
-        !location.startsWith('/wishlist');
-  }
-
-  Widget _buildTopBarTitle(String location) {
-    if (location.startsWith('/account')) {
-      return Text(
-        'Profile',
-        style: NuviTypography.textTheme.headlineMedium?.copyWith(
-          color: NuviColors.primary,
-          fontWeight: FontWeight.bold,
-          fontSize: 20,
-        ),
-      );
-    } else if (location.startsWith('/orders')) {
-      return Text(
-        'My Orders',
-        style: NuviTypography.textTheme.headlineMedium?.copyWith(
-          color: NuviColors.primary,
-          fontWeight: FontWeight.bold,
-        ),
-      );
-    } else if (location.startsWith('/cart')) {
-      return Text(
-        'My Bag',
-        style: NuviTypography.textTheme.headlineMedium?.copyWith(
-          color: NuviColors.primary,
-          fontWeight: FontWeight.bold,
-        ),
-      );
-    } else if (location.startsWith('/wishlist')) {
-      return Text(
-        'Wishlist',
-        style: NuviTypography.textTheme.headlineMedium?.copyWith(
-          color: NuviColors.primary,
-          fontWeight: FontWeight.bold,
-        ),
-      );
+  @override
+  void didUpdateWidget(covariant AppShell oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.state.matchedLocation != widget.state.matchedLocation) {
+      _scrolled.value = false;
     }
-    return NuviLogoAnimated(
-      child: Image.asset(
-        'assets/images/brand/nuvi_kidz_logo.png',
-        height: 48,
-        fit: BoxFit.contain,
-        errorBuilder: (context, error, stackTrace) => Text(
-          'Nuvi Kidz',
-          style: NuviTypography.textTheme.headlineMedium?.copyWith(
-            color: NuviColors.primary,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-    );
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final location = state.matchedLocation;
-    final selectedIndex = _calculateSelectedIndex(location);
-    final isOnProfile = location.startsWith('/account');
+  void dispose() {
+    _scrolled.dispose();
+    super.dispose();
+  }
 
-    return Scaffold(
-      backgroundColor: NuviColors.surface,
-      appBar: NuviTopBar(
-        title: _buildTopBarTitle(location),
-        showBackButton: false,
-        centerTitle: !_showsLogoTitle(location),
-        showCart: false,
-        showProfile: !isOnProfile,
-        onProfileTap: () => context.go('/account'),
+  bool _onScroll(ScrollNotification notification) {
+    if (notification.depth == 0 && notification.metrics.axis == Axis.vertical) {
+      _scrolled.value = notification.metrics.pixels > 4;
+    }
+    return false;
+  }
+
+  void _back() {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/home');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final location = widget.state.matchedLocation;
+    final selectedIndex = _calculateSelectedIndex(location);
+    final isHome = location.startsWith('/home');
+    // The bag has its own pinned checkout footer, so the tab bar steps aside.
+    final hideTabBar = location.startsWith('/cart');
+    final bagCount = ref.watch(
+      cartControllerProvider.select((s) => s.totalItemCount),
+    );
+    final wishlistCount = ref.watch(
+      wishlistControllerProvider.select((s) => s.wishlistProductIds.length),
+    );
+
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light.copyWith(
+        statusBarColor: Colors.transparent,
+        systemNavigationBarColor: NuviColors.white,
+        systemNavigationBarIconBrightness: Brightness.dark,
       ),
-      body: child,
-      bottomNavigationBar: NuviBottomNav(
-        currentIndex: selectedIndex,
-        onTap: (index) {
-          switch (index) {
-            case 0:
-              context.go('/home');
-              break;
-            case 1:
-              context.go('/orders');
-              break;
-            case 2:
-              context.go('/cart');
-              break;
-            case 3:
-              context.go('/wishlist');
-              break;
-          }
-        },
+      child: Scaffold(
+        backgroundColor: NuviColors.cream,
+        body: Column(
+          children: [
+            const NuviAnnouncementBar(),
+            NuviHeader(
+              showBack: !isHome,
+              onBack: _back,
+              onLogoTap: isHome ? null : () => context.go('/home'),
+              scrolled: _scrolled,
+              wishlistCount: wishlistCount,
+              bagCount: bagCount,
+              onSearch: () => context.push('/search'),
+              onWishlist: () => context.go('/wishlist'),
+              onAccount: () => context.go('/account'),
+              onBag: () => context.go('/cart'),
+            ),
+            Expanded(
+              child: MediaQuery.removePadding(
+                context: context,
+                removeTop: true,
+                child: NotificationListener<ScrollNotification>(
+                  onNotification: _onScroll,
+                  child: widget.child,
+                ),
+              ),
+            ),
+          ],
+        ),
+        bottomNavigationBar: hideTabBar
+            ? null
+            : NuviBottomNav(
+                currentIndex: selectedIndex,
+                cartCount: bagCount,
+                wishlistCount: wishlistCount,
+                onTap: (index) {
+                  switch (index) {
+                    case 0:
+                      context.go('/home');
+                      break;
+                    case 1:
+                      context.go('/orders');
+                      break;
+                    case 2:
+                      context.go('/cart');
+                      break;
+                    case 3:
+                      context.go('/wishlist');
+                      break;
+                  }
+                },
+              ),
       ),
     );
   }
