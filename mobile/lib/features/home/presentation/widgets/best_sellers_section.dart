@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+
 import '../../../../core/theme/nuvi_colors.dart';
 import '../../../../core/theme/nuvi_spacing.dart';
-import '../../../../core/theme/nuvi_typography.dart';
 import '../../../../core/widgets/nuvi_product_card.dart';
+import '../../../../core/widgets/nuvi_section_header.dart';
 import '../../domain/product.dart';
 
+/// "Top picks by customers": a horizontal rail of product cards, each
+/// carrying a Bestseller pill unless the product has its own badge.
 class BestSellersSection extends StatelessWidget {
   final List<Product> products;
   final Set<String> favoriteProductIds;
@@ -23,62 +26,55 @@ class BestSellersSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: NuviSpacing.md),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                'Bestsellers',
-                style: NuviTypography.textTheme.headlineMedium?.copyWith(
-                  color: NuviColors.primary,
-                ),
-              ),
-              GestureDetector(
-                onTap: onViewAllTap,
-                child: Text(
-                  'View All',
-                  style: NuviTypography.textTheme.labelLarge?.copyWith(
-                    color: NuviColors.primary,
-                    decoration: TextDecoration.underline,
-                  ),
-                ),
-              ),
-            ],
+    final scale = MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 1.3);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: NuviSpacing.gutter),
+          child: NuviSectionHeader(
+            eyebrow: 'Top picks by customers',
+            title: 'Bestsellers',
+            actionLabel: 'View all',
+            onAction: onViewAllTap,
           ),
-          const SizedBox(height: NuviSpacing.md),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: products.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              childAspectRatio: 0.65,
-              crossAxisSpacing: NuviSpacing.md,
-              mainAxisSpacing: NuviSpacing.md,
+        ),
+        const SizedBox(height: NuviSpacing.s12),
+        SizedBox(
+          height: 318 + 40 * (scale - 1),
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.fromLTRB(
+              NuviSpacing.gutter,
+              4,
+              NuviSpacing.gutter,
+              14,
             ),
+            itemCount: products.length,
+            separatorBuilder: (context, index) =>
+                const SizedBox(width: NuviSpacing.gridGap),
             itemBuilder: (context, index) {
               final product = products[index];
-              final isFav = favoriteProductIds.contains(product.id);
-              return NuviProductCard(
-                title: product.title,
-                price: product.price,
-                salePrice: product.salePrice,
-                rating: product.rating,
-                isFavorite: isFav,
-                badgeText: product.badgeText,
-                imageUrl: product.imageUrl,
-                onFavoriteToggle: () => onToggleFavorite?.call(product.id),
-                onTap: () => onProductTap?.call(product),
+              return SizedBox(
+                width: 176,
+                child: NuviProductCard(
+                  title: product.title,
+                  price: product.price,
+                  salePrice: product.salePrice,
+                  compareAtPrice: product.compareAtPrice,
+                  rating: product.rating,
+                  isFavorite: favoriteProductIds.contains(product.id),
+                  badgeText: product.badgeText ?? 'Bestseller',
+                  imageUrl: product.imageUrl,
+                  tile: NuviTile.values[index % NuviTile.values.length],
+                  onFavoriteToggle: () => onToggleFavorite?.call(product.id),
+                  onTap: () => onProductTap?.call(product),
+                ),
               );
             },
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
