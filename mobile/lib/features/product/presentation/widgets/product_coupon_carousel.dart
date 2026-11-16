@@ -1,184 +1,141 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/nuvi_colors.dart';
 import '../../../../core/theme/nuvi_radii.dart';
 import '../../../../core/theme/nuvi_spacing.dart';
-import '../../../../core/theme/nuvi_typography.dart';
+import '../../../../core/theme/nuvi_theme_ext.dart';
+import '../../../../core/widgets/nuvi_bottom_sheet.dart';
+import '../../../../core/widgets/nuvi_button.dart';
+import '../../../../core/widgets/nuvi_coupon_ticket.dart';
+import '../../../../core/widgets/nuvi_pressable.dart';
 import '../../domain/coupon.dart';
 import '../coupon_controller.dart';
 
-class ProductCouponCarousel extends ConsumerStatefulWidget {
+/// "Best price" card for the first active coupon; "+ n more offers" (and the
+/// card itself) open an offers sheet of coupon tickets with copy.
+class ProductCouponCarousel extends ConsumerWidget {
   const ProductCouponCarousel({super.key});
 
   @override
-  ConsumerState<ProductCouponCarousel> createState() =>
-      _ProductCouponCarouselState();
-}
-
-class _ProductCouponCarouselState extends ConsumerState<ProductCouponCarousel> {
-  final _controller = PageController();
-  Timer? _timer;
-  int _page = 0;
-  int _itemCount = 0;
-
-  void _startAutoScroll() {
-    _timer?.cancel();
-    if (_itemCount <= 1) return;
-    _timer = Timer.periodic(const Duration(seconds: 4), (_) {
-      if (!_controller.hasClients) return;
-      _page = (_page + 1) % _itemCount;
-      _controller.animateToPage(
-        _page,
-        duration: const Duration(milliseconds: 400),
-        curve: Curves.easeInOut,
-      );
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _copyCode(String code) {
-    Clipboard.setData(ClipboardData(text: code));
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('Copied "$code"')));
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final couponsAsync = ref.watch(activeCouponsProvider);
-
     return couponsAsync.when(
       data: (coupons) {
         if (coupons.isEmpty) return const SizedBox.shrink();
-        if (_itemCount != coupons.length) {
-          _itemCount = coupons.length;
-          WidgetsBinding.instance.addPostFrameCallback(
-            (_) => _startAutoScroll(),
-          );
-        }
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              height: 112,
-              child: PageView.builder(
-                controller: _controller,
-                itemCount: coupons.length,
-                onPageChanged: (i) => setState(() => _page = i),
-                itemBuilder: (context, index) =>
-                    _buildCouponCard(coupons[index]),
-              ),
-            ),
-            if (coupons.length > 1) ...[
-              const SizedBox(height: NuviSpacing.sm),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(coupons.length, (i) {
-                  final isActive = i == _page;
-                  return AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    margin: const EdgeInsets.symmetric(horizontal: 3),
-                    width: 6,
-                    height: 6,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: isActive
-                          ? NuviColors.primary
-                          : NuviColors.primary.withValues(alpha: 0.25),
-                    ),
-                  );
-                }),
-              ),
-            ],
-          ],
-        );
+        return _BestPriceCard(coupons: coupons);
       },
       loading: () => const SizedBox.shrink(),
       error: (error, stackTrace) => const SizedBox.shrink(),
     );
   }
+}
 
-  Widget _buildCouponCard(Coupon coupon) {
-    return Container(
-      padding: const EdgeInsets.all(NuviSpacing.md),
-      decoration: BoxDecoration(
-        color: NuviColors.secondary,
-        borderRadius: BorderRadius.circular(NuviRadii.card / 1.5),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            coupon.description,
-            style: NuviTypography.textTheme.labelLarge?.copyWith(
-              fontSize: 12,
-              color: NuviColors.onSecondary,
-              fontWeight: FontWeight.bold,
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: NuviSpacing.sm),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: NuviColors.surface,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: NuviColors.onSecondary.withValues(alpha: 0.4),
-                  ),
-                ),
-                child: Text(
-                  coupon.code,
-                  style: NuviTypography.textTheme.labelLarge?.copyWith(
-                    fontSize: 12,
-                    color: NuviColors.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+class _BestPriceCard extends StatelessWidget {
+  final List<Coupon> coupons;
+
+  const _BestPriceCard({required this.coupons});
+
+  void _openOffers(BuildContext context) {
+    showNuviSheet<void>(
+      context,
+      builder: (sheetContext) => NuviSheet(
+        title: 'Offers for you',
+        child: Column(
+          children: [
+            for (final coupon in coupons) ...[
+              NuviCouponTicket(
+                title: coupon.description,
+                code: coupon.code,
+                condition: 'Use code ${coupon.code} at checkout',
               ),
-              GestureDetector(
-                onTap: () => _copyCode(coupon.code),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: NuviColors.primary,
-                    borderRadius: BorderRadius.circular(NuviRadii.pill),
-                  ),
-                  child: Text(
-                    'Copy',
-                    style: NuviTypography.textTheme.labelLarge?.copyWith(
-                      fontSize: 11,
-                      color: NuviColors.onPrimary,
-                      fontWeight: FontWeight.bold,
+              const SizedBox(height: NuviSpacing.s12),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final x = context.nuvi;
+    final best = coupons.first;
+    final more = coupons.length - 1;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        NuviPressable(
+          onTap: () => _openOffers(context),
+          semanticLabel: 'Best price offer: ${best.description}',
+          pressedScale: 0.99,
+          child: Container(
+            decoration: BoxDecoration(
+              color: NuviColors.card,
+              borderRadius: BorderRadius.circular(NuviRadii.card),
+              border: Border.all(
+                color: x.gold.withValues(alpha: 0.6),
+                width: 1.2,
+              ),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Container(
+                    width: 30,
+                    color: x.gold,
+                    alignment: Alignment.center,
+                    child: RotatedBox(
+                      quarterTurns: 3,
+                      child: Text(
+                        'Best price',
+                        style: x.baloo(
+                          11.5,
+                          weight: FontWeight.w700,
+                          color: x.onGold,
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(14, 12, 8, 12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            best.description,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: x.baloo(15, weight: FontWeight.w700),
+                          ),
+                          const SizedBox(height: 2),
+                          Text('Use code ${best.code}', style: x.small),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.only(right: 10),
+                    child: Icon(
+                      Icons.chevron_right_rounded,
+                      color: NuviColors.ink,
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ],
-      ),
+        ),
+        if (more > 0)
+          NuviTextAction(
+            text: '+ $more more ${more == 1 ? 'offer' : 'offers'}',
+            color: x.goldText,
+            onTap: () => _openOffers(context),
+          ),
+      ],
     );
   }
 }

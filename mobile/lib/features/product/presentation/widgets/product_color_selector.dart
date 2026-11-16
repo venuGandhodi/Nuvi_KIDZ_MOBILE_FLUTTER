@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+
 import '../../../../core/theme/nuvi_colors.dart';
-import '../../../../core/theme/nuvi_spacing.dart';
-import '../../../../core/theme/nuvi_typography.dart';
+import '../../../../core/theme/nuvi_theme_ext.dart';
+import '../../../../core/widgets/nuvi_color_swatch.dart';
 import '../../domain/product_color.dart';
 
 class ProductColorSelector extends StatelessWidget {
@@ -21,64 +22,42 @@ class ProductColorSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (colors.isEmpty) return const SizedBox.shrink();
-
+    final x = context.nuvi;
     final activeName = selectedColor?.name ?? colors.first.name;
-    final swatchSize = dense ? 26.0 : 40.0;
-    final labelStyle = NuviTypography.textTheme.labelLarge?.copyWith(
-      fontSize: dense ? 12 : null,
-    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Text(
-              'Color: ',
-              style: labelStyle?.copyWith(
-                color: NuviColors.primary,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            Text(
-              activeName,
-              style: labelStyle?.copyWith(
-                color: NuviColors.onSurface.withValues(alpha: 0.8),
-                fontWeight: FontWeight.normal,
-              ),
-            ),
-          ],
-        ),
-        SizedBox(height: dense ? NuviSpacing.xs : NuviSpacing.sm),
-        Row(
-          children: colors.map((c) {
-            final isSelected = selectedColor?.id == c.id;
-            return GestureDetector(
-              onTap: () => onColorSelected(c),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 150),
-                width: swatchSize,
-                height: swatchSize,
-                margin: EdgeInsets.symmetric(
-                  horizontal: isSelected ? 5 : 0,
-                ).copyWith(right: (isSelected ? 5 : 0) + (dense ? 8 : 12)),
-                decoration: BoxDecoration(
-                  color: c.color,
-                  shape: BoxShape.circle,
-                  border: isSelected
-                      ? null
-                      : Border.all(color: NuviColors.border, width: 1),
-                  boxShadow: isSelected
-                      ? [
-                          BoxShadow(color: NuviColors.surface, spreadRadius: 2),
-                          BoxShadow(
-                            color: NuviColors.primary,
-                            spreadRadius: 3.5,
-                          ),
-                        ]
-                      : null,
+        Text.rich(
+          TextSpan(
+            children: [
+              TextSpan(
+                text: 'Colour: ',
+                style: x.baloo(
+                  15,
+                  weight: FontWeight.w700,
+                  color: NuviColors.pdpInk,
                 ),
               ),
+              TextSpan(
+                text: activeName,
+                style: x.nunito(
+                  15,
+                  weight: FontWeight.w600,
+                  color: NuviColors.inkMuted,
+                ),
+              ),
+            ],
+          ),
+        ),
+        Wrap(
+          spacing: 2,
+          children: colors.map((c) {
+            return NuviColorSwatch(
+              color: c.color,
+              semanticLabel: c.name,
+              isSelected: selectedColor?.id == c.id,
+              onTap: () => onColorSelected(c),
             );
           }).toList(),
         ),

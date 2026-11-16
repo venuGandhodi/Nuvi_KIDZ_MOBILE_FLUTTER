@@ -78,7 +78,7 @@ class NuviSizePill extends StatelessWidget {
     }
 
     return NuviPressable(
-      onTap: soldOut ? null : onTap,
+      onTap: onTap,
       semanticLabel: soldOut ? '$label, sold out' : 'Size $label',
       child: Semantics(
         selected: selected,

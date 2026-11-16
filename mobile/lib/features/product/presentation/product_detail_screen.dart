@@ -2,13 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:flutter/services.dart';
+
 import '../../../core/theme/nuvi_colors.dart';
+import '../../../core/theme/nuvi_decorations.dart';
+import '../../../core/theme/nuvi_motion.dart';
 import '../../../core/theme/nuvi_spacing.dart';
-import '../../../core/theme/nuvi_typography.dart';
+import '../../../core/theme/nuvi_theme_ext.dart';
+import '../../../core/widgets/nuvi_badge.dart';
 import '../../../core/widgets/nuvi_button.dart';
+import '../../../core/widgets/nuvi_empty_state.dart';
+import '../../../core/widgets/nuvi_icon_button.dart';
+import '../../../core/widgets/nuvi_icons.dart';
 import '../../../core/widgets/nuvi_loading_indicator.dart';
-import '../../../core/widgets/nuvi_pill_selector.dart';
+import '../../../core/widgets/nuvi_pressable.dart';
+import '../../../core/widgets/nuvi_price.dart';
 import '../../../core/widgets/nuvi_product_card.dart';
+import '../../../core/widgets/nuvi_section_header.dart';
+import '../../../core/widgets/nuvi_size_pill.dart';
+import '../../../core/widgets/nuvi_toast.dart';
 import '../../../core/widgets/nuvi_top_bar.dart';
 import '../../cart/presentation/cart_controller.dart';
 import '../../wishlist/presentation/wishlist_controller.dart';
@@ -50,373 +62,365 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
     }
   }
 
+  final GlobalKey _similarKey = GlobalKey();
+
+  void _back() {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/home');
+    }
+  }
+
+  void _scrollToSimilar() {
+    final target = _similarKey.currentContext;
+    if (target == null) return;
+    Scrollable.ensureVisible(
+      target,
+      duration: NuviMotion.of(context, const Duration(milliseconds: 450)),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  bool _isSizeSoldOut(ProductDetailState state, String size) {
+    final variants = state.product?.variants;
+    if (variants == null) return false;
+    final colorName = state.selectedColor?.name;
+    final matching = variants.where(
+      (v) =>
+          v.size == size &&
+          (colorName == null || v.color == null || v.color == colorName),
+    );
+    return matching.isNotEmpty && matching.every((v) => !v.availableForSale);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final x = context.nuvi;
     final state = ref.watch(productControllerProvider);
     final notifier = ref.read(productControllerProvider.notifier);
     final cartState = ref.watch(cartControllerProvider);
     final product = state.product;
 
-    if (state.isLoading) {
-      return Scaffold(
-        backgroundColor: NuviColors.surface,
-        appBar: NuviTopBar(
-          title: const SizedBox.shrink(),
-          showBackButton: true,
-          cartItemCount: cartState.totalItemCount,
-          onCartTap: () => context.go('/cart'),
-        ),
-        body: const Center(child: NuviLoadingIndicator()),
-      );
-    }
+    ref.listen<ProductDetailState>(productControllerProvider, (prev, next) {
+      if (next.addedToCartSuccess && !(prev?.addedToCartSuccess ?? false)) {
+        NuviToast.show(
+          context,
+          message: 'Added to bag',
+          actionLabel: 'View bag',
+          onAction: () => context.go('/cart'),
+        );
+      }
+    });
 
-    if (product == null) {
+    if (state.isLoading || product == null) {
       return Scaffold(
-        backgroundColor: NuviColors.surface,
+        backgroundColor: NuviColors.cream,
         appBar: NuviTopBar(
           title: const SizedBox.shrink(),
           showBackButton: true,
           cartItemCount: cartState.totalItemCount,
           onCartTap: () => context.go('/cart'),
         ),
-        body: Center(
-          child: Text(
-            state.errorMessage ?? 'Product not found.',
-            style: NuviTypography.textTheme.bodyMedium,
-          ),
-        ),
+        body: state.isLoading
+            ? const Center(child: NuviLoadingIndicator())
+            : NuviEmptyState(
+                title: 'Product not found',
+                message: state.errorMessage ?? 'Product not found.',
+                actionLabel: 'Back to shop',
+                onAction: () => context.go('/home'),
+              ),
       );
     }
 
     final images =
         product.images ??
-        (product.imageUrl != null ? [product.imageUrl!] : const []);
+        (product.imageUrl != null ? [product.imageUrl!] : const <String>[]);
     final priceStr = product.salePrice ?? product.price;
+    final onSale = product.compareAtPrice != null && product.salePrice != null;
+    final shownPrice = onSale
+        ? product.salePrice!
+        : (state.selectedVariant?.formattedPrice ?? priceStr);
+    final info = NuviPriceInfo.from(
+      price: shownPrice,
+      compareAtPrice: onSale ? product.compareAtPrice : null,
+    );
+    final isFav = ref
+        .watch(wishlistControllerProvider)
+        .isWishlisted(product.id);
+    final badge = product.badgeText;
 
-    return Scaffold(
-      backgroundColor: NuviColors.surface,
-      appBar: NuviTopBar(
-        title: const SizedBox.shrink(),
-        showBackButton: true,
-        onBackTap: () {
-          if (context.canPop()) {
-            context.pop();
-          } else {
-            context.go('/home');
-          }
-        },
-        cartItemCount: cartState.totalItemCount,
-        onCartTap: () => context.go('/cart'),
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.dark.copyWith(
+        statusBarColor: Colors.transparent,
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.only(
-                left: NuviSpacing.md,
-                right: NuviSpacing.md,
-                top: NuviSpacing.sm,
-                bottom:
-                    kBottomNavigationBarHeight +
-                    MediaQuery.of(context).padding.bottom +
-                    48.0,
+      child: Scaffold(
+        backgroundColor: NuviColors.cream,
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.only(bottom: NuviSpacing.xl),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              ProductImageCarousel(
+                images: images,
+                currentIndex: state.selectedImageIndex,
+                onPageChanged: (idx) => notifier.selectImage(idx),
+                onBack: _back,
+                ratingLabel: product.reviewCount > 0
+                    ? '${product.rating.toStringAsFixed(1)} (${product.reviewCount})'
+                    : null,
+                onSimilar: state.relatedProducts.isNotEmpty
+                    ? _scrollToSimilar
+                    : null,
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Image Gallery Carousel
-                  ProductImageCarousel(
-                    images: images,
-                    currentIndex: state.selectedImageIndex,
-                    onPageChanged: (idx) => notifier.selectImage(idx),
-                  ),
-                  const SizedBox(height: NuviSpacing.md),
-
-                  // Title & Wishlist Button
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          product.title,
-                          style: NuviTypography.textTheme.displayMedium
-                              ?.copyWith(
-                                color: NuviColors.onSurface,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 23,
-                              ),
-                        ),
-                      ),
-                      Builder(
-                        builder: (context) {
-                          final wishlistState = ref.watch(
-                            wishlistControllerProvider,
-                          );
-                          final isFav = wishlistState.isWishlisted(product.id);
-                          return IconButton(
-                            icon: Icon(
-                              isFav ? Icons.favorite : Icons.favorite_border,
-                              color: isFav
-                                  ? NuviColors.secondary
-                                  : NuviColors.onSurface.withValues(alpha: 0.6),
-                            ),
-                            onPressed: () {
-                              ref
-                                  .read(wishlistControllerProvider.notifier)
-                                  .toggleWishlist(product);
-                            },
-                          );
-                        },
-                      ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  NuviSpacing.gutter,
+                  NuviSpacing.s20,
+                  NuviSpacing.gutter,
+                  0,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (badge != null) ...[
+                      NuviBadge.fromText(badge),
+                      const SizedBox(height: NuviSpacing.sm),
                     ],
-                  ),
-                  const SizedBox(height: NuviSpacing.xs),
-
-                  // Price & Rating Row
-                  Row(
-                    children: [
-                      if (product.compareAtPrice != null &&
-                          product.salePrice != null) ...[
-                        Text(
-                          product.salePrice!,
-                          style: NuviTypography.textTheme.headlineMedium
-                              ?.copyWith(
-                                color: NuviColors.accent,
-                                fontWeight: FontWeight.w800,
-                                fontSize: 19,
-                              ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          product.compareAtPrice!,
-                          style: NuviTypography.textTheme.bodyMedium?.copyWith(
-                            color: NuviColors.onSurface.withValues(alpha: 0.5),
-                            decoration: TextDecoration.lineThrough,
-                          ),
-                        ),
-                      ] else ...[
-                        Text(
-                          state.selectedVariant?.formattedPrice ?? priceStr,
-                          style: NuviTypography.textTheme.headlineMedium
-                              ?.copyWith(
-                                color: NuviColors.accent,
-                                fontWeight: FontWeight.w800,
-                                fontSize: 19,
-                              ),
-                        ),
-                      ],
-                      const SizedBox(width: NuviSpacing.md),
-                      const Icon(
-                        Icons.star,
-                        size: 16,
-                        color: NuviColors.secondary,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${product.rating}',
-                        style: NuviTypography.textTheme.labelLarge?.copyWith(
-                          color: NuviColors.secondary,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '(${product.reviewCount})',
-                        style: NuviTypography.textTheme.bodySmall?.copyWith(
-                          color: NuviColors.onSurface.withValues(alpha: 0.6),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: NuviSpacing.sm),
-
-                  // Subtitle Summary
-                  if (product.description != null)
-                    Text(
-                      product.description!,
-                      style: NuviTypography.textTheme.bodyMedium?.copyWith(
-                        color: NuviColors.onSurface.withValues(alpha: 0.8),
-                        height: 1.4,
-                      ),
-                    ),
-                  const SizedBox(height: NuviSpacing.md),
-
-                  // Color Selector
-                  if (product.availableColors != null &&
-                      product.availableColors!.isNotEmpty) ...[
-                    ProductColorSelector(
-                      colors: product.availableColors!,
-                      selectedColor: state.selectedColor,
-                      onColorSelected: (c) => notifier.selectColor(c),
-                      dense: true,
-                    ),
-                    const SizedBox(height: NuviSpacing.sm),
-                  ],
-
-                  // Size Selector
-                  if (product.availableSizes != null &&
-                      product.availableSizes!.isNotEmpty) ...[
+                    Text(product.title, style: x.pdpTitle),
+                    const SizedBox(height: 6),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
+                        NuviStars(rating: product.rating, size: 16),
+                        const SizedBox(width: 6),
                         Text(
-                          'Size',
-                          style: NuviTypography.textTheme.labelLarge?.copyWith(
-                            fontSize: 12,
-                            color: NuviColors.primary,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          product.rating.toStringAsFixed(1),
+                          style: x.nunito(13, weight: FontWeight.w800),
                         ),
-                        GestureDetector(
-                          onTap: () {
-                            // Size guide dialog
-                          },
-                          child: Text(
-                            'Size Guide',
-                            style: NuviTypography.textTheme.labelLarge
-                                ?.copyWith(
-                                  fontSize: 12,
-                                  color: NuviColors.primary,
-                                  decoration: TextDecoration.underline,
-                                ),
-                          ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '(${product.reviewCount} reviews)',
+                          style: x.small,
                         ),
                       ],
                     ),
-                    const SizedBox(height: NuviSpacing.xs),
-                    Wrap(
-                      spacing: NuviSpacing.xs,
-                      runSpacing: NuviSpacing.xs,
-                      children: product.availableSizes!.map((size) {
-                        final isSelected = state.selectedSize == size;
-                        return NuviPillSelector(
-                          label: size,
-                          isSelected: isSelected,
-                          dense: true,
-                          onTap: () => notifier.selectSize(size),
-                        );
-                      }).toList(),
+                    const SizedBox(height: NuviSpacing.s12),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Expanded(
+                          child: Wrap(
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: 8,
+                            runSpacing: 4,
+                            children: [
+                              Text(info.current, style: x.priceLarge),
+                              if (info.compareAt != null)
+                                Text(
+                                  info.compareAt!,
+                                  style: x.compareAt.copyWith(fontSize: 15),
+                                ),
+                              if (info.percentOff != null)
+                                NuviBadge(
+                                  label: '${info.percentOff}% OFF',
+                                  kind: NuviBadgeKind.sale,
+                                  compact: true,
+                                ),
+                            ],
+                          ),
+                        ),
+                        NuviIconButton(
+                          icon: isFav ? Icons.favorite : Icons.favorite_border,
+                          color: isFav ? NuviColors.sale : NuviColors.ink,
+                          background: NuviColors.card,
+                          semanticLabel: isFav
+                              ? 'Remove from wishlist'
+                              : 'Save to wishlist',
+                          onPressed: () {
+                            ref
+                                .read(wishlistControllerProvider.notifier)
+                                .toggleWishlist(product);
+                          },
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: NuviSpacing.md),
-                  ],
-
-                  // Accordion Section
-                  ProductAccordionSection(
-                    description: product.description,
-                    fabricAndCare: product.fabricAndCare,
-                    reviews: product.reviews,
-                  ),
-                  const SizedBox(height: NuviSpacing.md),
-
-                  // Pincode & Delivery Info
-                  const ProductDeliveryInfoSection(),
-                  const SizedBox(height: NuviSpacing.md),
-
-                  // Coupon Carousel
-                  const ProductCouponCarousel(),
-                  const SizedBox(height: NuviSpacing.lg),
-
-                  // You May Also Like Horizontal Carousel
-                  if (state.relatedProducts.isNotEmpty) ...[
                     Text(
-                      'You May Also Like',
-                      style: NuviTypography.textTheme.headlineMedium?.copyWith(
-                        color: NuviColors.primary,
-                      ),
+                      'Inclusive of all taxes',
+                      style: x.nunito(12, color: NuviColors.inkMuted),
                     ),
                     const SizedBox(height: NuviSpacing.md),
-                    SizedBox(
-                      height: 240,
-                      child: ListView.separated(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: state.relatedProducts.length,
-                        separatorBuilder: (context, index) =>
-                            const SizedBox(width: NuviSpacing.md),
-                        itemBuilder: (context, index) {
-                          final rel = state.relatedProducts[index];
-                          final wishlistState = ref.watch(
-                            wishlistControllerProvider,
-                          );
-                          final isRelFav = wishlistState.isWishlisted(rel.id);
-                          return SizedBox(
-                            width: 160,
-                            child: NuviProductCard(
-                              title: rel.title,
-                              price: rel.price,
-                              salePrice: rel.salePrice,
-                              rating: rel.rating,
-                              imageUrl: rel.imageUrl,
-                              isFavorite: isRelFav,
-                              onFavoriteToggle: () {
-                                ref
-                                    .read(wishlistControllerProvider.notifier)
-                                    .toggleWishlist(rel);
-                              },
-                              onTap: () => context.push('/product/${rel.id}'),
-                            ),
-                          );
-                        },
+                    const ProductCouponCarousel(),
+                    const SizedBox(height: NuviSpacing.s20),
+                    if (product.availableColors != null &&
+                        product.availableColors!.isNotEmpty) ...[
+                      ProductColorSelector(
+                        colors: product.availableColors!,
+                        selectedColor: state.selectedColor,
+                        onColorSelected: (c) => notifier.selectColor(c),
                       ),
+                      const SizedBox(height: NuviSpacing.s12),
+                    ],
+                    if (product.availableSizes != null &&
+                        product.availableSizes!.isNotEmpty) ...[
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'Size',
+                              style: x.baloo(
+                                15,
+                                weight: FontWeight.w700,
+                                color: NuviColors.pdpInk,
+                              ),
+                            ),
+                          ),
+                          NuviPressable(
+                            onTap: () {
+                              // Size guide dialog
+                            },
+                            child: SizedBox(
+                              height: 44,
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.straighten_rounded,
+                                    size: 17,
+                                    color: NuviColors.ink,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'Size Guide',
+                                    style: x
+                                        .nunito(13, weight: FontWeight.w800)
+                                        .copyWith(
+                                          decoration: TextDecoration.underline,
+                                        ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      Wrap(
+                        spacing: 6,
+                        children: product.availableSizes!.map((size) {
+                          return NuviSizePill(
+                            label: size,
+                            selected: state.selectedSize == size,
+                            soldOut: _isSizeSoldOut(state, size),
+                            onTap: () => notifier.selectSize(size),
+                          );
+                        }).toList(),
+                      ),
+                      const SizedBox(height: NuviSpacing.md),
+                    ],
+                    const ProductPromisesRow(),
+                    const SizedBox(height: NuviSpacing.md),
+                    const ProductDeliveryInfoSection(),
+                    const SizedBox(height: NuviSpacing.md),
+                    ProductAccordionSection(
+                      description: product.description,
+                      fabricAndCare: product.fabricAndCare,
                     ),
+                    if (product.reviews != null &&
+                        product.reviews!.isNotEmpty) ...[
+                      const SizedBox(height: NuviSpacing.lg),
+                      ProductReviewsSummary(
+                        rating: product.rating,
+                        reviewCount: product.reviewCount,
+                        reviews: product.reviews!,
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
-            ),
-          ),
-        ],
-      ),
-
-      // Sticky Bottom Add to Cart CTA
-      bottomSheet: Container(
-        padding: EdgeInsets.only(
-          left: NuviSpacing.lg,
-          right: NuviSpacing.lg,
-          top: NuviSpacing.md,
-          bottom: MediaQuery.of(context).padding.bottom + NuviSpacing.md,
-        ),
-        decoration: BoxDecoration(
-          color: NuviColors.surface.withValues(alpha: 0.95),
-          border: Border(
-            top: BorderSide(color: NuviColors.border.withValues(alpha: 0.5)),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
-              blurRadius: 10,
-              offset: const Offset(0, -4),
-            ),
-          ],
-        ),
-        child: NuviButton(
-          text: !state.isSelectedVariantAvailable
-              ? 'Out of Stock'
-              : state.addedToCartSuccess
-              ? 'Added to Cart'
-              : 'Add to Cart - ${state.selectedVariant?.formattedPrice ?? priceStr}',
-          type: NuviButtonType.primary,
-          isLoading: state.isAddingToCart,
-          icon: state.addedToCartSuccess
-              ? Container(
-                  width: 19,
-                  height: 19,
-                  decoration: const BoxDecoration(
-                    color: NuviColors.secondary,
-                    shape: BoxShape.circle,
+              if (state.relatedProducts.isNotEmpty) ...[
+                const SizedBox(height: NuviSpacing.xl),
+                Padding(
+                  key: _similarKey,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: NuviSpacing.gutter,
                   ),
-                  alignment: Alignment.center,
-                  child: const Icon(
-                    Icons.check,
-                    size: 12,
-                    color: NuviColors.onSecondary,
+                  child: const NuviSectionHeader(
+                    eyebrow: 'You may also like',
+                    title: 'Similar styles',
                   ),
-                )
-              : null,
-          onPressed: !state.isSelectedVariantAvailable
-              ? () {}
-              : () {
-                  notifier.addToCart();
-                },
+                ),
+                const SizedBox(height: NuviSpacing.s12),
+                SizedBox(
+                  height: 300,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.fromLTRB(
+                      NuviSpacing.gutter,
+                      4,
+                      NuviSpacing.gutter,
+                      12,
+                    ),
+                    itemCount: state.relatedProducts.length,
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(width: NuviSpacing.gridGap),
+                    itemBuilder: (context, index) {
+                      final rel = state.relatedProducts[index];
+                      final isRelFav = ref
+                          .watch(wishlistControllerProvider)
+                          .isWishlisted(rel.id);
+                      return SizedBox(
+                        width: 168,
+                        child: NuviProductCard(
+                          title: rel.title,
+                          price: rel.price,
+                          salePrice: rel.salePrice,
+                          compareAtPrice: rel.compareAtPrice,
+                          rating: rel.rating,
+                          badgeText: rel.badgeText,
+                          imageUrl: rel.imageUrl,
+                          isFavorite: isRelFav,
+                          tile: NuviTile.values[index % NuviTile.values.length],
+                          onFavoriteToggle: () {
+                            ref
+                                .read(wishlistControllerProvider.notifier)
+                                .toggleWishlist(rel);
+                          },
+                          onTap: () => context.push('/product/${rel.id}'),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        bottomNavigationBar: Container(
+          padding: EdgeInsets.only(
+            left: NuviSpacing.gutter,
+            right: NuviSpacing.gutter,
+            top: NuviSpacing.s12,
+            bottom: MediaQuery.of(context).padding.bottom + NuviSpacing.s12,
+          ),
+          decoration: const BoxDecoration(
+            color: NuviColors.white,
+            boxShadow: NuviShadows.bottomBar,
+          ),
+          child: NuviButton(
+            text: !state.isSelectedVariantAvailable
+                ? 'Out of Stock'
+                : state.addedToCartSuccess
+                ? 'Added to Cart'
+                : 'Add to Cart - ${state.selectedVariant?.formattedPrice ?? priceStr}',
+            type: NuviButtonType.leaf,
+            isLoading: state.isAddingToCart,
+            icon: state.addedToCartSuccess
+                ? const Icon(Icons.check_circle_rounded)
+                : NuviIcons.bag(color: NuviColors.cream, size: 19),
+            onPressed: !state.isSelectedVariantAvailable
+                ? () {}
+                : () {
+                    notifier.addToCart();
+                  },
+          ),
         ),
       ),
     );
