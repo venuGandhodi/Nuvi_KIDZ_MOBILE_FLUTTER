@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import '../theme/nuvi_colors.dart';
-import '../theme/nuvi_typography.dart';
-import '../theme/nuvi_spacing.dart';
+import '../theme/nuvi_motion.dart';
+import '../theme/nuvi_radii.dart';
+import '../theme/nuvi_theme_ext.dart';
 
 class NuviInputField extends StatefulWidget {
   final String label;
@@ -69,12 +70,14 @@ class _NuviInputFieldState extends State<NuviInputField> {
 
   @override
   Widget build(BuildContext context) {
-    Color borderColor = NuviColors.border;
+    final x = context.nuvi;
+    Color borderColor = NuviColors.line;
     if (widget.errorText != null) {
-      borderColor = NuviColors.error;
+      borderColor = NuviColors.sale;
     } else if (_isFocused) {
-      borderColor = NuviColors.secondary; // Mustard glow
+      borderColor = NuviColors.ink;
     }
+    final muted = NuviColors.ink.withValues(alpha: 0.5);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -82,26 +85,25 @@ class _NuviInputFieldState extends State<NuviInputField> {
       children: [
         Text(
           widget.label,
-          style: NuviTypography.textTheme.labelLarge?.copyWith(
-            color: widget.enabled
-                ? NuviColors.onSurface
-                : NuviColors.onSurface.withValues(alpha: 0.5),
+          style: x.nunito(
+            13.5,
+            weight: FontWeight.w700,
+            color: widget.enabled ? NuviColors.ink : muted,
           ),
         ),
-        const SizedBox(height: NuviSpacing.xs),
-        Container(
+        const SizedBox(height: 6),
+        AnimatedContainer(
+          duration: NuviMotion.of(context, NuviMotion.fast),
           decoration: BoxDecoration(
-            color: widget.enabled
-                ? NuviColors.fieldBackground
-                : NuviColors.surfaceVariant,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: borderColor, width: _isFocused ? 2 : 1.5),
+            color: widget.enabled ? NuviColors.card : NuviColors.sageSoft,
+            borderRadius: BorderRadius.circular(NuviRadii.pill),
+            border: Border.all(color: borderColor, width: 1.5),
             boxShadow: _isFocused && widget.errorText == null
                 ? [
                     BoxShadow(
-                      color: NuviColors.secondary.withValues(alpha: 0.2),
-                      blurRadius: 8,
-                      offset: Offset.zero,
+                      color: x.gold.withValues(alpha: 0.22),
+                      blurRadius: 0,
+                      spreadRadius: 3,
                     ),
                   ]
                 : null,
@@ -115,33 +117,28 @@ class _NuviInputFieldState extends State<NuviInputField> {
             keyboardType: widget.keyboardType,
             textInputAction: widget.textInputAction,
             validator: widget.validator,
-            style: NuviTypography.textTheme.bodyMedium?.copyWith(
-              color: widget.enabled
-                  ? NuviColors.onSurface
-                  : NuviColors.onSurface.withValues(alpha: 0.5),
+            style: x.body.copyWith(
+              color: widget.enabled ? NuviColors.ink : muted,
             ),
             decoration: InputDecoration(
               hintText: widget.hint,
-              hintStyle: NuviTypography.textTheme.bodyMedium?.copyWith(
-                color: NuviColors.onSurface.withValues(alpha: 0.4),
-              ),
+              hintStyle: x.body.copyWith(color: NuviColors.inkFaint),
               prefixIcon: widget.prefixIcon != null
                   ? IconTheme(
                       data: IconThemeData(
-                        color: _isFocused
-                            ? NuviColors.primary
-                            : NuviColors.onSurface.withValues(alpha: 0.5),
+                        color: _isFocused ? NuviColors.ink : muted,
                       ),
                       child: widget.prefixIcon!,
                     )
                   : null,
               suffixIcon: widget.obscureText
                   ? IconButton(
+                      tooltip: _obscureText ? 'Show password' : 'Hide password',
                       icon: Icon(
                         _obscureText
                             ? Icons.visibility_off_outlined
                             : Icons.visibility_outlined,
-                        color: NuviColors.onSurface.withValues(alpha: 0.5),
+                        color: muted,
                       ),
                       onPressed: () {
                         setState(() {
@@ -153,13 +150,19 @@ class _NuviInputFieldState extends State<NuviInputField> {
                         ? IconButton(
                             icon: widget.suffixIcon!,
                             onPressed: widget.onSuffixIconPressed,
-                            color: NuviColors.onSurface.withValues(alpha: 0.5),
+                            color: muted,
                           )
                         : null),
+              filled: false,
               border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+              errorBorder: InputBorder.none,
+              focusedErrorBorder: InputBorder.none,
+              disabledBorder: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(
-                horizontal: NuviSpacing.md,
-                vertical: NuviSpacing.md,
+                horizontal: 18,
+                vertical: 14,
               ),
               isDense: true,
             ),
@@ -167,11 +170,13 @@ class _NuviInputFieldState extends State<NuviInputField> {
         ),
         if (widget.errorText != null)
           Padding(
-            padding: const EdgeInsets.only(top: NuviSpacing.xs),
+            padding: const EdgeInsets.only(top: 6, left: 14),
             child: Text(
               widget.errorText!,
-              style: NuviTypography.textTheme.bodySmall?.copyWith(
-                color: NuviColors.error,
+              style: x.nunito(
+                12.5,
+                weight: FontWeight.w700,
+                color: NuviColors.sale,
               ),
             ),
           ),

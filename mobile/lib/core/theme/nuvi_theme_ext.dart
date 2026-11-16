@@ -53,18 +53,21 @@ class NuviThemeX extends ThemeExtension<NuviThemeX> {
   /// Gold for small text on cream (darkened until it passes 4.5:1).
   Color get goldText => _darkenFor(gold, NuviColors.cream);
 
-  Color get goldSoft =>
-      isFestive ? Color.lerp(NuviColors.cream, gold, 0.16)! : NuviColors.goldSoft;
+  Color get goldSoft => isFestive
+      ? Color.lerp(NuviColors.cream, gold, 0.16)!
+      : NuviColors.goldSoft;
   Color get peachSoft => Color.lerp(NuviColors.cream, peach, 0.22)!;
-  Color get sageSoft =>
-      isFestive ? Color.lerp(NuviColors.cream, sage, 0.16)! : NuviColors.sageSoft;
+  Color get sageSoft => isFestive
+      ? Color.lerp(NuviColors.cream, sage, 0.16)!
+      : NuviColors.sageSoft;
 
   /// Bag headings + bag buttons: deep festival colour, olive otherwise.
   Color get bagAccent => isFestive ? lavender : NuviBagColors.olive;
   Color get bagHeading => isFestive ? lavender : NuviBagColors.ink;
 
   /// Add to Bag / collection accent.
-  Color get leaf => isFestive ? _darkenFor(peach, NuviColors.cream) : NuviColors.leaf;
+  Color get leaf =>
+      isFestive ? _darkenFor(peach, NuviColors.cream) : NuviColors.leaf;
 
   // ── Type ───────────────────────────────────────────────────────────────
   List<String>? get _headingFallback =>
@@ -82,19 +85,25 @@ class NuviThemeX extends ThemeExtension<NuviThemeX> {
   );
 
   TextStyle get display => _heading(30, FontWeight.w800, NuviColors.ink);
-  TextStyle get h1 => _heading(NuviTypography.h1, FontWeight.w800, NuviColors.ink);
-  TextStyle get h2 => _heading(NuviTypography.h2, FontWeight.w700, NuviColors.ink);
-  TextStyle get h3 => _heading(NuviTypography.h3, FontWeight.w700, NuviColors.ink);
+  TextStyle get h1 =>
+      _heading(NuviTypography.h1, FontWeight.w800, NuviColors.ink);
+  TextStyle get h2 =>
+      _heading(NuviTypography.h2, FontWeight.w700, NuviColors.ink);
+  TextStyle get h3 =>
+      _heading(NuviTypography.h3, FontWeight.w700, NuviColors.ink);
   TextStyle get pdpTitle => _heading(24, FontWeight.w700, NuviColors.pdpInk);
 
-  TextStyle baloo(double size, {FontWeight weight = FontWeight.w600, Color? color}) =>
-      TextStyle(
-        fontFamily: NuviTypography.headlineFont,
-        fontSize: size,
-        fontWeight: weight,
-        height: 1.2,
-        color: color ?? NuviColors.ink,
-      );
+  TextStyle baloo(
+    double size, {
+    FontWeight weight = FontWeight.w600,
+    Color? color,
+  }) => TextStyle(
+    fontFamily: NuviTypography.headlineFont,
+    fontSize: size,
+    fontWeight: weight,
+    height: 1.2,
+    color: color ?? NuviColors.ink,
+  );
 
   TextStyle nunito(
     double size, {
@@ -110,9 +119,12 @@ class NuviThemeX extends ThemeExtension<NuviThemeX> {
   );
 
   TextStyle get body => nunito(NuviTypography.body);
-  TextStyle get bodyMuted => nunito(NuviTypography.body, color: NuviColors.inkMuted);
-  TextStyle get small => nunito(NuviTypography.small, color: NuviColors.inkMuted);
-  TextStyle get smallStrong => nunito(NuviTypography.small, weight: FontWeight.w700);
+  TextStyle get bodyMuted =>
+      nunito(NuviTypography.body, color: NuviColors.inkMuted);
+  TextStyle get small =>
+      nunito(NuviTypography.small, color: NuviColors.inkMuted);
+  TextStyle get smallStrong =>
+      nunito(NuviTypography.small, weight: FontWeight.w700);
   TextStyle get micro => nunito(NuviTypography.micro, weight: FontWeight.w700);
   TextStyle get article => nunito(17, height: 1.65);
 
@@ -125,7 +137,8 @@ class NuviThemeX extends ThemeExtension<NuviThemeX> {
 
   TextStyle get button => baloo(15, weight: FontWeight.w600);
   TextStyle get price => baloo(16, weight: FontWeight.w700);
-  TextStyle get priceLarge => baloo(24, weight: FontWeight.w800, color: NuviColors.pdpInk);
+  TextStyle get priceLarge =>
+      baloo(24, weight: FontWeight.w800, color: NuviColors.pdpInk);
   TextStyle get compareAt => nunito(
     13,
     color: NuviColors.inkFaint,
@@ -140,14 +153,17 @@ class NuviThemeX extends ThemeExtension<NuviThemeX> {
     color: bagHeading,
   );
 
-  TextStyle bagSerif(double size, {FontWeight weight = FontWeight.w500, Color? color}) =>
-      TextStyle(
-        fontFamily: NuviTypography.bagFont,
-        fontSize: size,
-        fontWeight: weight,
-        height: 1.2,
-        color: color ?? bagHeading,
-      );
+  TextStyle bagSerif(
+    double size, {
+    FontWeight weight = FontWeight.w500,
+    Color? color,
+  }) => TextStyle(
+    fontFamily: NuviTypography.bagFont,
+    fontSize: size,
+    fontWeight: weight,
+    height: 1.2,
+    color: color ?? bagHeading,
+  );
 
   @override
   NuviThemeX copyWith({
@@ -190,7 +206,8 @@ class NuviThemeX extends ThemeExtension<NuviThemeX> {
   }
 
   static Color _readableOn(Color fill) =>
-      _contrast(fill, NuviColors.nightGreen) >= _contrast(fill, NuviColors.cream)
+      _contrast(fill, NuviColors.nightGreen) >=
+          _contrast(fill, NuviColors.cream)
       ? NuviColors.nightGreen
       : NuviColors.cream;
 
@@ -206,5 +223,6 @@ class NuviThemeX extends ThemeExtension<NuviThemeX> {
 }
 
 extension NuviThemeContext on BuildContext {
-  NuviThemeX get nuvi => Theme.of(this).extension<NuviThemeX>() ?? NuviThemeX.day;
+  NuviThemeX get nuvi =>
+      Theme.of(this).extension<NuviThemeX>() ?? NuviThemeX.day;
 }

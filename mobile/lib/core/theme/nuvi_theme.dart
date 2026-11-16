@@ -59,7 +59,11 @@ class NuviTheme {
       progressIndicatorTheme: ProgressIndicatorThemeData(color: x.gold),
       snackBarTheme: SnackBarThemeData(
         backgroundColor: NuviColors.ink,
-        contentTextStyle: x.nunito(14, weight: FontWeight.w600, color: NuviColors.cream),
+        contentTextStyle: x.nunito(
+          14,
+          weight: FontWeight.w600,
+          color: NuviColors.cream,
+        ),
         actionTextColor: x.gold,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
@@ -88,7 +92,10 @@ class NuviTheme {
         filled: true,
         fillColor: NuviColors.card,
         hintStyle: x.nunito(15, color: NuviColors.inkFaint),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 18,
+          vertical: 14,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(NuviRadii.pill),
           borderSide: const BorderSide(color: NuviColors.line, width: 1.5),
@@ -117,7 +124,11 @@ class NuviTheme {
         backgroundColor: x.sageSoft,
         selectedColor: NuviColors.ink,
         labelStyle: x.nunito(13, weight: FontWeight.w700),
-        secondaryLabelStyle: x.nunito(13, weight: FontWeight.w700, color: NuviColors.cream),
+        secondaryLabelStyle: x.nunito(
+          13,
+          weight: FontWeight.w700,
+          color: NuviColors.cream,
+        ),
         side: BorderSide.none,
         shape: const StadiumBorder(),
         showCheckmark: false,

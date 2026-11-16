@@ -239,7 +239,9 @@ class _ParticlePainter extends CustomPainter {
         _rand(i, 3) * size.height * 0.6,
       );
       final r = 1.2 + twinkle * 1.8;
-      _paint.color = NuviColors.moonCream.withValues(alpha: 0.2 + twinkle * 0.35);
+      _paint.color = NuviColors.moonCream.withValues(
+        alpha: 0.2 + twinkle * 0.35,
+      );
       final path = Path()
         ..moveTo(pos.dx, pos.dy - r * 2)
         ..lineTo(pos.dx + r * 0.5, pos.dy - r * 0.5)

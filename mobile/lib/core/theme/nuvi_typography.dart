@@ -9,6 +9,8 @@ class NuviTypography {
   static const String headlineFont = 'Baloo2';
   static const String bodyFont = 'Nunito';
   static const String bagFont = 'Fraunces';
+  static const String monoFont = 'Menlo';
+  static const List<String> monoFallback = ['Courier', 'monospace'];
 
   static const double h1 = 28;
   static const double h2 = 22;
@@ -22,9 +24,7 @@ class NuviTypography {
   static TextTheme get textTheme => buildTextTheme(headlineFont);
 
   static TextTheme buildTextTheme(String headingFont) {
-    final fallback = headingFont == headlineFont
-        ? null
-        : const [headlineFont];
+    final fallback = headingFont == headlineFont ? null : const [headlineFont];
     TextStyle heading(double size, FontWeight weight) => TextStyle(
       fontFamily: headingFont,
       fontFamilyFallback: fallback,

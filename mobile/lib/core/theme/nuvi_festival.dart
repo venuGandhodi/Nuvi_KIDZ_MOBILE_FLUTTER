@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-enum NuviFestivalEffect { snow, confetti, crackers, colourPuffs, petals, moonStars }
+enum NuviFestivalEffect {
+  snow,
+  confetti,
+  crackers,
+  colourPuffs,
+  petals,
+  moonStars,
+}
 
 class NuviMonthDay {
   final int month;
