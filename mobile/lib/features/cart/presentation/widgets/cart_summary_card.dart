@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/nuvi_colors.dart';
-import '../../../../core/theme/nuvi_spacing.dart';
-import '../../../../core/theme/nuvi_typography.dart';
-import '../../../../core/widgets/nuvi_button.dart';
 
+import '../../../../core/theme/nuvi_colors.dart';
+import '../../../../core/theme/nuvi_radii.dart';
+import '../../../../core/theme/nuvi_spacing.dart';
+import '../../../../core/theme/nuvi_theme_ext.dart';
+import '../../../../core/widgets/nuvi_decor.dart';
+
+/// Order summary card in the bag palette; checkout lives in the pinned
+/// footer.
 class CartSummaryCard extends StatelessWidget {
   final double subtotal;
   final double shipping;
   final double tax;
   final double total;
   final String currencyCode;
-  final VoidCallback onCheckout;
 
   const CartSummaryCard({
     super.key,
@@ -19,7 +22,6 @@ class CartSummaryCard extends StatelessWidget {
     required this.tax,
     required this.total,
     this.currencyCode = 'INR',
-    required this.onCheckout,
   });
 
   String _format(double val) {
@@ -31,126 +33,108 @@ class CartSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final x = context.nuvi;
     return Container(
-      padding: const EdgeInsets.all(NuviSpacing.lg),
       decoration: BoxDecoration(
-        color: NuviColors.surfaceVariant,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: NuviColors.textTertiary.withValues(alpha: 0.08),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        color: NuviBagColors.card,
+        borderRadius: BorderRadius.circular(NuviRadii.cardLarge),
+        border: Border.all(color: NuviBagColors.line),
       ),
+      clipBehavior: Clip.antiAlias,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            'Summary',
-            style: NuviTypography.textTheme.headlineMedium?.copyWith(
-              color: NuviColors.onSurface,
-              fontWeight: FontWeight.bold,
-              fontSize: 19,
+          if (x.isFestive)
+            Container(
+              height: 5,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(colors: [x.gold, x.peach, x.lavender]),
+              ),
             ),
-          ),
-          const SizedBox(height: NuviSpacing.md),
-
-          // Subtotal
-          _buildSummaryRow(label: 'Subtotal', value: _format(subtotal)),
-          const SizedBox(height: NuviSpacing.xs),
-
-          // Shipping
-          _buildSummaryRow(
-            label: 'Shipping',
-            value: shipping > 0 ? _format(shipping) : 'Calculated at checkout',
-          ),
-          const SizedBox(height: NuviSpacing.xs),
-
-          // Estimated Tax
-          _buildSummaryRow(
-            label: 'Estimated Tax',
-            value: tax > 0 ? _format(tax) : 'Calculated at checkout',
-          ),
-          const SizedBox(height: NuviSpacing.md),
-
-          const Divider(color: NuviColors.border),
-          const SizedBox(height: NuviSpacing.md),
-
-          // Total
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Total',
-                style: NuviTypography.textTheme.labelLarge?.copyWith(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  color: NuviColors.onSurface,
+          Padding(
+            padding: const EdgeInsets.all(NuviSpacing.s20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text('Summary', style: x.bagSerif(20, weight: FontWeight.w600)),
+                const SizedBox(height: NuviSpacing.md),
+                _row(x, 'Subtotal', _format(subtotal)),
+                _row(
+                  x,
+                  'Shipping',
+                  shipping > 0 ? _format(shipping) : 'Calculated at checkout',
                 ),
-              ),
-              Text(
-                _format(total),
-                style: NuviTypography.textTheme.headlineMedium?.copyWith(
-                  fontSize: 19,
-                  color: NuviColors.accent,
-                  fontWeight: FontWeight.w800,
+                _row(
+                  x,
+                  'Estimated Tax',
+                  tax > 0 ? _format(tax) : 'Calculated at checkout',
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: NuviSpacing.lg),
-
-          // Checkout CTA Button
-          NuviButton(
-            text: 'CHECKOUT',
-            type: NuviButtonType.primary,
-            onPressed: onCheckout,
-          ),
-          const SizedBox(height: NuviSpacing.md),
-
-          // Security Badge
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.lock_outline,
-                size: 16,
-                color: NuviColors.primary,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                'Secure Encrypted Checkout',
-                style: NuviTypography.textTheme.labelSmall?.copyWith(
-                  color: NuviColors.onSurface.withValues(alpha: 0.6),
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: NuviSpacing.s12),
+                  child: NuviDashedLine(color: NuviBagColors.line),
                 ),
-              ),
-            ],
+                Row(
+                  children: [
+                    Text(
+                      'Total',
+                      style: x.nunito(
+                        15,
+                        weight: FontWeight.w800,
+                        color: NuviBagColors.ink,
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      _format(total),
+                      style: x.bagSerif(19, weight: FontWeight.w600),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: NuviSpacing.md),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.verified_user_outlined,
+                      size: 16,
+                      color: NuviBagColors.green,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Secure Encrypted Checkout',
+                      style: x.nunito(
+                        12,
+                        weight: FontWeight.w700,
+                        color: NuviBagColors.muted,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSummaryRow({required String label, required String value}) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: NuviTypography.textTheme.bodyMedium?.copyWith(
-            color: NuviColors.onSurface.withValues(alpha: 0.7),
+  Widget _row(NuviThemeX x, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Text(label, style: x.nunito(14, color: NuviBagColors.muted)),
+          const Spacer(),
+          Text(
+            value,
+            style: x.nunito(
+              14,
+              weight: FontWeight.w700,
+              color: NuviBagColors.ink,
+            ),
           ),
-        ),
-        Text(
-          value,
-          style: NuviTypography.textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: NuviColors.primary,
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

@@ -14,7 +14,7 @@ class NuviToast {
   }) {
     final x = context.nuvi;
     final messenger = ScaffoldMessenger.maybeOf(context);
-    if (messenger == null) return;
+    if (messenger == null || Scaffold.maybeOf(context) == null) return;
     messenger
       ..hideCurrentSnackBar()
       ..showSnackBar(
