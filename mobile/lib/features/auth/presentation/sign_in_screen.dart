@@ -4,7 +4,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/nuvi_colors.dart';
 import '../../../core/theme/nuvi_spacing.dart';
-import '../../../core/theme/nuvi_typography.dart';
+import '../../../core/theme/nuvi_decorations.dart';
+import '../../../core/theme/nuvi_radii.dart';
+import '../../../core/theme/nuvi_theme_ext.dart';
+import '../../../core/widgets/nuvi_decor.dart';
 import '../../../core/utils/nuvi_logger.dart';
 import '../../../core/widgets/nuvi_animations.dart';
 import '../../../core/widgets/nuvi_button.dart';
@@ -88,164 +91,286 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
       );
     });
 
+    final x = context.nuvi;
     return Scaffold(
-      backgroundColor: NuviColors.surface,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(NuviSpacing.gutter),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: NuviSpacing.xl),
-                // Mascot avatar
-                Center(
-                  child: NuviMascotAnimated(
-                    loop: NuviMascotLoop.float,
-                    child: Container(
-                      width: 96,
-                      height: 96,
-                      decoration: const BoxDecoration(
-                        color: NuviColors.primary,
-                        shape: BoxShape.circle,
+      backgroundColor: NuviColors.cream,
+      body: SingleChildScrollView(
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _WelcomePanel(top: MediaQuery.paddingOf(context).top),
+              Transform.translate(
+                offset: const Offset(0, -28),
+                child: Container(
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: NuviSpacing.gutter,
+                  ),
+                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+                  decoration: BoxDecoration(
+                    color: NuviColors.card,
+                    borderRadius: BorderRadius.circular(NuviRadii.sheet),
+                    boxShadow: NuviShadows.soft,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        'Welcome back',
+                        style: x.h2,
+                        textAlign: TextAlign.center,
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(13),
-                        child: Image.asset(
-                          'assets/images/brand/nuvi_elephant_mascot.png',
-                          fit: BoxFit.contain,
+                      const SizedBox(height: 4),
+                      Text(
+                        'Sign in to continue your Nuvi journey',
+                        style: x.small,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: NuviSpacing.lg),
+                      NuviInputField(
+                        label: 'Email',
+                        hint: 'Enter your email',
+                        controller: _emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        prefixIcon: const Icon(Icons.email_outlined),
+                        enabled: !isLoading,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Email is required';
+                          }
+                          if (!value.contains('@')) {
+                            return 'Please enter a valid email';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: NuviSpacing.lg),
+                      NuviInputField(
+                        label: 'Password',
+                        hint: 'Enter your password',
+                        controller: _passwordController,
+                        obscureText: true,
+                        prefixIcon: const Icon(Icons.lock_outline),
+                        enabled: !isLoading,
+                        textInputAction: TextInputAction.done,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Password is required';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: NuviSpacing.md),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: isLoading
+                              ? null
+                              : () => context.go('/forgot-password'),
+                          child: Text(
+                            'Forgot Password?',
+                            style: x
+                                .nunito(13.5, weight: FontWeight.w800)
+                                .copyWith(decoration: TextDecoration.underline),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: NuviSpacing.xl),
-                NuviFadeUp(
-                  delay: const Duration(milliseconds: 150),
-                  child: Text(
-                    'Welcome Back',
-                    style: NuviTypography.textTheme.displayMedium?.copyWith(
-                      fontSize: 29,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                const SizedBox(height: NuviSpacing.sm),
-                NuviFadeUp(
-                  delay: const Duration(milliseconds: 250),
-                  child: Text(
-                    'Sign in to continue your Nuvi journey',
-                    style: NuviTypography.textTheme.bodyMedium?.copyWith(
-                      color: NuviColors.textSecondary,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                const SizedBox(height: NuviSpacing.xxl),
-                NuviInputField(
-                  label: 'Email',
-                  hint: 'Enter your email',
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  prefixIcon: const Icon(Icons.email_outlined),
-                  enabled: !isLoading,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Email is required';
-                    }
-                    if (!value.contains('@')) {
-                      return 'Please enter a valid email';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: NuviSpacing.lg),
-                NuviInputField(
-                  label: 'Password',
-                  hint: 'Enter your password',
-                  controller: _passwordController,
-                  obscureText: true,
-                  prefixIcon: const Icon(Icons.lock_outline),
-                  enabled: !isLoading,
-                  textInputAction: TextInputAction.done,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Password is required';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: NuviSpacing.md),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: isLoading
-                        ? null
-                        : () => context.go('/forgot-password'),
-                    child: Text(
-                      'Forgot Password?',
-                      style: NuviTypography.textTheme.labelLarge?.copyWith(
-                        color: NuviColors.primary,
+                      const SizedBox(height: NuviSpacing.sm),
+                      NuviButton(
+                        text: 'Sign In',
+                        type: NuviButtonType.dark,
+                        isLoading: isLoading,
+                        trailingIcon: const Icon(Icons.arrow_forward_rounded),
+                        onPressed: _onSignIn,
                       ),
-                    ),
+                      const SizedBox(height: NuviSpacing.md),
+                      Row(
+                        children: [
+                          const Expanded(
+                            child: Divider(color: NuviColors.line),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: NuviSpacing.md,
+                            ),
+                            child: Text(
+                              'OR',
+                              style: x.micro.copyWith(
+                                color: NuviColors.inkFaint,
+                              ),
+                            ),
+                          ),
+                          const Expanded(
+                            child: Divider(color: NuviColors.line),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: NuviSpacing.md),
+                      NuviButton.social(
+                        text: 'Continue with Google',
+                        icon: const Icon(Icons.g_mobiledata, size: 24),
+                        onPressed: isLoading ? null : _onGoogleSignIn,
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: NuviSpacing.xl),
-                NuviButton(
-                  text: 'Sign In',
-                  isLoading: isLoading,
-                  onPressed: _onSignIn,
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: NuviSpacing.gutter,
                 ),
-                const SizedBox(height: NuviSpacing.xxl),
-                Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Expanded(child: Divider(color: NuviColors.border)),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: NuviSpacing.md,
-                      ),
-                      child: Text(
-                        'OR',
-                        style: NuviTypography.textTheme.bodySmall?.copyWith(
-                          color: NuviColors.onSurface.withValues(alpha: 0.5),
-                        ),
-                      ),
+                    const _Perk(
+                      icon: Icons.local_shipping_outlined,
+                      title: 'Track every order',
+                      tone: NuviTone.sky,
                     ),
-                    Expanded(child: Divider(color: NuviColors.border)),
+                    const _Perk(
+                      icon: Icons.favorite_border_rounded,
+                      title: 'Keep a wishlist of favourites',
+                      tone: NuviTone.pink,
+                    ),
+                    const _Perk(
+                      icon: Icons.home_outlined,
+                      title: 'Save addresses for quicker checkout',
+                      tone: NuviTone.sage,
+                    ),
+                    const SizedBox(height: NuviSpacing.md),
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        Text('Don\'t have an account? ', style: x.body),
+                        GestureDetector(
+                          onTap: isLoading
+                              ? null
+                              : () => context.go('/sign-up'),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            child: Text(
+                              'Sign Up',
+                              style: x
+                                  .baloo(15, weight: FontWeight.w700)
+                                  .copyWith(
+                                    decoration: TextDecoration.underline,
+                                  ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(
+                      height:
+                          MediaQuery.paddingOf(context).bottom + NuviSpacing.md,
+                    ),
                   ],
                 ),
-                const SizedBox(height: NuviSpacing.xl),
-                NuviButton.social(
-                  text: 'Continue with Google',
-                  icon: const Icon(Icons.g_mobiledata, size: 24),
-                  onPressed: isLoading ? null : _onGoogleSignIn,
-                ),
-                const SizedBox(height: NuviSpacing.xxl),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Don\'t have an account? ',
-                      style: NuviTypography.textTheme.bodyMedium,
-                    ),
-                    GestureDetector(
-                      onTap: isLoading ? null : () => context.go('/sign-up'),
-                      child: Text(
-                        'Sign Up',
-                        style: NuviTypography.textTheme.labelLarge?.copyWith(
-                          color: NuviColors.primary,
-                          decoration: TextDecoration.underline,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: NuviSpacing.md),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _WelcomePanel extends StatelessWidget {
+  final double top;
+
+  const _WelcomePanel({required this.top});
+
+  @override
+  Widget build(BuildContext context) {
+    final x = context.nuvi;
+    return Container(
+      decoration: BoxDecoration(
+        gradient: RadialGradient(
+          center: const Alignment(0, -0.2),
+          radius: 0.9,
+          colors: [x.peachSoft, NuviColors.cream],
+        ),
+      ),
+      padding: EdgeInsets.only(top: top + NuviSpacing.lg),
+      child: Stack(
+        children: [
+          Positioned(
+            top: 10,
+            left: 32,
+            child: NuviSparkle(size: 16, color: x.gold),
+          ),
+          Positioned(
+            top: 64,
+            right: 40,
+            child: NuviSparkle(size: 11, color: x.peach),
+          ),
+          Positioned(
+            top: 120,
+            left: 54,
+            child: NuviLeaf(size: 22, color: x.sage, angle: -0.6),
+          ),
+          Column(
+            children: [
+              const NuviMascotAnimated(
+                loop: NuviMascotLoop.wave,
+                child: NuviMascot(size: 120, semanticLabel: 'NUVI elephant'),
+              ),
+              const SizedBox(height: NuviSpacing.md),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: NuviSpacing.xl),
+                child: Column(
+                  children: [
+                    Text(
+                      'Welcome to the NUVI family',
+                      textAlign: TextAlign.center,
+                      style: x.h1,
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Tiny styles, big smiles, beautiful memories.',
+                      textAlign: TextAlign.center,
+                      style: x.bodyMuted,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: NuviSpacing.sm),
+              const NuviHills(height: 70),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Perk extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final NuviTone tone;
+
+  const _Perk({required this.icon, required this.title, required this.tone});
+
+  @override
+  Widget build(BuildContext context) {
+    final x = context.nuvi;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: NuviSpacing.sm),
+      child: Row(
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(color: tone.tint, shape: BoxShape.circle),
+            child: Icon(icon, size: 19, color: tone.accent),
+          ),
+          const SizedBox(width: NuviSpacing.s12),
+          Expanded(
+            child: Text(title, style: x.nunito(14.5, weight: FontWeight.w700)),
+          ),
+        ],
       ),
     );
   }
