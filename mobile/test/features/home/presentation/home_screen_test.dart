@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:go_router/go_router.dart';
 import 'package:nuvi_kidz/features/category/data/category_repository.dart';
 import 'package:nuvi_kidz/features/category/domain/category_detail.dart';
 import 'package:nuvi_kidz/features/category/domain/category_filter.dart';
@@ -129,63 +128,13 @@ void main() {
     // not the flat collection list.
     expect(find.text('Girls'), findsOneWidget);
     expect(find.text('Boys'), findsOneWidget);
-    expect(find.text('Shop by age'), findsOneWidget);
+    expect(find.text('Shop by age'), findsNothing);
     expect(find.text('Bestsellers'), findsOneWidget);
     expect(find.text('Forest Elephant Romper'), findsOneWidget);
-
-    // Verify Age filter tap
-    final pill = find.text('0-3m');
-    expect(pill, findsOneWidget);
-    await tester.tap(pill, warnIfMissed: false);
-    await tester.pumpAndSettle();
   });
 
   testWidgets(
-    'Tapping an age category navigates to its Shopify collection handle',
-    (WidgetTester tester) async {
-      final router = GoRouter(
-        initialLocation: '/home',
-        routes: [
-          GoRoute(
-            path: '/home',
-            builder: (context, state) => const HomeScreen(),
-          ),
-          GoRoute(
-            path: '/category/:categoryId',
-            builder: (context, state) => Scaffold(
-              body: Text('Category: ${state.pathParameters['categoryId']}'),
-            ),
-          ),
-        ],
-      );
-
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            homeRepositoryProvider.overrideWithValue(MockHomeRepo()),
-            categoryRepositoryProvider.overrideWithValue(
-              MockCategoryMenuRepo(),
-            ),
-          ],
-          child: MaterialApp.router(routerConfig: router),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      final ageTile = find.text('0-3m');
-      await tester.ensureVisible(ageTile);
-      await tester.pumpAndSettle();
-
-      await tester.tap(ageTile, warnIfMissed: false);
-      await tester.pumpAndSettle();
-
-      expect(find.text('Category: newborn-clothing'), findsOneWidget);
-    },
-  );
-
-  testWidgets(
-    'HomeScreen hides the "Shop by age" section when Shopify returns no '
-    'active age categories, instead of showing hardcoded fallback data',
+    'HomeScreen renders normally when Shopify returns no age categories',
     (WidgetTester tester) async {
       await tester.pumpWidget(
         ProviderScope(

@@ -37,6 +37,8 @@ class NuviColors {
   static const Color inkFaint = Color(0xFF8A938E);
   static const Color photoButton = Color(0xEBFFFFFF);
   static const Color scrim = Color(0x66172D2A);
+  static const Color mist = Color(0xFFE9ECF1);
+  static const Color silver = Color(0xFFA9AFB8);
 
   // My Orders card.
   static const Color orderCard = Color(0xFFFFFDFA);

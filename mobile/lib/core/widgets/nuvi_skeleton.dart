@@ -81,6 +81,7 @@ class NuviImage extends StatelessWidget {
   final double? width;
   final double? height;
   final String? semanticLabel;
+  final Alignment alignment;
 
   const NuviImage({
     super.key,
@@ -90,6 +91,7 @@ class NuviImage extends StatelessWidget {
     this.width,
     this.height,
     this.semanticLabel,
+    this.alignment = Alignment.center,
   });
 
   @override
@@ -104,6 +106,7 @@ class NuviImage extends StatelessWidget {
       width: width,
       height: height,
       fit: fit,
+      alignment: alignment,
       semanticLabel: semanticLabel,
       excludeFromSemantics: semanticLabel == null,
       loadingBuilder: (context, child, progress) => progress == null
