@@ -551,44 +551,29 @@ Prefer incremental implementation.
 
 ---
 
-# 17. Git Rules
+# 17. Git Development Workflow — Local Main Only
 
-Use feature branches.
+1. Always work directly on the LOCAL `main` branch.
+2. Always modify files inside the currently opened local project folder.
+3. Never create, switch, or checkout another branch.
+4. Never modify the remote repository directly.
+5. Never execute `git push`, `git push origin main`, or any other push command.
+6. Never automatically commit changes.
+7. Never use force push, reset hard, or destructive Git commands.
+8. Preserve all existing user modifications.
+9. After implementation, run relevant tests, builds, and validations.
+10. Review the final Git diff and report all modified files.
+11. Leave all changes in the local working directory for the user to review.
 
-Preferred workflow:
-
-```text
-main
-  ↓
-feature/<feature-name>
-  ↓
-Implementation
-  ↓
-Tests
-  ↓
-Review
-  ↓
-Pull Request
-  ↓
-Merge
-```
-
-Do not commit directly to `main` unless explicitly requested.
-
-Use meaningful commit messages.
-
-Do not commit generated files, secrets, local configuration, or credentials.
-
-Before completing a feature:
+## Mandatory Workflow
 
 ```text
-git diff
-dart format
-flutter analyze
-tests
+LOCAL MAIN → IMPLEMENT → TEST → VALIDATE → REVIEW → STOP
 ```
 
-For backend changes, run the applicable build and test commands.
+The user is solely responsible for committing and pushing changes to GitHub.
+
+**STRICT RULE:** AI must NEVER commit or push changes. All development must happen locally on the existing `main` branch.
 
 ---
 
