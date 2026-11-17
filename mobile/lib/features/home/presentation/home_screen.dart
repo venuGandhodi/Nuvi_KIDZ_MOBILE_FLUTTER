@@ -13,7 +13,7 @@ import '../domain/category.dart';
 import '../data/home_sections_repository.dart';
 import 'home_controller.dart';
 import 'widgets/best_sellers_section.dart';
-import 'widgets/category_circles_section.dart';
+import 'widgets/category_cards_section.dart';
 import 'widgets/hero_banner_section.dart';
 import 'widgets/occasion_section.dart';
 import 'widgets/styled_banner_section.dart';
@@ -71,24 +71,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         },
         child: SingleChildScrollView(
           padding: const EdgeInsets.only(
-            top: NuviSpacing.md,
+            top: NuviSpacing.sm,
             bottom: NuviSpacing.xxl,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              HeroBannerSection(
-                hero: homeState.hero,
-                onShopCollectionPressed: () {
-                  final handle =
-                      homeState.hero?.collectionHandle.isNotEmpty == true
-                      ? homeState.hero!.collectionHandle
-                      : 'new-arrivals';
-                  context.push('/category/$handle');
-                },
-              ),
-              const SizedBox(height: NuviSpacing.lg),
-              CategoryCirclesSection(
+              CategoryCardsSection(
                 categories: menuCategories
                     .map(
                       (m) => Category(
@@ -109,6 +98,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   if (category.id.isNotEmpty) {
                     _onMenuCategoryTap(category);
                   }
+                },
+              ),
+              const SizedBox(height: NuviSpacing.md),
+              HeroBannerSection(
+                hero: homeState.hero,
+                onShopCollectionPressed: () {
+                  final handle =
+                      homeState.hero?.collectionHandle.isNotEmpty == true
+                      ? homeState.hero!.collectionHandle
+                      : 'new-arrivals';
+                  context.push('/category/$handle');
                 },
               ),
               if (occasions.isNotEmpty) ...[
