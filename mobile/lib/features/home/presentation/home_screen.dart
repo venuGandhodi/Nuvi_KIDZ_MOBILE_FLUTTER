@@ -4,19 +4,20 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/nuvi_colors.dart';
 import '../../../core/theme/nuvi_spacing.dart';
-import '../../../core/theme/nuvi_theme_ext.dart';
-import '../../../core/widgets/nuvi_decor.dart';
 import '../../../core/widgets/nuvi_empty_state.dart';
 import '../../../core/widgets/nuvi_loading_indicator.dart';
 import '../../category/domain/menu_category.dart';
 import '../../category/presentation/category_menu_controller.dart';
 import '../../wishlist/presentation/wishlist_controller.dart';
 import '../domain/category.dart';
+import '../data/home_sections_repository.dart';
 import 'home_controller.dart';
 import 'widgets/age_filter_section.dart';
 import 'widgets/best_sellers_section.dart';
 import 'widgets/category_circles_section.dart';
 import 'widgets/hero_banner_section.dart';
+import 'widgets/occasion_section.dart';
+import 'widgets/styled_banner_section.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -43,6 +44,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final homeState = ref.watch(homeControllerProvider);
     final homeNotifier = ref.read(homeControllerProvider.notifier);
     final menuCategories = ref.watch(categoryMenuControllerProvider).categories;
+    final occasions = ref.watch(occasionMenuProvider).value ?? const [];
+    final styledBanner = ref.watch(styledBannerProvider).value;
 
     if (homeState.isLoading) {
       return const Center(child: NuviLoadingIndicator());
@@ -58,11 +61,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
 
     return Material(
-      color: NuviColors.surface,
+      color: NuviColors.cream,
       child: RefreshIndicator(
         color: NuviColors.ink,
         backgroundColor: NuviColors.cream,
         onRefresh: () async {
+          ref.invalidate(occasionMenuProvider);
+          ref.invalidate(styledBannerProvider);
           await homeNotifier.loadHomeData();
         },
         child: SingleChildScrollView(
@@ -73,6 +78,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              HeroBannerSection(
+                hero: homeState.hero,
+                onShopCollectionPressed: () {
+                  final handle =
+                      homeState.hero?.collectionHandle.isNotEmpty == true
+                      ? homeState.hero!.collectionHandle
+                      : 'new-arrivals';
+                  context.push('/category/$handle');
+                },
+              ),
+              const SizedBox(height: NuviSpacing.lg),
               CategoryCirclesSection(
                 categories: menuCategories
                     .map(
@@ -96,26 +112,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   }
                 },
               ),
-              const SizedBox(height: NuviSpacing.xl),
-              HeroBannerSection(
-                hero: homeState.hero,
-                onShopCollectionPressed: () {
-                  final handle =
-                      homeState.hero?.collectionHandle.isNotEmpty == true
-                      ? homeState.hero!.collectionHandle
-                      : 'new-arrivals';
-                  context.push('/category/$handle');
-                },
-                onSecondaryPressed: () {
-                  context.push('/category/most-selling-items');
-                },
-              ),
+              if (occasions.isNotEmpty) ...[
+                const SizedBox(height: NuviSpacing.lg),
+                OccasionSection(
+                  occasions: occasions,
+                  onTap: (o) =>
+                      context.push('/category/${o.collectionHandle ?? o.id}'),
+                ),
+              ],
               // Age categories are entirely Shopify-driven (Metaobject type
               // "age_category"); when Shopify returns none (fetch failure or
               // zero active entries), the section is hidden rather than
               // showing stale/hardcoded placeholder data.
               if (homeState.ageFilters.isNotEmpty) ...[
-                const SizedBox(height: NuviSpacing.xxl),
+                const SizedBox(height: NuviSpacing.xl),
                 AgeFilterSection(
                   filters: homeState.ageFilters,
                   selectedFilterId: homeState.selectedAgeFilterId,
@@ -133,7 +143,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   },
                 ),
               ],
-              const SizedBox(height: NuviSpacing.xxl),
+              const SizedBox(height: NuviSpacing.xl),
               BestSellersSection(
                 products: homeState.bestSellers,
                 favoriteProductIds: ref
@@ -156,53 +166,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   context.push('/category/most-selling-items');
                 },
               ),
-              const SizedBox(height: NuviSpacing.xl),
-              const _BrandSignOff(),
+              if (styledBanner != null) ...[
+                const SizedBox(height: NuviSpacing.xl),
+                StyledBannerSection(
+                  banner: styledBanner,
+                  onPressed: () => context.push(
+                    '/category/${styledBanner.collectionHandle}',
+                  ),
+                ),
+              ],
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-/// Closing brand note: mascot, tagline and "Made with tiny smiles".
-class _BrandSignOff extends StatelessWidget {
-  const _BrandSignOff();
-
-  @override
-  Widget build(BuildContext context) {
-    final x = context.nuvi;
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: NuviSpacing.gutter),
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
-      decoration: BoxDecoration(
-        color: x.peachSoft,
-        borderRadius: BorderRadius.circular(24),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              NuviSparkle(size: 12, color: x.gold),
-              const SizedBox(width: 8),
-              Text('Tiny styles, big smiles', style: x.h3),
-              const SizedBox(width: 8),
-              NuviSparkle(size: 12, color: x.gold),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Made with tiny smiles \u2661',
-            style: x.small,
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: NuviSpacing.sm),
-          const NuviMascot(size: 92),
-          const NuviHills(height: 36),
-        ],
       ),
     );
   }

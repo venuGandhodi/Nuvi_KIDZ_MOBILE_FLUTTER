@@ -36,57 +36,40 @@ class AgeFilterSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final x = context.nuvi;
-    return Stack(
-      clipBehavior: Clip.none,
+    final scale = MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 1.3);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Positioned(
-          top: 4,
-          left: 18,
-          child: NuviLeaf(size: 26, color: x.sage, angle: -0.5),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: NuviSpacing.gutter),
+          child: NuviSectionHeader(
+            eyebrow: 'Little milestones',
+            title: 'Shop by age',
+            centered: true,
+          ),
         ),
-        Positioned(
-          top: 30,
-          right: 22,
-          child: NuviLeaf(size: 20, color: x.peach, angle: 0.7),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: NuviSpacing.gutter),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const NuviSectionHeader(
-                eyebrow: 'Little milestones',
-                title: 'Shop by age',
-                subtitle: 'Thoughtful picks for every tiny stage',
-                centered: true,
-                swoosh: true,
-              ),
-              const SizedBox(height: NuviSpacing.md),
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                padding: EdgeInsets.zero,
-                itemCount: filters.length,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  mainAxisSpacing: NuviSpacing.gridGap,
-                  crossAxisSpacing: NuviSpacing.gridGap,
-                  childAspectRatio: 0.92,
+        const SizedBox(height: NuviSpacing.s12),
+        SizedBox(
+          height: 150 + 18 * (scale - 1),
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: NuviSpacing.gutter),
+            itemCount: filters.length,
+            separatorBuilder: (context, index) => const SizedBox(width: 10),
+            itemBuilder: (context, index) {
+              final filter = filters[index];
+              return SizedBox(
+                width: 116,
+                child: _AgeTile(
+                  filter: filter,
+                  tone: NuviTone.all[index % NuviTone.all.length],
+                  icon: _icons[index % _icons.length],
+                  seed: index,
+                  selected: filter.id == selectedFilterId,
+                  onTap: () => onFilterSelected?.call(filter.id),
                 ),
-                itemBuilder: (context, index) {
-                  final filter = filters[index];
-                  return _AgeTile(
-                    filter: filter,
-                    tone: NuviTone.all[index % NuviTone.all.length],
-                    icon: _icons[index % _icons.length],
-                    seed: index,
-                    selected: filter.id == selectedFilterId,
-                    onTap: () => onFilterSelected?.call(filter.id),
-                  );
-                },
-              ),
-            ],
+              );
+            },
           ),
         ),
       ],
