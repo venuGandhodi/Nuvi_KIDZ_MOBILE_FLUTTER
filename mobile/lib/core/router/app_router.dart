@@ -15,6 +15,8 @@ import '../../features/auth/presentation/forgot_password_screen.dart';
 import '../../features/auth/presentation/reset_password_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/category/presentation/category_listing_screen.dart';
+import '../../features/category/presentation/shop_tab_screen.dart';
+import '../../features/explore/presentation/coming_soon_screen.dart';
 import '../../features/product/presentation/product_detail_screen.dart';
 import '../../features/cart/presentation/cart_screen.dart';
 import '../../features/checkout/presentation/checkout_screen.dart';
@@ -202,6 +204,18 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/home',
             builder: (context, state) => const HomeScreen(),
+          ),
+          GoRoute(
+            path: '/shop',
+            builder: (context, state) => const ShopTabScreen(),
+          ),
+          GoRoute(
+            path: '/styled',
+            builder: (context, state) => const ComingSoonScreen.styled(),
+          ),
+          GoRoute(
+            path: '/world',
+            builder: (context, state) => const ComingSoonScreen.world(),
           ),
           GoRoute(
             path: '/category/:categoryId',

@@ -9,12 +9,13 @@ import 'nuvi_decor.dart';
 import 'nuvi_icon_button.dart';
 import 'nuvi_icons.dart';
 
-/// Sticky cream header: back chevron (except on Home), NUVI logo, then
-/// search, wishlist (count), account and bag (count). Gains a soft shadow
+/// Sticky cream header: menu (Home) or back chevron, centred NUVI logo,
+/// then search, wishlist (count), account and bag (count). Gains a soft shadow
 /// once the page scrolls.
 class NuviHeader extends StatelessWidget {
   final bool showBack;
   final VoidCallback? onBack;
+  final VoidCallback? onMenu;
   final VoidCallback? onLogoTap;
   final VoidCallback? onSearch;
   final VoidCallback? onWishlist;
@@ -29,6 +30,7 @@ class NuviHeader extends StatelessWidget {
     required this.showBack,
     required this.scrolled,
     this.onBack,
+    this.onMenu,
     this.onLogoTap,
     this.onSearch,
     this.onWishlist,
@@ -51,7 +53,7 @@ class NuviHeader extends StatelessWidget {
         child: child,
       ),
       child: SizedBox(
-        height: 56,
+        height: 72,
         child: Row(
           children: [
             const SizedBox(width: 4),
@@ -63,10 +65,14 @@ class NuviHeader extends StatelessWidget {
                 onPressed: onBack,
               )
             else
-              const SizedBox(width: 8),
+              NuviIconButton(
+                icon: Icons.menu_rounded,
+                iconSize: 28,
+                semanticLabel: 'Menu',
+                onPressed: onMenu,
+              ),
             Expanded(
-              child: Align(
-                alignment: Alignment.centerLeft,
+              child: Center(
                 child: Semantics(
                   button: onLogoTap != null,
                   label: 'NUVI KIDZ home',
@@ -99,7 +105,7 @@ class NuviHeader extends StatelessWidget {
               onPressed: onBag,
               child: NuviIcons.bag(color: NuviColors.ink, size: 23),
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: 2),
           ],
         ),
       ),
@@ -172,8 +178,8 @@ class _HeaderLogoState extends State<_HeaderLogo>
               alignment: Alignment.centerLeft,
               child: Image.asset(
                 kNuviLogoAsset,
-                height: 44,
-                cacheHeight: 176,
+                height: 62,
+                cacheHeight: 248,
                 fit: BoxFit.contain,
                 errorBuilder: (context, error, stackTrace) =>
                     Text('NUVI KIDZ', style: x.h3),

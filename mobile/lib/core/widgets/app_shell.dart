@@ -6,9 +6,11 @@ import 'package:go_router/go_router.dart';
 import '../../features/cart/presentation/cart_controller.dart';
 import '../../features/wishlist/presentation/wishlist_controller.dart';
 import '../theme/nuvi_colors.dart';
+import '../theme/nuvi_festival.dart';
 import 'nuvi_announcement_bar.dart';
 import 'nuvi_bottom_nav.dart';
 import 'nuvi_header.dart';
+import 'nuvi_menu_drawer.dart';
 
 class AppShell extends ConsumerStatefulWidget {
   final Widget child;
@@ -22,18 +24,19 @@ class AppShell extends ConsumerStatefulWidget {
 
 class _AppShellState extends ConsumerState<AppShell> {
   final ValueNotifier<bool> _scrolled = ValueNotifier(false);
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   // -1 = no bottom-tab matches (e.g. Shop/Profile, reached via the category
   // circles or the header profile icon rather than a footer tab).
   int _calculateSelectedIndex(String location) {
-    if (location.startsWith('/orders')) {
+    if (location.startsWith('/home')) return 0;
+    if (location.startsWith('/shop') || location.startsWith('/category')) {
       return 1;
-    } else if (location.startsWith('/cart')) {
-      return 2;
-    } else if (location.startsWith('/wishlist')) {
-      return 3;
-    } else if (location.startsWith('/home')) {
-      return 0;
+    }
+    if (location.startsWith('/styled')) return 2;
+    if (location.startsWith('/world')) return 3;
+    if (location.startsWith('/account') || location.startsWith('/orders')) {
+      return 4;
     }
     return -1;
   }
@@ -80,21 +83,29 @@ class _AppShellState extends ConsumerState<AppShell> {
     final wishlistCount = ref.watch(
       wishlistControllerProvider.select((s) => s.wishlistProductIds.length),
     );
+    final festive = ref.watch(activeFestivalProvider) != null;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.light.copyWith(
-        statusBarColor: Colors.transparent,
-        systemNavigationBarColor: NuviColors.white,
-        systemNavigationBarIconBrightness: Brightness.dark,
-      ),
+      value: (festive ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark)
+          .copyWith(
+            statusBarColor: Colors.transparent,
+            systemNavigationBarColor: NuviColors.white,
+            systemNavigationBarIconBrightness: Brightness.dark,
+          ),
       child: Scaffold(
+        key: _scaffoldKey,
         backgroundColor: NuviColors.cream,
+        drawer: const NuviMenuDrawer(),
         body: Column(
           children: [
-            const NuviAnnouncementBar(),
+            if (festive)
+              const NuviAnnouncementBar()
+            else
+              SizedBox(height: MediaQuery.paddingOf(context).top),
             NuviHeader(
               showBack: !isHome,
               onBack: _back,
+              onMenu: () => _scaffoldKey.currentState?.openDrawer(),
               onLogoTap: isHome ? null : () => context.go('/home'),
               scrolled: _scrolled,
               wishlistCount: wishlistCount,
@@ -120,24 +131,15 @@ class _AppShellState extends ConsumerState<AppShell> {
             ? null
             : NuviBottomNav(
                 currentIndex: selectedIndex,
-                cartCount: bagCount,
-                wishlistCount: wishlistCount,
-                onTap: (index) {
-                  switch (index) {
-                    case 0:
-                      context.go('/home');
-                      break;
-                    case 1:
-                      context.go('/orders');
-                      break;
-                    case 2:
-                      context.go('/cart');
-                      break;
-                    case 3:
-                      context.go('/wishlist');
-                      break;
-                  }
-                },
+                onTap: (index) => context.go(
+                  const [
+                    '/home',
+                    '/shop',
+                    '/styled',
+                    '/world',
+                    '/account',
+                  ][index],
+                ),
               ),
       ),
     );
