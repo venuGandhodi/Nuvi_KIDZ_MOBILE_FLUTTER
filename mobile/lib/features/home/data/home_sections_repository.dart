@@ -5,6 +5,7 @@ import '../../shopify/data/shopify_product_mapper.dart';
 import '../../shopify/data/shopify_queries.dart';
 import '../../shopify/data/shopify_storefront_client.dart';
 import '../domain/home_hero.dart';
+import '../domain/promo_content.dart';
 
 /// Optional Home sections read from Shopify. Each returns empty/null when the
 /// store hasn't set the content up, so the section simply stays hidden (no
@@ -16,16 +17,108 @@ class HomeSectionsRepository {
   /// Metaobject type for the "Styled by NUVI" banner.
   static const styledBannerType = 'styled_banner';
 
+  /// Shopify menu whose items are the Festive Picks category circles.
+  static const festiveMenuHandle = 'festive-picks';
+
+  /// Metaobject type for the "Festive Picks" banner.
+  static const festiveBannerType = 'festive_banner';
+
+  /// Metaobject type for the "Deal Zone" banner.
+  static const dealBannerType = 'deal_banner';
+
+  /// Metaobject type for the Deal Zone offer tiles (one entry per tile).
+  static const dealTileType = 'deal_tile';
+
   final ShopifyStorefrontClient client;
 
   HomeSectionsRepository({ShopifyStorefrontClient? client})
     : client = client ?? ShopifyStorefrontClient();
 
-  Future<List<MenuCategory>> getOccasions() async {
+  Future<List<MenuCategory>> getOccasions() => _menu(occasionMenuHandle);
+
+  Future<List<MenuCategory>> getFestiveCategories() => _menu(festiveMenuHandle);
+
+  Future<PromoBanner?> getFestiveBanner() => _banner(festiveBannerType);
+
+  Future<PromoBanner?> getDealBanner() => _banner(dealBannerType);
+
+  Future<List<DealTile>> getDealTiles() async {
+    final tiles = <DealTile>[];
+    for (final f in await _metaobjects(dealTileType, first: 6)) {
+      final title = f['title']?.value ?? '';
+      final offer = f['offer_text']?.value ?? '';
+      final handle = f['collection_handle']?.value ?? '';
+      if (!_isActive(f) || title.isEmpty || handle.isEmpty) continue;
+      tiles.add(
+        DealTile(
+          title: title,
+          offerText: offer,
+          imageUrl: f['image']?.imageUrl,
+          collectionHandle: handle,
+        ),
+      );
+    }
+    return tiles;
+  }
+
+  Future<PromoBanner?> _banner(String type) async {
+    final list = await _metaobjects(type, first: 1);
+    if (list.isEmpty) return null;
+    final f = list.first;
+    final title = f['title']?.value ?? '';
+    final handle = f['collection_handle']?.value ?? '';
+    if (!_isActive(f) || title.isEmpty || handle.isEmpty) return null;
+    final badge = f['badge_text']?.value;
+    return PromoBanner(
+      title: title,
+      subtitle: f['subtitle']?.value ?? '',
+      imageUrl: f['image']?.imageUrl,
+      buttonText: f['button_text']?.value ?? 'Shop Now',
+      collectionHandle: handle,
+      badgeText: badge == null || badge.isEmpty ? null : badge,
+    );
+  }
+
+  /// Missing `is_active` counts as active; "false"/"0" hides the entry.
+  static bool _isActive(Map<String, _Field> f) {
+    final v = f['is_active']?.value;
+    return v == null || !(v == 'false' || v == '0');
+  }
+
+  /// Field maps (key → value/image) of up to [first] metaobjects of [type].
+  Future<List<Map<String, _Field>>> _metaobjects(
+    String type, {
+    required int first,
+  }) async {
+    try {
+      final data = await client.query(
+        query: _metaobjectsQuery,
+        variables: {'type': type, 'first': first},
+      );
+      final nodes = data['metaobjects']?['nodes'];
+      if (nodes is! List) return const [];
+      return [
+        for (final node in nodes)
+          if (node is Map<String, dynamic> && node['fields'] is List)
+            {
+              for (final field in node['fields'] as List)
+                if (field is Map<String, dynamic> && field['key'] is String)
+                  field['key'] as String: _Field(
+                    field['value'] as String?,
+                    field['reference']?['image']?['url'] as String?,
+                  ),
+            },
+      ];
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  Future<List<MenuCategory>> _menu(String handle) async {
     try {
       final data = await client.query(
         query: ShopifyQueries.getMenu,
-        variables: {'handle': occasionMenuHandle},
+        variables: {'handle': handle},
       );
       final menu = data['menu'];
       if (menu is Map<String, dynamic>) {
@@ -48,6 +141,26 @@ class HomeSectionsRepository {
     } catch (_) {}
     return null;
   }
+
+  static const String _metaobjectsQuery = r'''
+    query GetMetaobjects($type: String!, $first: Int!) {
+      metaobjects(type: $type, first: $first) {
+        nodes {
+          fields {
+            key
+            value
+            reference {
+              ... on MediaImage {
+                image {
+                  url
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ''';
 
   static const String _styledBannerQuery =
       '''
@@ -74,6 +187,17 @@ class HomeSectionsRepository {
   ''';
 }
 
+class _Field {
+  final String? value;
+  final String? _imageUrl;
+
+  const _Field(this.value, this._imageUrl);
+
+  /// Image from a file reference, or a plain URL value.
+  String? get imageUrl =>
+      _imageUrl ?? (value != null && value!.startsWith('http') ? value : null);
+}
+
 final homeSectionsRepositoryProvider = Provider<HomeSectionsRepository>(
   (ref) => HomeSectionsRepository(),
 );
@@ -84,4 +208,20 @@ final occasionMenuProvider = FutureProvider<List<MenuCategory>>(
 
 final styledBannerProvider = FutureProvider<HomeHero?>(
   (ref) => ref.read(homeSectionsRepositoryProvider).getStyledBanner(),
+);
+
+final festiveBannerProvider = FutureProvider<PromoBanner?>(
+  (ref) => ref.read(homeSectionsRepositoryProvider).getFestiveBanner(),
+);
+
+final festiveCategoriesProvider = FutureProvider<List<MenuCategory>>(
+  (ref) => ref.read(homeSectionsRepositoryProvider).getFestiveCategories(),
+);
+
+final dealBannerProvider = FutureProvider<PromoBanner?>(
+  (ref) => ref.read(homeSectionsRepositoryProvider).getDealBanner(),
+);
+
+final dealTilesProvider = FutureProvider<List<DealTile>>(
+  (ref) => ref.read(homeSectionsRepositoryProvider).getDealTiles(),
 );

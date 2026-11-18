@@ -14,6 +14,8 @@ import '../data/home_sections_repository.dart';
 import 'home_controller.dart';
 import 'widgets/best_sellers_section.dart';
 import 'widgets/category_cards_section.dart';
+import 'widgets/deal_zone_section.dart';
+import 'widgets/festive_picks_section.dart';
 import 'widgets/hero_banner_section.dart';
 import 'widgets/occasion_section.dart';
 import 'widgets/styled_banner_section.dart';
@@ -45,6 +47,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final menuCategories = ref.watch(categoryMenuControllerProvider).categories;
     final occasions = ref.watch(occasionMenuProvider).value ?? const [];
     final styledBanner = ref.watch(styledBannerProvider).value;
+    final festiveBanner = ref.watch(festiveBannerProvider).value;
+    final festiveCategories =
+        ref.watch(festiveCategoriesProvider).value ?? const [];
+    final dealBanner = ref.watch(dealBannerProvider).value;
+    final dealTiles = ref.watch(dealTilesProvider).value ?? const [];
 
     if (homeState.isLoading) {
       return const Center(child: NuviLoadingIndicator());
@@ -67,6 +74,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         onRefresh: () async {
           ref.invalidate(occasionMenuProvider);
           ref.invalidate(styledBannerProvider);
+          ref.invalidate(festiveBannerProvider);
+          ref.invalidate(festiveCategoriesProvider);
+          ref.invalidate(dealBannerProvider);
+          ref.invalidate(dealTilesProvider);
           await homeNotifier.loadHomeData();
         },
         child: SingleChildScrollView(
@@ -117,6 +128,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   occasions: occasions,
                   onTap: (o) =>
                       context.push('/category/${o.collectionHandle ?? o.id}'),
+                ),
+              ],
+              if (festiveBanner != null || festiveCategories.isNotEmpty) ...[
+                const SizedBox(height: NuviSpacing.xl),
+                FestivePicksSection(
+                  banner: festiveBanner,
+                  categories: festiveCategories,
+                  onCollectionTap: (handle) =>
+                      context.push('/category/$handle'),
+                ),
+              ],
+              if (dealBanner != null || dealTiles.isNotEmpty) ...[
+                const SizedBox(height: NuviSpacing.lg),
+                DealZoneSection(
+                  banner: dealBanner,
+                  tiles: dealTiles,
+                  onCollectionTap: (handle) =>
+                      context.push('/category/$handle'),
                 ),
               ],
               const SizedBox(height: NuviSpacing.xl),

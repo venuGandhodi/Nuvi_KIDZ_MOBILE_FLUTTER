@@ -10,7 +10,16 @@ import 'nuvi_pressable.dart';
 /// primary = gold fill, dark = ink fill, outline = 1.5pt ink border,
 /// leaf = Add to Bag green, bag = bag-screen olive. `secondary` and `social`
 /// are kept as outline aliases for existing call sites.
-enum NuviButtonType { primary, secondary, social, dark, outline, leaf, bag }
+enum NuviButtonType {
+  primary,
+  secondary,
+  social,
+  dark,
+  outline,
+  leaf,
+  bag,
+  coral,
+}
 
 class NuviButton extends StatelessWidget {
   final String text;
@@ -88,6 +97,9 @@ class NuviButton extends StatelessWidget {
         foreground = NuviColors.cream;
       case NuviButtonType.bag:
         background = x.bagAccent;
+        foreground = NuviColors.white;
+      case NuviButtonType.coral:
+        background = NuviColors.sale;
         foreground = NuviColors.white;
       case NuviButtonType.secondary:
       case NuviButtonType.social:

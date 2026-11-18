@@ -551,29 +551,31 @@ Prefer incremental implementation.
 
 ---
 
-# 17. Git Development Workflow — Local Main Only
+# 17. Git Development Workflow — Main Branch, No Commits
 
-1. Always work directly on the LOCAL `main` branch.
-2. Always modify files inside the currently opened local project folder.
-3. Never create, switch, or checkout another branch.
-4. Never modify the remote repository directly.
-5. Never execute `git push`, `git push origin main`, or any other push command.
-6. Never automatically commit changes.
-7. Never use force push, reset hard, or destructive Git commands.
-8. Preserve all existing user modifications.
-9. After implementation, run relevant tests, builds, and validations.
-10. Review the final Git diff and report all modified files.
-11. Leave all changes in the local working directory for the user to review.
+AI makes all code changes directly on the `main` branch and leaves them
+uncommitted. The user reviews, commits and pushes the changes manually.
+
+1. Always work directly on the `main` branch.
+2. Before starting, confirm the current branch is `main`. If it is not, stop and report it. Do not switch branches.
+3. Never create, switch to, or check out another branch.
+4. Make all changes directly in the working tree on `main`.
+5. Never run `git commit`. The user commits manually.
+6. Never run `git push` or any other push command. The user pushes manually.
+7. Never stage changes on the user's behalf unless explicitly asked.
+8. Never use force push, `git reset --hard`, or other destructive Git commands.
+9. Preserve all existing user modifications. Never discard or overwrite them.
+10. After implementation, run `dart format`, `flutter analyze` and `flutter test`, and fix any failures.
+11. Review the final `git diff` and report every modified file.
+12. Leave all changes uncommitted in the working directory for the user to review.
 
 ## Mandatory Workflow
 
 ```text
-LOCAL MAIN → IMPLEMENT → TEST → VALIDATE → REVIEW → STOP
+MAIN → IMPLEMENT → TEST → VALIDATE → REVIEW DIFF → REPORT → STOP (uncommitted)
 ```
 
-The user is solely responsible for committing and pushing changes to GitHub.
-
-**STRICT RULE:** AI must NEVER commit or push changes. All development must happen locally on the existing `main` branch.
+**STRICT RULE:** AI must NEVER commit or push. The user is solely responsible for committing and pushing changes to GitHub.
 
 ---
 
