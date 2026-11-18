@@ -45,6 +45,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final homeState = ref.watch(homeControllerProvider);
     final homeNotifier = ref.read(homeControllerProvider.notifier);
     final menuCategories = ref.watch(categoryMenuControllerProvider).categories;
+    // Separately uploaded card images win; otherwise the main menu.
+    final cardTiles = ref.watch(categoryCardsProvider).value ?? const [];
+    final cards = cardTiles.isNotEmpty ? cardTiles : menuCategories;
     final occasions = ref.watch(occasionMenuProvider).value ?? const [];
     final styledBanner = ref.watch(styledBannerProvider).value;
     final festiveBanner = ref.watch(festiveBannerProvider).value;
@@ -72,6 +75,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         color: NuviColors.ink,
         backgroundColor: NuviColors.cream,
         onRefresh: () async {
+          ref.invalidate(categoryCardsProvider);
           ref.invalidate(occasionMenuProvider);
           ref.invalidate(styledBannerProvider);
           ref.invalidate(festiveBannerProvider);
@@ -89,7 +93,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               CategoryCardsSection(
-                categories: menuCategories
+                categories: cards
                     .map(
                       (m) => Category(
                         id: m.id,
@@ -102,7 +106,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 selectedCategoryId: homeState.selectedCategoryId,
                 onCategorySelected: (id) {
                   homeNotifier.selectCategory(id);
-                  final category = menuCategories.firstWhere(
+                  final category = cards.firstWhere(
                     (m) => m.id == id,
                     orElse: () => const MenuCategory(id: '', title: ''),
                   );

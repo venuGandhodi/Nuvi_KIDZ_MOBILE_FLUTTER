@@ -29,36 +29,84 @@ class HomeSectionsRepository {
   /// Metaobject type for the Deal Zone offer tiles (one entry per tile).
   static const dealTileType = 'deal_tile';
 
+  /// Metaobject types for image tiles uploaded separately from collections
+  /// (one entry per tile). When a type has no entries the section falls back
+  /// to its Shopify menu and the collection images.
+  static const categoryCardType = 'category_card';
+  static const occasionTileType = 'occasion_tile';
+  static const festiveCategoryType = 'festive_category';
+
   final ShopifyStorefrontClient client;
 
   HomeSectionsRepository({ShopifyStorefrontClient? client})
     : client = client ?? ShopifyStorefrontClient();
 
-  Future<List<MenuCategory>> getOccasions() => _menu(occasionMenuHandle);
+  /// Girls / Boys / New Born cards. Empty means use the main menu.
+  Future<List<MenuCategory>> getCategoryCards() => _tiles(categoryCardType);
 
-  Future<List<MenuCategory>> getFestiveCategories() => _menu(festiveMenuHandle);
+  Future<List<MenuCategory>> getOccasions() =>
+      _tilesOrMenu(occasionTileType, occasionMenuHandle);
+
+  Future<List<MenuCategory>> getFestiveCategories() =>
+      _tilesOrMenu(festiveCategoryType, festiveMenuHandle);
+
+  Future<List<MenuCategory>> _tilesOrMenu(String type, String menu) async {
+    final tiles = await _tiles(type);
+    return tiles.isNotEmpty ? tiles : _menu(menu);
+  }
+
+  /// Active image tiles of [type] (fields: title, image, collection_handle,
+  /// position, is_active), sorted by position then Shopify entry order.
+  Future<List<MenuCategory>> _tiles(String type) async {
+    final entries = <(int, int, MenuCategory)>[];
+    final list = await _metaobjects(type, first: 20);
+    for (final (i, f) in list.indexed) {
+      final title = f['title']?.value ?? '';
+      final handle = f['collection_handle']?.value ?? '';
+      if (!_isActive(f) || title.isEmpty || handle.isEmpty) continue;
+      entries.add((
+        _position(f),
+        i,
+        MenuCategory(
+          id: '$type-$i-$handle',
+          title: title,
+          imageUrl: f['image']?.imageUrl,
+          collectionHandle: handle,
+        ),
+      ));
+    }
+    entries.sort((a, b) => a.$1 != b.$1 ? a.$1 - b.$1 : a.$2 - b.$2);
+    return [for (final e in entries) e.$3];
+  }
+
+  /// Entries without a valid `position` sort after numbered ones.
+  static int _position(Map<String, _Field> f) =>
+      int.tryParse(f['position']?.value?.trim() ?? '') ?? 1 << 30;
 
   Future<PromoBanner?> getFestiveBanner() => _banner(festiveBannerType);
 
   Future<PromoBanner?> getDealBanner() => _banner(dealBannerType);
 
   Future<List<DealTile>> getDealTiles() async {
-    final tiles = <DealTile>[];
-    for (final f in await _metaobjects(dealTileType, first: 6)) {
+    final tiles = <(int, int, DealTile)>[];
+    for (final (i, f) in (await _metaobjects(dealTileType, first: 6)).indexed) {
       final title = f['title']?.value ?? '';
       final offer = f['offer_text']?.value ?? '';
       final handle = f['collection_handle']?.value ?? '';
       if (!_isActive(f) || title.isEmpty || handle.isEmpty) continue;
-      tiles.add(
+      tiles.add((
+        _position(f),
+        i,
         DealTile(
           title: title,
           offerText: offer,
           imageUrl: f['image']?.imageUrl,
           collectionHandle: handle,
         ),
-      );
+      ));
     }
-    return tiles;
+    tiles.sort((a, b) => a.$1 != b.$1 ? a.$1 - b.$1 : a.$2 - b.$2);
+    return [for (final t in tiles) t.$3];
   }
 
   Future<PromoBanner?> _banner(String type) async {
@@ -224,4 +272,8 @@ final dealBannerProvider = FutureProvider<PromoBanner?>(
 
 final dealTilesProvider = FutureProvider<List<DealTile>>(
   (ref) => ref.read(homeSectionsRepositoryProvider).getDealTiles(),
+);
+
+final categoryCardsProvider = FutureProvider<List<MenuCategory>>(
+  (ref) => ref.read(homeSectionsRepositoryProvider).getCategoryCards(),
 );

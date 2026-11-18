@@ -6,8 +6,9 @@ import 'package:nuvi_kidz/features/shopify/data/shopify_storefront_client.dart';
 /// Returns canned metaobject nodes per type; throws for unknown types.
 class _FakeClient extends ShopifyStorefrontClient {
   final Map<String, List<Map<String, dynamic>>> byType;
+  final Map<String, Map<String, dynamic>> menus;
 
-  _FakeClient(this.byType)
+  _FakeClient(this.byType, {this.menus = const {}})
     : super(domain: 'test.myshopify.com', storefrontAccessToken: 'test');
 
   @override
@@ -15,6 +16,8 @@ class _FakeClient extends ShopifyStorefrontClient {
     required String query,
     Map<String, dynamic>? variables,
   }) async {
+    final menu = menus[variables?['handle']];
+    if (menu != null) return {'menu': menu};
     final nodes = byType[variables?['type']];
     if (nodes == null) throw Exception('no data');
     return {
@@ -126,6 +129,70 @@ void main() {
       final repo = HomeSectionsRepository(client: _FakeClient({}));
       expect(await repo.getFestiveBanner(), isNull);
       expect(await repo.getDealTiles(), isEmpty);
+    });
+  });
+
+  group('HomeSectionsRepository image tiles', () {
+    final occasionMenu = {
+      'id': 'm',
+      'title': 'Shop by Occasion',
+      'items': [
+        {
+          'id': 'i1',
+          'title': 'Menu Winter',
+          'resource': {
+            'handle': 'winter',
+            'image': {'url': 'https://cdn.test/collection.jpg'},
+          },
+          'items': [],
+        },
+      ],
+    };
+
+    test('uses uploaded occasion tiles sorted by position', () async {
+      final repo = HomeSectionsRepository(
+        client: _FakeClient(
+          {
+            'occasion_tile': [
+              _node({
+                'title': 'Birthday',
+                'collection_handle': 'birthday',
+                'position': '2',
+              }, image: 'https://cdn.test/birthday.png'),
+              _node({
+                'title': 'Winter',
+                'collection_handle': 'winter',
+                'position': '1',
+              }, image: 'https://cdn.test/winter.png'),
+              _node({'title': 'No position', 'collection_handle': 'casual'}),
+              _node({
+                'title': 'Off',
+                'collection_handle': 'off',
+                'is_active': 'false',
+              }),
+            ],
+          },
+          menus: {'shop-by-occasion': occasionMenu},
+        ),
+      );
+      final tiles = await repo.getOccasions();
+      expect(tiles.map((t) => t.title), ['Winter', 'Birthday', 'No position']);
+      expect(tiles.first.imageUrl, 'https://cdn.test/winter.png');
+      expect(tiles.first.collectionHandle, 'winter');
+    });
+
+    test('falls back to the menu and collection image', () async {
+      final repo = HomeSectionsRepository(
+        client: _FakeClient({}, menus: {'shop-by-occasion': occasionMenu}),
+      );
+      final tiles = await repo.getOccasions();
+      expect(tiles.single.title, 'Menu Winter');
+      expect(tiles.single.imageUrl, 'https://cdn.test/collection.jpg');
+    });
+
+    test('category cards are empty when none are uploaded', () async {
+      final repo = HomeSectionsRepository(client: _FakeClient({}));
+      expect(await repo.getCategoryCards(), isEmpty);
     });
   });
 
