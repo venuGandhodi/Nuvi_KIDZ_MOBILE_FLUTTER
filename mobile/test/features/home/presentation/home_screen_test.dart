@@ -122,7 +122,8 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verify sections render
-    expect(find.text('Autumn Adventures\nAwait'), findsOneWidget);
+    // The hero shows the Shopify image and CTA only, no overlaid text.
+    expect(find.text('Autumn Adventures\nAwait'), findsNothing);
     expect(find.text('Shop the Collection'), findsOneWidget);
     // Category row is now populated from the Shopify menu (Content / Menus),
     // not the flat collection list.
@@ -153,7 +154,7 @@ void main() {
 
       expect(find.text('Shop by age'), findsNothing);
       // The rest of the screen still renders normally.
-      expect(find.text('Autumn Adventures\nAwait'), findsOneWidget);
+      expect(find.text('Shop the Collection'), findsOneWidget);
       expect(find.text('Bestsellers'), findsOneWidget);
     },
   );
