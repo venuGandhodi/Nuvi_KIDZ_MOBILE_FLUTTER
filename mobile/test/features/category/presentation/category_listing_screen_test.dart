@@ -37,15 +37,44 @@ void main() {
       expect(find.text('Forest Knit Cardigan'), findsOneWidget);
     });
 
-    testWidgets('opens filter bottom sheet on tap', (tester) async {
+    testWidgets('shows Age, Price and Color pills in the top row', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
+
+      expect(find.text('Age'), findsOneWidget);
+      expect(find.text('Price'), findsOneWidget);
+      expect(find.text('Color'), findsOneWidget);
+      expect(find.text('Occasion'), findsNothing);
+    });
+
+    testWidgets('Filter toggles the extra filter options', (tester) async {
       await tester.pumpWidget(buildTestWidget());
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Filter'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Filter Products'), findsOneWidget);
-      expect(find.text('Apply Filters'), findsOneWidget);
+      expect(find.text('Gender'), findsOneWidget);
+      expect(find.text('Occasion'), findsOneWidget);
+      expect(find.text('Category'), findsOneWidget);
+      expect(find.text('Delivery Time'), findsOneWidget);
+
+      await tester.tap(find.text('Filter'));
+      await tester.pumpAndSettle();
+      expect(find.text('Occasion'), findsNothing);
+    });
+
+    testWidgets('opens a filter value sheet from an option', (tester) async {
+      await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Price'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Under ₹500'), findsOneWidget);
+      expect(find.text('Apply'), findsOneWidget);
     });
 
     testWidgets('opens sort bottom sheet on tap', (tester) async {
@@ -56,7 +85,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Sort By'), findsOneWidget);
-      expect(find.text('Highest Rated'), findsOneWidget);
+      expect(find.text('Best Selling'), findsOneWidget);
     });
   });
 }

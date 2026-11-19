@@ -8,8 +8,6 @@ import '../../../core/theme/nuvi_motion.dart';
 import '../../../core/theme/nuvi_radii.dart';
 import '../../../core/theme/nuvi_spacing.dart';
 import '../../../core/theme/nuvi_theme_ext.dart';
-import '../../../core/widgets/nuvi_badge.dart';
-import '../../../core/widgets/nuvi_chip.dart';
 import '../../../core/widgets/nuvi_decor.dart';
 import '../../../core/widgets/nuvi_empty_state.dart';
 import '../../../core/widgets/nuvi_icon_button.dart';
@@ -22,8 +20,9 @@ import '../../wishlist/presentation/wishlist_controller.dart';
 import 'category_controller.dart';
 import 'category_menu_controller.dart';
 import '../domain/category_filter.dart';
+import '../domain/collection_filter.dart';
 import '../domain/menu_category.dart';
-import 'widgets/category_filter_sheet.dart';
+import 'widgets/collection_filter_bar.dart';
 import 'widgets/category_sort_sheet.dart';
 
 class CategoryListingScreen extends ConsumerStatefulWidget {
@@ -114,19 +113,21 @@ class _CategoryListingScreenState extends ConsumerState<CategoryListingScreen> {
     }
   }
 
-  void _openFilterSheet() {
-    final controller = ref.read(categoryControllerProvider.notifier);
-    final currentFilter = ref.read(categoryControllerProvider).filterState;
+  /// Whether the extra filter cards (shown by the Filter button) are open.
+  bool _filtersOpen = false;
 
+  void _openFilterKind(CollectionFilterKind kind) {
+    final state = ref.read(categoryControllerProvider);
+    final controller = ref.read(categoryControllerProvider.notifier);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => CategoryFilterSheet(
-        initialFilterState: currentFilter,
-        onApply: (newFilter) {
-          controller.applyFilter(newFilter);
-        },
+      builder: (context) => CollectionFilterSheet(
+        kind: kind,
+        values: state.valuesFor(kind),
+        selectedIds: state.selectedIdsFor(kind),
+        onApply: (values) => controller.setFilterValues(kind, values),
       ),
     );
   }
@@ -145,21 +146,6 @@ class _CategoryListingScreenState extends ConsumerState<CategoryListingScreen> {
         },
       ),
     );
-  }
-
-  void _removeFilter(
-    FilterState current, {
-    String? category,
-    String? age,
-    bool stock = false,
-  }) {
-    final next = FilterState(
-      selectedCategoryIds: {...current.selectedCategoryIds}..remove(category),
-      selectedAgeFilters: {...current.selectedAgeFilters}..remove(age),
-      selectedPriceRange: current.selectedPriceRange,
-      inStockOnly: stock ? false : current.inStockOnly,
-    );
-    ref.read(categoryControllerProvider.notifier).applyFilter(next);
   }
 
   @override
@@ -387,8 +373,10 @@ class _CategoryListingScreenState extends ConsumerState<CategoryListingScreen> {
     final state = ref.watch(categoryControllerProvider);
     final notifier = ref.read(categoryControllerProvider.notifier);
     final headerTitle = title ?? state.categoryDetail?.title ?? 'Products';
+    final activeKinds = {for (final f in state.selectedFilters) f.kind};
 
-    if (state.isLoading) {
+    // Full-page loader only on first load; refiltering keeps the toolbar.
+    if (state.isLoading && state.categoryDetail == null) {
       return Column(
         children: [
           if (flat) _buildBackBar(headerTitle, null),
@@ -420,25 +408,59 @@ class _CategoryListingScreenState extends ConsumerState<CategoryListingScreen> {
       slivers: [
         SliverToBoxAdapter(
           child: flat
-              ? _buildBackBar(headerTitle, state.products.length)
+              ? _buildBackBar(headerTitle, null)
               : _buildBanner(headerTitle, state),
         ),
         SliverPersistentHeader(
           pinned: true,
-          delegate: _ToolbarDelegate(height: 60, child: _buildToolbar(state)),
+          delegate: _ToolbarDelegate(
+            height: 56,
+            child: CollectionFilterBar(
+              activeKinds: activeKinds,
+              sortActive: state.sortOption != SortOption.featured,
+              optionsOpen: _filtersOpen,
+              onOpenKind: _openFilterKind,
+              onOpenSort: _openSortSheet,
+              onToggleOptions: () =>
+                  setState(() => _filtersOpen = !_filtersOpen),
+            ),
+          ),
         ),
-        if (!state.filterState.isEmpty)
-          SliverToBoxAdapter(child: _buildActiveFilters(state.filterState)),
-        if (state.products.isEmpty)
+        if (_filtersOpen)
+          SliverToBoxAdapter(
+            child: CollectionFilterOptions(
+              kinds: state.filterKinds,
+              activeKinds: activeKinds,
+              onOpenKind: _openFilterKind,
+            ),
+          ),
+        SliverToBoxAdapter(
+          child: CollectionFilterSummary(
+            productCount: state.products.length,
+            selected: state.selectedFilters,
+            onRemove: notifier.removeFilter,
+            onClearAll: notifier.clearFilters,
+          ),
+        ),
+        if (state.isLoading)
+          const SliverFillRemaining(
+            hasScrollBody: false,
+            child: Center(child: NuviLoadingIndicator()),
+          )
+        else if (state.products.isEmpty)
           SliverFillRemaining(
             hasScrollBody: false,
             child: NuviEmptyState(
-              title: state.filterState.isEmpty
+              title: state.selectedFilters.isEmpty
                   ? 'No products in this category yet.'
                   : 'No little styles found here yet',
-              message: state.filterState.isEmpty ? null : 'Try another filter.',
-              actionLabel: state.filterState.isEmpty ? null : 'Reset Filters',
-              onAction: () => notifier.resetFilters(),
+              message: state.selectedFilters.isEmpty
+                  ? null
+                  : 'Try another filter.',
+              actionLabel: state.selectedFilters.isEmpty
+                  ? null
+                  : 'Reset Filters',
+              onAction: notifier.clearFilters,
               mascotSize: 96,
             ),
           )
@@ -468,6 +490,7 @@ class _CategoryListingScreenState extends ConsumerState<CategoryListingScreen> {
                   badgeText: product.badgeText,
                   imageUrl: product.imageUrl,
                   colorSwatches: product.colorSwatches,
+                  discountPill: true,
                   tile: NuviTile.values[index % NuviTile.values.length],
                   onFavoriteToggle: () {
                     ref
@@ -578,141 +601,6 @@ class _CategoryListingScreenState extends ConsumerState<CategoryListingScreen> {
                 ],
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildToolbar(CategoryState state) {
-    final x = context.nuvi;
-    final f = state.filterState;
-    final activeCount =
-        f.selectedCategoryIds.length +
-        f.selectedAgeFilters.length +
-        (f.inStockOnly ? 1 : 0) +
-        (f.selectedPriceRange != null ? 1 : 0);
-    return Container(
-      color: NuviColors.cream,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: Row(
-        children: [
-          _ToolbarPill(
-            icon: Icons.tune_rounded,
-            label: 'Filter',
-            count: activeCount,
-            onTap: _openFilterSheet,
-          ),
-          const SizedBox(width: 8),
-          _ToolbarPill(
-            label: 'Sort',
-            trailing: Icons.keyboard_arrow_down_rounded,
-            active: state.sortOption != SortOption.featured,
-            onTap: _openSortSheet,
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              '${state.products.length} Products',
-              maxLines: 1,
-              textAlign: TextAlign.end,
-              overflow: TextOverflow.ellipsis,
-              style: x.nunito(
-                12.5,
-                weight: FontWeight.w700,
-                color: NuviColors.inkMuted,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildActiveFilters(FilterState f) {
-    final chips = <Widget>[
-      for (final id in f.selectedCategoryIds)
-        NuviChip(
-          label: kCategoryFilterOptions[id] ?? id,
-          dense: true,
-          selected: true,
-          onRemove: () => _removeFilter(f, category: id),
-        ),
-      for (final age in f.selectedAgeFilters)
-        NuviChip(
-          label: age,
-          dense: true,
-          selected: true,
-          onRemove: () => _removeFilter(f, age: age),
-        ),
-      if (f.inStockOnly)
-        NuviChip(
-          label: 'In stock',
-          dense: true,
-          selected: true,
-          onRemove: () => _removeFilter(f, stock: true),
-        ),
-    ];
-    return SizedBox(
-      height: 46,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        itemCount: chips.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 6),
-        itemBuilder: (_, i) => chips[i],
-      ),
-    );
-  }
-}
-
-class _ToolbarPill extends StatelessWidget {
-  final IconData? icon;
-  final IconData? trailing;
-  final String label;
-  final int count;
-  final bool active;
-  final VoidCallback onTap;
-
-  const _ToolbarPill({
-    this.icon,
-    this.trailing,
-    required this.label,
-    this.count = 0,
-    this.active = false,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final x = context.nuvi;
-    final on = active || count > 0;
-    return NuviPressable(
-      onTap: onTap,
-      child: Container(
-        height: 40,
-        padding: const EdgeInsets.symmetric(horizontal: 14),
-        decoration: BoxDecoration(
-          color: on ? x.goldSoft : NuviColors.card,
-          borderRadius: BorderRadius.circular(NuviRadii.pill),
-          border: Border.all(color: on ? x.gold : NuviColors.line, width: 1.5),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (icon != null) ...[
-              Icon(icon, size: 17, color: NuviColors.ink),
-              const SizedBox(width: 6),
-            ],
-            Text(label, style: x.baloo(14, weight: FontWeight.w600)),
-            if (count > 0) ...[
-              const SizedBox(width: 6),
-              NuviCountBadge(count: count),
-            ],
-            if (trailing != null) ...[
-              const SizedBox(width: 2),
-              Icon(trailing, size: 18, color: NuviColors.ink),
-            ],
           ],
         ),
       ),

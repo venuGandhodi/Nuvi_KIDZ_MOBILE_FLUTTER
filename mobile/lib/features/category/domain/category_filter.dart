@@ -4,7 +4,7 @@ enum SortOption {
   featured('Featured'),
   priceLowToHigh('Price: Low to High'),
   priceHighToLow('Price: High to Low'),
-  rating('Highest Rated'),
+  rating('Best Selling'),
   newest('Newest Arrivals');
 
   final String label;

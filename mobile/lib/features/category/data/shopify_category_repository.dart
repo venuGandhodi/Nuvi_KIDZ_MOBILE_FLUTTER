@@ -1,9 +1,12 @@
+import 'dart:convert';
+
 import '../../home/domain/product.dart';
 import '../../shopify/data/shopify_product_mapper.dart';
 import '../../shopify/data/shopify_queries.dart';
 import '../../shopify/data/shopify_storefront_client.dart';
 import '../domain/category_detail.dart';
 import '../domain/category_filter.dart';
+import '../domain/collection_filter.dart';
 import '../domain/menu_category.dart';
 import 'category_repository.dart';
 
@@ -140,6 +143,95 @@ class ShopifyCategoryRepository implements CategoryRepository {
         .replaceAll(',', '')
         .trim();
     return double.tryParse(cleanStr) ?? 0.0;
+  }
+
+  @override
+  Future<CollectionPage> getCollectionPage(
+    String categoryId, {
+    List<SelectedFilterValue> filters = const [],
+    SortOption sort = SortOption.featured,
+  }) async {
+    final (sortKey, reverse) = collectionSortKey(sort);
+    Map<String, dynamic>? collection;
+    try {
+      final data = await client.query(
+        query: ShopifyQueries.getCollectionPage,
+        variables: {
+          'handle': categoryId,
+          'filters': [for (final f in filters) jsonDecode(f.value.input)],
+          'sortKey': sortKey,
+          'reverse': reverse,
+        },
+      );
+      collection = data['collection'] as Map<String, dynamic>?;
+    } catch (_) {
+      collection = null;
+    }
+
+    // Unknown handle or network failure: keep the previous behaviour (generic
+    // feed / offline data), without filters.
+    if (collection == null) {
+      return CollectionPage(
+        products: await getCategoryProducts(categoryId, sort: sort),
+      );
+    }
+
+    final products = <Product>[];
+    final edges = collection['products']?['edges'];
+    if (edges is List) {
+      for (final edge in edges) {
+        final node = edge is Map ? edge['node'] : null;
+        if (node is Map<String, dynamic>) {
+          products.add(ShopifyProductMapper.mapToProduct(node));
+        }
+      }
+    }
+    return CollectionPage(
+      products: products,
+      filters: parseCollectionFilters(collection['products']?['filters']),
+    );
+  }
+
+  /// Shopify `ProductCollectionSortKeys` + reverse flag for a sort option.
+  static (String, bool) collectionSortKey(SortOption sort) => switch (sort) {
+    SortOption.featured => ('COLLECTION_DEFAULT', false),
+    SortOption.priceLowToHigh => ('PRICE', false),
+    SortOption.priceHighToLow => ('PRICE', true),
+    SortOption.rating => ('BEST_SELLING', false),
+    SortOption.newest => ('CREATED', true),
+  };
+
+  /// Maps Storefront `Filter` objects, dropping values with no products.
+  static List<CollectionFilter> parseCollectionFilters(Object? raw) {
+    if (raw is! List) return const [];
+    final filters = <CollectionFilter>[];
+    for (final f in raw) {
+      if (f is! Map) continue;
+      final values = <CollectionFilterValue>[];
+      for (final v in (f['values'] as List?) ?? const []) {
+        if (v is! Map) continue;
+        final count = (v['count'] as num?)?.toInt() ?? 0;
+        final input = v['input'];
+        if (count <= 0 || input is! String) continue;
+        values.add(
+          CollectionFilterValue(
+            id: v['id'] as String? ?? input,
+            label: v['label'] as String? ?? '',
+            count: count,
+            input: input,
+          ),
+        );
+      }
+      filters.add(
+        CollectionFilter(
+          id: f['id'] as String? ?? '',
+          label: f['label'] as String? ?? '',
+          type: f['type'] as String? ?? 'LIST',
+          values: values,
+        ),
+      );
+    }
+    return filters;
   }
 
   @override

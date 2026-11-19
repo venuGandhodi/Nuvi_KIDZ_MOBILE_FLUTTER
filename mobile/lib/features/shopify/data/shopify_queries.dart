@@ -274,6 +274,87 @@ class ShopifyQueries {
     }
   ''';
 
+  /// A collection's products with Search & Discovery filters and sorting,
+  /// plus the filters (and value counts) available for it.
+  static const String getCollectionPage = r'''
+    query GetCollectionPage(
+      $handle: String!
+      $firstProducts: Int = 30
+      $filters: [ProductFilter!]
+      $sortKey: ProductCollectionSortKeys = COLLECTION_DEFAULT
+      $reverse: Boolean = false
+    ) {
+      collection(handle: $handle) {
+        id
+        title
+        handle
+        description
+        image {
+          url
+          altText
+        }
+        products(
+          first: $firstProducts
+          filters: $filters
+          sortKey: $sortKey
+          reverse: $reverse
+        ) {
+          filters {
+            id
+            label
+            type
+            values {
+              id
+              label
+              count
+              input
+            }
+          }
+          edges {
+            node {
+              id
+              title
+              handle
+              descriptionHtml
+              vendor
+              productType
+              tags
+              images(first: 10) {
+                edges {
+                  node {
+                    url
+                    altText
+                  }
+                }
+              }
+              variants(first: 50) {
+                edges {
+                  node {
+                    id
+                    title
+                    availableForSale
+                    price {
+                      amount
+                      currencyCode
+                    }
+                    compareAtPrice {
+                      amount
+                      currencyCode
+                    }
+                    selectedOptions {
+                      name
+                      value
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ''';
+
   static const String getMenu = r'''
     query GetMenu($handle: String!) {
       menu(handle: $handle) {

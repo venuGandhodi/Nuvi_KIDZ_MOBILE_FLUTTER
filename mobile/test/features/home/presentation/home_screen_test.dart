@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:nuvi_kidz/features/category/data/category_repository.dart';
 import 'package:nuvi_kidz/features/category/domain/category_detail.dart';
 import 'package:nuvi_kidz/features/category/domain/category_filter.dart';
+import 'package:nuvi_kidz/features/category/domain/collection_filter.dart';
 import 'package:nuvi_kidz/features/category/domain/menu_category.dart';
 import 'package:nuvi_kidz/features/category/presentation/category_controller.dart';
 import 'package:nuvi_kidz/features/home/data/home_repository.dart';
@@ -98,6 +99,13 @@ class MockCategoryMenuRepo implements CategoryRepository {
     FilterState? filter,
     SortOption? sort,
   }) async => [];
+
+  @override
+  Future<CollectionPage> getCollectionPage(
+    String categoryId, {
+    List<SelectedFilterValue> filters = const [],
+    SortOption sort = SortOption.featured,
+  }) async => const CollectionPage(products: []);
 }
 
 void main() {

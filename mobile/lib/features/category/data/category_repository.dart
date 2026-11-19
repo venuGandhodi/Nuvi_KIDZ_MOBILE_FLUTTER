@@ -1,6 +1,7 @@
 import '../../home/domain/product.dart';
 import '../domain/category_detail.dart';
 import '../domain/category_filter.dart';
+import '../domain/collection_filter.dart';
 import '../domain/menu_category.dart';
 import 'mock_category_data.dart';
 
@@ -12,9 +13,27 @@ abstract class CategoryRepository {
     SortOption? sort,
   });
   Future<List<MenuCategory>> getCategoryMenu({String handle = 'main-menu'});
+
+  /// A collection's products narrowed by [filters] and ordered by [sort],
+  /// with the filters the collection supports.
+  Future<CollectionPage> getCollectionPage(
+    String categoryId, {
+    List<SelectedFilterValue> filters = const [],
+    SortOption sort = SortOption.featured,
+  });
 }
 
 class MockCategoryRepository implements CategoryRepository {
+  /// Offline/mock data has no Shopify filters; it only sorts.
+  @override
+  Future<CollectionPage> getCollectionPage(
+    String categoryId, {
+    List<SelectedFilterValue> filters = const [],
+    SortOption sort = SortOption.featured,
+  }) async => CollectionPage(
+    products: await getCategoryProducts(categoryId, sort: sort),
+  );
+
   @override
   Future<CategoryDetail> getCategoryDetail(String categoryId) async {
     await Future.delayed(const Duration(milliseconds: 50));

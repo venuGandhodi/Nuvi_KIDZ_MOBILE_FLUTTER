@@ -32,6 +32,10 @@ class NuviProductCard extends StatelessWidget {
   final VoidCallback? onAddToCart;
   final NuviTile tile;
 
+  /// Collection-page style: "x% Off" pill and a "Sale" badge when the
+  /// product is discounted and has no other badge.
+  final bool discountPill;
+
   const NuviProductCard({
     super.key,
     required this.title,
@@ -49,6 +53,7 @@ class NuviProductCard extends StatelessWidget {
     this.onTap,
     this.onAddToCart,
     this.tile = NuviTile.sage,
+    this.discountPill = false,
   });
 
   @override
@@ -59,6 +64,8 @@ class NuviProductCard extends StatelessWidget {
       salePrice: salePrice,
       compareAtPrice: compareAtPrice,
     );
+    final badge =
+        badgeText ?? (discountPill && info.percentOff != null ? 'Sale' : null);
     final titleStyle = x.nunito(13.5, weight: FontWeight.w600, height: 1.3);
     final titleHeight =
         MediaQuery.textScalerOf(context).scale(13.5) * 1.3 * 2 + 1;
@@ -81,11 +88,11 @@ class NuviProductCard extends StatelessWidget {
                 fit: StackFit.expand,
                 children: [
                   NuviImage(url: imageUrl, tile: tile),
-                  if (badgeText != null)
+                  if (badge != null)
                     Positioned(
                       top: 10,
                       left: 10,
-                      child: NuviBadge.fromText(badgeText!, compact: true),
+                      child: NuviBadge.fromText(badge, compact: true),
                     ),
                   if (onFavoriteToggle != null)
                     Positioned(
@@ -115,7 +122,7 @@ class NuviProductCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  NuviPriceRow(info: info),
+                  NuviPriceRow(info: info, discountPill: discountPill),
                   if (sizes != null && sizes!.isNotEmpty) ...[
                     const SizedBox(height: 8),
                     SizedBox(
