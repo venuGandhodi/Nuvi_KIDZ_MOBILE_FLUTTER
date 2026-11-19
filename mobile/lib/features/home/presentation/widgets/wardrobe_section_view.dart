@@ -198,22 +198,28 @@ class _CategoryTile extends StatelessWidget {
         width: size,
         child: Column(
           children: [
+            // Same box as the Top Picks cards, so both sides line up.
             SizedBox(
               width: size,
-              height: size,
+              height: size * 1.25,
               child: Stack(
                 clipBehavior: Clip.none,
                 children: [
                   Positioned.fill(
-                    child: NuviImage(
-                      url: tile.imageUrl,
-                      fit: BoxFit.contain,
-                      tile: NuviTile.peach,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(NuviRadii.image),
+                      child: ColoredBox(
+                        color: NuviColors.white,
+                        child: NuviImage(
+                          url: tile.imageUrl,
+                          tile: NuviTile.peach,
+                        ),
+                      ),
                     ),
                   ),
                   if (sparkle)
                     const Positioned(
-                      left: -9,
+                      left: -11,
                       top: 0,
                       bottom: 0,
                       child: Center(
@@ -225,8 +231,8 @@ class _CategoryTile extends StatelessWidget {
                     ),
                   if (tile.badgeText != null)
                     Positioned(
-                      top: 0,
-                      right: -2,
+                      top: 6,
+                      right: 6,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 7,
