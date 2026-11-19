@@ -67,26 +67,33 @@ class _DealBanner extends StatelessWidget {
         return Container(
           height: h,
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [x.peachSoft, NuviColors.peachSoft],
-            ),
+            color: NuviColors.peachSoft,
             borderRadius: BorderRadius.circular(NuviRadii.sheet),
           ),
           clipBehavior: Clip.antiAlias,
           child: Stack(
             children: [
-              Positioned(
-                top: 0,
-                right: 0,
-                bottom: 0,
-                width: w * 0.46,
-                child: ShaderMask(
-                  blendMode: BlendMode.dstIn,
-                  shaderCallback: (rect) => const LinearGradient(
-                    colors: [Colors.transparent, Colors.black],
-                    stops: [0, 0.25],
-                  ).createShader(rect),
-                  child: NuviImage(url: banner.imageUrl, tile: NuviTile.peach),
+              // The Shopify image fills the whole banner with its own
+              // background; a soft shade on the left keeps the text legible.
+              Positioned.fill(
+                child: NuviImage(
+                  url: banner.imageUrl,
+                  tile: NuviTile.peach,
+                  alignment: Alignment.centerRight,
+                ),
+              ),
+              Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        NuviColors.nightGreen.withValues(alpha: 0.5),
+                        NuviColors.nightGreen.withValues(alpha: 0.22),
+                        NuviColors.nightGreen.withValues(alpha: 0),
+                      ],
+                      stops: const [0, 0.38, 0.62],
+                    ),
+                  ),
                 ),
               ),
               if (banner.badgeText != null)
@@ -119,7 +126,9 @@ class _DealBanner extends StatelessWidget {
                               banner.title,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: promoTitleStyle(30),
+                              style: promoTitleStyle(
+                                30,
+                              ).copyWith(color: NuviColors.cream),
                             ),
                           ),
                         ],
@@ -133,7 +142,12 @@ class _DealBanner extends StatelessWidget {
                           banner.subtitle,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: x.nunito(13.5, height: 1.35),
+                          style: x.nunito(
+                            13.5,
+                            weight: FontWeight.w600,
+                            height: 1.35,
+                            color: NuviColors.cream,
+                          ),
                         ),
                       ),
                     ],
