@@ -210,6 +210,87 @@ void main() {
       expect(tiles.last.badgeText, isNull);
     });
 
+    test('reads wardrobe sections with their linked tiles', () async {
+      Map<String, dynamic> tile(Map<String, String> v, {String? image}) => {
+        'fields': _node(v, image: image)['fields'],
+      };
+      final repo = HomeSectionsRepository(
+        client: _FakeClient({
+          'wardrobe_section': [
+            {
+              'fields': [
+                {'key': 'title', 'value': "Boy's Wardrobe"},
+                {'key': 'position', 'value': '2'},
+                {
+                  'key': 'categories',
+                  'value': '[]',
+                  'references': {
+                    'nodes': [
+                      tile({'title': 'Shirts', 'collection_handle': 'shirts'}),
+                    ],
+                  },
+                },
+              ],
+            },
+            {
+              'fields': [
+                {'key': 'title', 'value': "Girl's Wardrobe"},
+                {'key': 'picks_title', 'value': 'Top Picks'},
+                {'key': 'picks_highlight', 'value': 'Up To 70% Off'},
+                {'key': 'position', 'value': '1'},
+                {'key': 'is_active', 'value': 'true'},
+                {
+                  'key': 'categories',
+                  'value': '[]',
+                  'references': {
+                    'nodes': [
+                      tile({
+                        'title': 'Co-ord Sets',
+                        'collection_handle': 'coord-sets',
+                        'badge_text': 'Sets',
+                      }, image: 'https://cdn.test/coord.png'),
+                      tile({'title': 'No handle'}),
+                    ],
+                  },
+                },
+                {
+                  'key': 'top_picks',
+                  'value': '[]',
+                  'references': {
+                    'nodes': [
+                      tile({
+                        'title': 'Festive Fits',
+                        'collection_handle': 'festive',
+                        'offer_text': 'Up to 70% off',
+                      }),
+                    ],
+                  },
+                },
+              ],
+            },
+            {
+              'fields': [
+                {'key': 'title', 'value': 'Hidden'},
+                {'key': 'is_active', 'value': 'false'},
+              ],
+            },
+          ],
+        }),
+      );
+      final sections = await repo.getWardrobeSections();
+      expect(sections.map((s) => s.title), [
+        "Girl's Wardrobe",
+        "Boy's Wardrobe",
+      ]);
+      final girls = sections.first;
+      expect(girls.picksHighlight, 'Up To 70% Off');
+      expect(girls.categories.single.title, 'Co-ord Sets');
+      expect(girls.categories.single.badgeText, 'Sets');
+      expect(girls.categories.single.imageUrl, 'https://cdn.test/coord.png');
+      expect(girls.topPicks.single.offerText, 'Up to 70% off');
+      expect(sections.last.topPicks, isEmpty);
+    });
+
     test('category cards are empty when none are uploaded', () async {
       final repo = HomeSectionsRepository(client: _FakeClient({}));
       expect(await repo.getCategoryCards(), isEmpty);

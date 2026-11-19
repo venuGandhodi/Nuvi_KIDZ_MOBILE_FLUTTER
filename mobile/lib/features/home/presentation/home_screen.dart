@@ -20,6 +20,7 @@ import 'widgets/hero_banner_section.dart';
 import 'widgets/occasion_section.dart';
 import 'widgets/shop_category_grid.dart';
 import 'widgets/styled_banner_section.dart';
+import 'widgets/wardrobe_section_view.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -57,6 +58,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final dealBanner = ref.watch(dealBannerProvider).value;
     final dealTiles = ref.watch(dealTilesProvider).value ?? const [];
     final shopCategories = ref.watch(shopCategoriesProvider).value ?? const [];
+    final wardrobes = ref.watch(wardrobeSectionsProvider).value ?? const [];
 
     if (homeState.isLoading) {
       return const Center(child: NuviLoadingIndicator());
@@ -85,6 +87,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ref.invalidate(dealBannerProvider);
           ref.invalidate(dealTilesProvider);
           ref.invalidate(shopCategoriesProvider);
+          ref.invalidate(wardrobeSectionsProvider);
           await homeNotifier.loadHomeData();
         },
         child: SingleChildScrollView(
@@ -161,6 +164,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   categories: shopCategories,
                   onTap: (c) =>
                       context.push('/category/${c.collectionHandle ?? c.id}'),
+                ),
+              ],
+              for (final wardrobe in wardrobes) ...[
+                const SizedBox(height: NuviSpacing.xl),
+                WardrobeSectionView(
+                  section: wardrobe,
+                  onCollectionTap: (handle) =>
+                      context.push('/category/$handle'),
                 ),
               ],
               const SizedBox(height: NuviSpacing.xl),

@@ -6,6 +6,7 @@ import '../../shopify/data/shopify_queries.dart';
 import '../../shopify/data/shopify_storefront_client.dart';
 import '../domain/home_hero.dart';
 import '../domain/promo_content.dart';
+import '../domain/wardrobe.dart';
 
 /// Optional Home sections read from Shopify. Each returns empty/null when the
 /// store hasn't set the content up, so the section simply stays hidden (no
@@ -41,6 +42,11 @@ class HomeSectionsRepository {
   static const shopCategoryType = 'shop_category';
   static const shopCategoryMenuHandle = 'shop-by-category';
 
+  /// Wardrobe blocks (Girl's / Boy's Wardrobe): metaobject `wardrobe_section`
+  /// with list fields `categories` and `top_picks` pointing at
+  /// `wardrobe_tile` entries.
+  static const wardrobeSectionType = 'wardrobe_section';
+
   final ShopifyStorefrontClient client;
 
   HomeSectionsRepository({ShopifyStorefrontClient? client})
@@ -54,6 +60,91 @@ class HomeSectionsRepository {
 
   Future<List<MenuCategory>> getFestiveCategories() =>
       _tilesOrMenu(festiveCategoryType, festiveMenuHandle);
+
+  /// Active wardrobe blocks in `position` order; blocks with no tiles are
+  /// skipped.
+  Future<List<WardrobeSection>> getWardrobeSections() async {
+    try {
+      final data = await client.query(
+        query: _wardrobeQuery,
+        variables: {'type': wardrobeSectionType, 'first': 10},
+      );
+      final nodes = data['metaobjects']?['nodes'];
+      if (nodes is! List) return const [];
+      final sections = <(int, int, WardrobeSection)>[];
+      for (final (i, node) in nodes.indexed) {
+        if (node is! Map) continue;
+        final fields = _fieldMap(node['fields']);
+        if (!_isActive(fields)) continue;
+        final title = fields['title']?.value?.trim() ?? '';
+        final categories = _wardrobeTiles(node['fields'], 'categories');
+        final picks = _wardrobeTiles(node['fields'], 'top_picks');
+        if (title.isEmpty || (categories.isEmpty && picks.isEmpty)) continue;
+        sections.add((
+          _position(fields),
+          i,
+          WardrobeSection(
+            title: title,
+            picksTitle: _nonEmpty(fields['picks_title']?.value) ?? 'Top Picks',
+            picksHighlight: _nonEmpty(fields['picks_highlight']?.value) ?? '',
+            categories: categories,
+            topPicks: picks,
+          ),
+        ));
+      }
+      sections.sort((a, b) => a.$1 != b.$1 ? a.$1 - b.$1 : a.$2 - b.$2);
+      return [for (final s in sections) s.$3];
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  /// Key → value/image for a metaobject's `fields` list.
+  static Map<String, _Field> _fieldMap(Object? raw) => {
+    if (raw is List)
+      for (final f in raw)
+        if (f is Map && f['key'] is String)
+          f['key'] as String: _Field(
+            f['value'] as String?,
+            _imageUrlOf(f['reference']),
+          ),
+  };
+
+  static String? _imageUrlOf(Object? reference) {
+    if (reference is! Map) return null;
+    final image = reference['image'];
+    return image is Map ? image['url'] as String? : null;
+  }
+
+  /// Tiles linked from the list field [key], in the order picked in Shopify.
+  static List<WardrobeTile> _wardrobeTiles(Object? rawFields, String key) {
+    if (rawFields is! List) return const [];
+    Object? refs;
+    for (final f in rawFields) {
+      if (f is Map && f['key'] == key && f['references'] is Map) {
+        refs = (f['references'] as Map)['nodes'];
+        break;
+      }
+    }
+    if (refs is! List) return const [];
+    return [
+      for (final r in refs)
+        if (r is Map) ?_wardrobeTile(_fieldMap(r['fields'])),
+    ];
+  }
+
+  static WardrobeTile? _wardrobeTile(Map<String, _Field> f) {
+    final title = f['title']?.value?.trim() ?? '';
+    final handle = f['collection_handle']?.value?.trim() ?? '';
+    if (!_isActive(f) || title.isEmpty || handle.isEmpty) return null;
+    return WardrobeTile(
+      title: title,
+      collectionHandle: handle,
+      imageUrl: f['image']?.imageUrl,
+      badgeText: _nonEmpty(f['badge_text']?.value),
+      offerText: _nonEmpty(f['offer_text']?.value),
+    );
+  }
 
   Future<List<MenuCategory>> getShopCategories() =>
       _tilesOrMenu(shopCategoryType, shopCategoryMenuHandle);
@@ -222,6 +313,36 @@ class HomeSectionsRepository {
     }
   ''';
 
+  static const String _wardrobeQuery = r'''
+    query GetWardrobeSections($type: String!, $first: Int!) {
+      metaobjects(type: $type, first: $first) {
+        nodes {
+          fields {
+            key
+            value
+            references(first: 12) {
+              nodes {
+                ... on Metaobject {
+                  fields {
+                    key
+                    value
+                    reference {
+                      ... on MediaImage {
+                        image {
+                          url
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ''';
+
   static const String _styledBannerQuery =
       '''
     query GetStyledBanner {
@@ -292,4 +413,8 @@ final categoryCardsProvider = FutureProvider<List<MenuCategory>>(
 
 final shopCategoriesProvider = FutureProvider<List<MenuCategory>>(
   (ref) => ref.read(homeSectionsRepositoryProvider).getShopCategories(),
+);
+
+final wardrobeSectionsProvider = FutureProvider<List<WardrobeSection>>(
+  (ref) => ref.read(homeSectionsRepositoryProvider).getWardrobeSections(),
 );
