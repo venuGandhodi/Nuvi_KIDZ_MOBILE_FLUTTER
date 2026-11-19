@@ -162,10 +162,23 @@ class _CategoryCard extends StatelessWidget {
                       colors: [Colors.black, Colors.transparent],
                       stops: [0.72, 1.0],
                     ).createShader(rect),
-                    child: NuviImage(
-                      url: category.imageUrl,
-                      tile: NuviTile.peach,
-                      alignment: Alignment.topCenter,
+                    // Multiply the photo with the card colour so a white or
+                    // light studio background takes on the card's tint and
+                    // the child sits directly on the card, as in the design.
+                    child: ColorFiltered(
+                      colorFilter: ColorFilter.mode(
+                        Color.lerp(
+                          style.gradient.first,
+                          style.gradient.last,
+                          0.3,
+                        )!,
+                        BlendMode.multiply,
+                      ),
+                      child: NuviImage(
+                        url: category.imageUrl,
+                        tile: NuviTile.peach,
+                        alignment: Alignment.topCenter,
+                      ),
                     ),
                   ),
                   Positioned(
