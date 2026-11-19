@@ -23,7 +23,10 @@ class NuviToast {
           backgroundColor: success ? NuviColors.ink : NuviColors.sale,
           shape: const StadiumBorder(),
           margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          duration: const Duration(seconds: 3),
+          duration: const Duration(seconds: 2),
+          // Snackbars with an action stay until tapped by default; this one
+          // should always close by itself.
+          persist: false,
           content: Row(
             children: [
               Icon(
