@@ -551,31 +551,32 @@ Prefer incremental implementation.
 
 ---
 
-# 17. Git Development Workflow — Main Branch, No Commits
+# 17. Git Development Workflow — Main Branch, Push When Done
 
-AI makes all code changes directly on the `main` branch and leaves them
-uncommitted. The user reviews, commits and pushes the changes manually.
+AI works directly on the `main` branch. Once a change is implemented and
+fully validated, AI commits it and pushes it directly to `origin main`.
 
 1. Always work directly on the `main` branch.
 2. Before starting, confirm the current branch is `main`. If it is not, stop and report it. Do not switch branches.
 3. Never create, switch to, or check out another branch.
 4. Make all changes directly in the working tree on `main`.
-5. Never run `git commit`. The user commits manually.
-6. Never run `git push` or any other push command. The user pushes manually.
-7. Never stage changes on the user's behalf unless explicitly asked.
-8. Never use force push, `git reset --hard`, or other destructive Git commands.
-9. Preserve all existing user modifications. Never discard or overwrite them.
-10. After implementation, run `dart format`, `flutter analyze` and `flutter test`, and fix any failures.
-11. Review the final `git diff` and report every modified file.
-12. Leave all changes uncommitted in the working directory for the user to review.
+5. After implementation, run `dart format`, `flutter analyze` and `flutter test`, and fix any failures.
+6. Never commit or push if any validation fails.
+7. Review the final `git diff`; stage and commit only the files belonging to the task, with a meaningful commit message.
+8. Push the commit directly to `origin main` (`git push origin main`).
+9. Never force-push (`git push --force` / `git push -f`), and never use `git reset --hard` or other destructive Git commands.
+10. Preserve all existing user modifications. Never discard, overwrite, or commit unrelated user changes.
+11. Never commit secrets, `.env` files, generated files, or local configuration.
+12. If the user asks for a preview first, show the preview and wait for approval before implementing, committing or pushing.
+13. Report the summary, files changed, validation results, and the pushed commit link.
 
 ## Mandatory Workflow
 
 ```text
-MAIN → IMPLEMENT → TEST → VALIDATE → REVIEW DIFF → REPORT → STOP (uncommitted)
+MAIN → IMPLEMENT → TEST → VALIDATE → REVIEW DIFF → COMMIT → PUSH origin main → REPORT
 ```
 
-**STRICT RULE:** AI must NEVER commit or push. The user is solely responsible for committing and pushing changes to GitHub.
+**STRICT RULE:** Only push to `main`, only after validation passes, and never force-push.
 
 ---
 
