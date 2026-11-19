@@ -169,67 +169,61 @@ class _FestiveCategoryRow extends StatelessWidget {
 
   const _FestiveCategoryRow({required this.categories, required this.onTap});
 
-  static const _tints = [
-    NuviColors.saleSoft,
-    NuviColors.goldSoft,
-    NuviColors.peachSoft,
-    NuviColors.sageSoft,
-  ];
+  static const int _columns = 3;
+  static const double _gap = 12;
 
   @override
   Widget build(BuildContext context) {
     final x = context.nuvi;
-    final scale = MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 1.3);
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // Six cells fill the row exactly; any extra scroll in. Labels use
-        // the full cell width, circles leave a small gap between them.
-        final cell = ((constraints.maxWidth - NuviSpacing.gutter * 2) / 6)
-            .clamp(58.0, 92.0);
-        final d = cell - 8;
-        return SizedBox(
-          height: d + 40 * scale,
-          child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: NuviSpacing.gutter),
-            scrollDirection: Axis.horizontal,
-            itemCount: categories.length,
-            itemExtent: cell,
-            itemBuilder: (context, index) {
-              final c = categories[index];
-              return NuviPressable(
-                onTap: () => onTap(c),
-                semanticLabel: 'Shop ${c.title}',
-                child: Column(
-                  children: [
-                    Container(
-                      width: d,
-                      height: d,
-                      decoration: BoxDecoration(
-                        color: _tints[index % _tints.length],
-                        shape: BoxShape.circle,
-                      ),
-                      clipBehavior: Clip.antiAlias,
-                      child: NuviImage(url: c.imageUrl, tile: NuviTile.peach),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: NuviSpacing.gutter),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // Three per row; further items wrap onto new rows.
+          final cell =
+              (constraints.maxWidth - _gap * (_columns - 1)) / _columns;
+          return Wrap(
+            spacing: _gap,
+            runSpacing: NuviSpacing.md,
+            children: [
+              for (final c in categories)
+                SizedBox(
+                  width: cell,
+                  child: NuviPressable(
+                    onTap: () => onTap(c),
+                    semanticLabel: 'Shop ${c.title}',
+                    child: Column(
+                      children: [
+                        // The image is shown as uploaded, with no backdrop.
+                        SizedBox(
+                          width: cell,
+                          height: cell,
+                          child: NuviImage(
+                            url: c.imageUrl,
+                            fit: BoxFit.contain,
+                            tile: NuviTile.peach,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          c.title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: x.nunito(
+                            14,
+                            weight: FontWeight.w500,
+                            height: 1.25,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      c.title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                      style: x.nunito(
-                        10.5,
-                        weight: FontWeight.w500,
-                        height: 1.25,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              );
-            },
-          ),
-        );
-      },
+            ],
+          );
+        },
+      ),
     );
   }
 }
