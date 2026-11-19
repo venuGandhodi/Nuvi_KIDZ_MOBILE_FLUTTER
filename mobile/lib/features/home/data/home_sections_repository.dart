@@ -36,6 +36,11 @@ class HomeSectionsRepository {
   static const occasionTileType = 'occasion_tile';
   static const festiveCategoryType = 'festive_category';
 
+  /// Category grid under Deal Zone: metaobject `shop_category` (fields as
+  /// above plus `badge_text`), else the Shopify menu `shop-by-category`.
+  static const shopCategoryType = 'shop_category';
+  static const shopCategoryMenuHandle = 'shop-by-category';
+
   final ShopifyStorefrontClient client;
 
   HomeSectionsRepository({ShopifyStorefrontClient? client})
@@ -49,6 +54,9 @@ class HomeSectionsRepository {
 
   Future<List<MenuCategory>> getFestiveCategories() =>
       _tilesOrMenu(festiveCategoryType, festiveMenuHandle);
+
+  Future<List<MenuCategory>> getShopCategories() =>
+      _tilesOrMenu(shopCategoryType, shopCategoryMenuHandle);
 
   Future<List<MenuCategory>> _tilesOrMenu(String type, String menu) async {
     final tiles = await _tiles(type);
@@ -72,12 +80,16 @@ class HomeSectionsRepository {
           title: title,
           imageUrl: f['image']?.imageUrl,
           collectionHandle: handle,
+          badgeText: _nonEmpty(f['badge_text']?.value),
         ),
       ));
     }
     entries.sort((a, b) => a.$1 != b.$1 ? a.$1 - b.$1 : a.$2 - b.$2);
     return [for (final e in entries) e.$3];
   }
+
+  static String? _nonEmpty(String? v) =>
+      v == null || v.trim().isEmpty ? null : v.trim();
 
   /// Entries without a valid `position` sort after numbered ones.
   static int _position(Map<String, _Field> f) =>
@@ -276,4 +288,8 @@ final dealTilesProvider = FutureProvider<List<DealTile>>(
 
 final categoryCardsProvider = FutureProvider<List<MenuCategory>>(
   (ref) => ref.read(homeSectionsRepositoryProvider).getCategoryCards(),
+);
+
+final shopCategoriesProvider = FutureProvider<List<MenuCategory>>(
+  (ref) => ref.read(homeSectionsRepositoryProvider).getShopCategories(),
 );

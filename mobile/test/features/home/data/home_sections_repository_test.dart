@@ -190,6 +190,26 @@ void main() {
       expect(tiles.single.imageUrl, 'https://cdn.test/collection.jpg');
     });
 
+    test('shop categories read the optional badge text', () async {
+      final repo = HomeSectionsRepository(
+        client: _FakeClient({
+          'shop_category': [
+            _node({
+              'title': 'Jeans/Jogger',
+              'collection_handle': 'jeans',
+              'badge_text': 'Sets',
+              'position': '1',
+            }),
+            _node({'title': 'Sweaters', 'collection_handle': 'sweaters'}),
+          ],
+        }),
+      );
+      final tiles = await repo.getShopCategories();
+      expect(tiles.map((t) => t.title), ['Jeans/Jogger', 'Sweaters']);
+      expect(tiles.first.badgeText, 'Sets');
+      expect(tiles.last.badgeText, isNull);
+    });
+
     test('category cards are empty when none are uploaded', () async {
       final repo = HomeSectionsRepository(client: _FakeClient({}));
       expect(await repo.getCategoryCards(), isEmpty);

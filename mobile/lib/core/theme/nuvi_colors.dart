@@ -38,6 +38,7 @@ class NuviColors {
   static const Color photoButton = Color(0xEBFFFFFF);
   static const Color scrim = Color(0x66172D2A);
   static const Color occasionPanel = Color(0xFFE7EBF1);
+  static const Color tagPurple = Color(0xFF8B6CC4);
 
   // My Orders card.
   static const Color orderCard = Color(0xFFFFFDFA);

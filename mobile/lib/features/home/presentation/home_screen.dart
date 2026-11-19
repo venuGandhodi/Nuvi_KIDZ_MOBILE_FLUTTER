@@ -18,6 +18,7 @@ import 'widgets/deal_zone_section.dart';
 import 'widgets/festive_picks_section.dart';
 import 'widgets/hero_banner_section.dart';
 import 'widgets/occasion_section.dart';
+import 'widgets/shop_category_grid.dart';
 import 'widgets/styled_banner_section.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -55,6 +56,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ref.watch(festiveCategoriesProvider).value ?? const [];
     final dealBanner = ref.watch(dealBannerProvider).value;
     final dealTiles = ref.watch(dealTilesProvider).value ?? const [];
+    final shopCategories = ref.watch(shopCategoriesProvider).value ?? const [];
 
     if (homeState.isLoading) {
       return const Center(child: NuviLoadingIndicator());
@@ -82,6 +84,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ref.invalidate(festiveCategoriesProvider);
           ref.invalidate(dealBannerProvider);
           ref.invalidate(dealTilesProvider);
+          ref.invalidate(shopCategoriesProvider);
           await homeNotifier.loadHomeData();
         },
         child: SingleChildScrollView(
@@ -150,6 +153,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   tiles: dealTiles,
                   onCollectionTap: (handle) =>
                       context.push('/category/$handle'),
+                ),
+              ],
+              if (shopCategories.isNotEmpty) ...[
+                const SizedBox(height: NuviSpacing.lg),
+                ShopCategoryGrid(
+                  categories: shopCategories,
+                  onTap: (c) =>
+                      context.push('/category/${c.collectionHandle ?? c.id}'),
                 ),
               ],
               const SizedBox(height: NuviSpacing.xl),
