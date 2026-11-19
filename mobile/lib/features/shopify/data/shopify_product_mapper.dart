@@ -86,7 +86,7 @@ class ShopifyProductMapper {
                 selectedOptionsMap[name] = value;
 
                 final lowerName = name.toLowerCase();
-                if (lowerName == 'size') {
+                if (lowerName == 'size' || lowerName == 'age') {
                   size = value;
                 } else if (lowerName == 'color' || lowerName == 'colour') {
                   color = value;
@@ -147,6 +147,9 @@ class ShopifyProductMapper {
       availableColors: availableColors.isNotEmpty ? availableColors : null,
       availableSizes: availableSizes.isNotEmpty ? availableSizes : null,
       variants: variantsList.isNotEmpty ? variantsList : null,
+      productType: (json['productType'] as String?)?.trim().isNotEmpty == true
+          ? (json['productType'] as String).trim()
+          : null,
     );
   }
 

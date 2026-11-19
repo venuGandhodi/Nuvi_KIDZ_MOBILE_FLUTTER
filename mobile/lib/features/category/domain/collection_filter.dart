@@ -16,6 +16,36 @@ enum CollectionFilterKind {
   final String label;
   const CollectionFilterKind(this.label);
 
+  /// Groups whose values come from the loaded products themselves (variant
+  /// colours and sizes, product type) and are filtered on the device.
+  bool get fromProducts =>
+      this == CollectionFilterKind.age ||
+      this == CollectionFilterKind.color ||
+      this == CollectionFilterKind.category;
+
+  /// Delivery Time opens the pincode checker rather than filtering.
+  bool get isPincodeCheck => this == CollectionFilterKind.delivery;
+
+  /// The product's own values for a [fromProducts] group.
+  Set<String> valuesOf(Product p) {
+    final Iterable<String?> raw = switch (this) {
+      CollectionFilterKind.color => [
+        for (final c in p.availableColors ?? const []) c.name,
+        for (final v in p.variants ?? const []) v.color,
+      ],
+      CollectionFilterKind.age => [
+        ...?p.availableSizes,
+        for (final v in p.variants ?? const []) v.size,
+      ],
+      CollectionFilterKind.category => [p.productType],
+      _ => const [],
+    };
+    return {
+      for (final v in raw)
+        if (v != null && v.trim().isNotEmpty) v.trim(),
+    };
+  }
+
   /// Which group a Shopify filter belongs to, from its label and type.
   static CollectionFilterKind? of(String label, String type) {
     if (type == 'PRICE_RANGE') return price;
@@ -98,6 +128,54 @@ class SelectedFilterValue {
 
   @override
   int get hashCode => Object.hash(kind, value.id);
+}
+
+/// Values of a [CollectionFilterKind.fromProducts] group found across
+/// [products], with how many products carry each. Sizes keep Shopify's
+/// order; colours and categories are alphabetical.
+List<CollectionFilterValue> productFilterValues(
+  CollectionFilterKind kind,
+  List<Product> products,
+) {
+  final counts = <String, int>{};
+  for (final p in products) {
+    for (final v in kind.valuesOf(p)) {
+      counts[v] = (counts[v] ?? 0) + 1;
+    }
+  }
+  final labels = counts.keys.toList();
+  if (kind != CollectionFilterKind.age) {
+    labels.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+  }
+  return [
+    for (final l in labels)
+      CollectionFilterValue(
+        id: '${kind.name}:$l',
+        label: l,
+        count: counts[l]!,
+        input: '',
+      ),
+  ];
+}
+
+/// Keeps products matching every picked product-based group (any value
+/// within a group).
+List<Product> filterProductsLocally(
+  List<Product> products,
+  List<SelectedFilterValue> selected,
+) {
+  final byKind = <CollectionFilterKind, Set<String>>{};
+  for (final s in selected) {
+    if (s.kind.fromProducts) {
+      (byKind[s.kind] ??= {}).add(s.value.label);
+    }
+  }
+  if (byKind.isEmpty) return products;
+  return [
+    for (final p in products)
+      if (byKind.entries.every((e) => e.key.valuesOf(p).any(e.value.contains)))
+        p,
+  ];
 }
 
 /// One page of a collection: its products and the filters it supports.

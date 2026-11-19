@@ -13,7 +13,9 @@ final categoryRepositoryProvider = Provider<CategoryRepository>((ref) {
 class CategoryState {
   final String categoryId;
   final CategoryDetail? categoryDetail;
-  final List<Product> products;
+
+  /// Every product Shopify returned (after Gender / Occasion filters).
+  final List<Product> allProducts;
 
   /// Filters Shopify offers for this collection (from the unfiltered load,
   /// so the options stay stable while the shopper narrows results).
@@ -27,14 +29,18 @@ class CategoryState {
   const CategoryState({
     this.categoryId = '',
     this.categoryDetail,
-    this.products = const [],
+    List<Product> products = const [],
     this.availableFilters = const [],
     this.selectedFilters = const [],
     this.sortOption = SortOption.featured,
     this.favoriteProductIds = const {},
     this.isLoading = false,
     this.errorMessage,
-  });
+  }) : allProducts = products;
+
+  /// Products shown: [allProducts] narrowed by Color / Age / Category.
+  List<Product> get products =>
+      filterProductsLocally(allProducts, selectedFilters);
 
   /// Boys / Girls collections hide the redundant Gender filter.
   bool get isGenderSpecific =>
@@ -46,11 +52,13 @@ class CategoryState {
       if (!(k == CollectionFilterKind.gender && isGenderSpecific)) k,
   ];
 
-  /// Values a shopper can pick for [kind]; price uses fixed bands.
+  /// Values a shopper can pick for [kind]: price uses fixed bands; Color,
+  /// Age and Category come from the products; the rest from Shopify.
   List<CollectionFilterValue> valuesFor(CollectionFilterKind kind) {
     if (kind == CollectionFilterKind.price) {
       return CollectionFilterValue.priceBands;
     }
+    if (kind.fromProducts) return productFilterValues(kind, allProducts);
     final seen = <String>{};
     return [
       for (final f in availableFilters)
@@ -79,7 +87,7 @@ class CategoryState {
     return CategoryState(
       categoryId: categoryId ?? this.categoryId,
       categoryDetail: categoryDetail ?? this.categoryDetail,
-      products: products ?? this.products,
+      products: products ?? allProducts,
       availableFilters: availableFilters ?? this.availableFilters,
       selectedFilters: selectedFilters ?? this.selectedFilters,
       sortOption: sortOption ?? this.sortOption,
@@ -124,26 +132,37 @@ class CategoryController extends Notifier<CategoryState> {
     }
   }
 
-  /// Replaces the picked values of one filter group.
+  /// Replaces the picked values of one filter group. Product-based groups
+  /// filter on the device; the others ask Shopify again.
   Future<void> setFilterValues(
     CollectionFilterKind kind,
     List<CollectionFilterValue> values,
-  ) => _reload(
-    selected: [
-      for (final s in state.selectedFilters)
-        if (s.kind != kind) s,
-      for (final v in values) SelectedFilterValue(kind, v),
-    ],
+  ) => _select([
+    for (final s in state.selectedFilters)
+      if (s.kind != kind) s,
+    for (final v in values) SelectedFilterValue(kind, v),
+  ], refetch: !kind.fromProducts);
+
+  Future<void> removeFilter(SelectedFilterValue value) => _select([
+    for (final s in state.selectedFilters)
+      if (s != value) s,
+  ], refetch: !value.kind.fromProducts);
+
+  Future<void> clearFilters() => _select(
+    const [],
+    refetch: state.selectedFilters.any((s) => !s.kind.fromProducts),
   );
 
-  Future<void> removeFilter(SelectedFilterValue value) => _reload(
-    selected: [
-      for (final s in state.selectedFilters)
-        if (s != value) s,
-    ],
-  );
-
-  Future<void> clearFilters() => _reload(selected: const []);
+  Future<void> _select(
+    List<SelectedFilterValue> selected, {
+    required bool refetch,
+  }) async {
+    if (!refetch) {
+      state = state.copyWith(selectedFilters: selected);
+      return;
+    }
+    await _reload(selected: selected);
+  }
 
   Future<void> applySort(SortOption sort) => _reload(sort: sort);
 
@@ -161,7 +180,10 @@ class CategoryController extends Notifier<CategoryState> {
           .read(categoryRepositoryProvider)
           .getCollectionPage(
             state.categoryId,
-            filters: state.selectedFilters,
+            filters: [
+              for (final s in state.selectedFilters)
+                if (!s.kind.fromProducts) s,
+            ],
             sort: state.sortOption,
           );
       state = state.copyWith(products: page.products, isLoading: false);

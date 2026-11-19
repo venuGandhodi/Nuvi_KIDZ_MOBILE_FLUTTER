@@ -16,6 +16,12 @@ import '../../../core/widgets/nuvi_pressable.dart';
 import '../../../core/widgets/nuvi_product_card.dart';
 import '../../../core/widgets/nuvi_section_header.dart';
 import '../../../core/widgets/nuvi_skeleton.dart';
+import '../../../core/widgets/nuvi_bottom_sheet.dart';
+import '../../../core/widgets/nuvi_toast.dart';
+import '../../cart/presentation/cart_controller.dart';
+import '../../home/domain/product.dart';
+import '../../product/domain/product_variant.dart';
+import '../../product/presentation/widgets/product_delivery_info_section.dart';
 import '../../wishlist/presentation/wishlist_controller.dart';
 import 'category_controller.dart';
 import 'category_menu_controller.dart';
@@ -23,6 +29,7 @@ import '../domain/category_filter.dart';
 import '../domain/collection_filter.dart';
 import '../domain/menu_category.dart';
 import 'widgets/collection_filter_bar.dart';
+import 'widgets/quick_add_size_sheet.dart';
 import 'widgets/category_sort_sheet.dart';
 
 class CategoryListingScreen extends ConsumerStatefulWidget {
@@ -117,6 +124,10 @@ class _CategoryListingScreenState extends ConsumerState<CategoryListingScreen> {
   bool _filtersOpen = false;
 
   void _openFilterKind(CollectionFilterKind kind) {
+    if (kind.isPincodeCheck) {
+      _openPincodeChecker();
+      return;
+    }
     final state = ref.read(categoryControllerProvider);
     final controller = ref.read(categoryControllerProvider.notifier);
     showModalBottomSheet(
@@ -129,6 +140,80 @@ class _CategoryListingScreenState extends ConsumerState<CategoryListingScreen> {
         selectedIds: state.selectedIdsFor(kind),
         onApply: (values) => controller.setFilterValues(kind, values),
       ),
+    );
+  }
+
+  /// Delivery Time: the same pincode checker as the product page.
+  void _openPincodeChecker() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: const NuviSheet(
+          title: 'Check delivery time',
+          child: ProductDeliveryInfoSection(),
+        ),
+      ),
+    );
+  }
+
+  /// "+" on a card: pick a size, then add it to the bag.
+  void _quickAdd(Product product) {
+    final sizes = quickAddSizes(product);
+    if (sizes.isEmpty) {
+      ProductVariant? variant;
+      for (final v in product.variants ?? const <ProductVariant>[]) {
+        if (v.availableForSale) {
+          variant = v;
+          break;
+        }
+      }
+      _addToBag(product, null, variant);
+      return;
+    }
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => QuickAddSizeSheet(
+        product: product,
+        onPick: (size, variant) => _addToBag(product, size, variant),
+      ),
+    );
+  }
+
+  Future<void> _addToBag(
+    Product product,
+    String? size,
+    ProductVariant? variant,
+  ) async {
+    final cart = ref.read(cartControllerProvider.notifier);
+    final color = product.availableColors?.where(
+      (c) => c.name == variant?.color,
+    );
+    await cart.addItem(
+      product: product,
+      selectedSize: size,
+      selectedColor: color == null || color.isEmpty ? null : color.first,
+      shopifyVariantId: variant == null || variant.id.isEmpty
+          ? null
+          : variant.id,
+      unitPrice: variant == null || variant.priceAmount == 0
+          ? null
+          : variant.priceAmount,
+    );
+    if (!mounted) return;
+    final error = ref.read(cartControllerProvider).errorMessage;
+    NuviToast.show(
+      context,
+      message: error ?? 'Added to bag${size == null ? '' : ' · $size'}',
+      success: error == null,
+      actionLabel: error == null ? 'View bag' : null,
+      onAction: error == null ? () => context.go('/cart') : null,
     );
   }
 
@@ -489,8 +574,11 @@ class _CategoryListingScreenState extends ConsumerState<CategoryListingScreen> {
                   isFavorite: isFav,
                   badgeText: product.badgeText,
                   imageUrl: product.imageUrl,
-                  colorSwatches: product.colorSwatches,
+                  colorSwatches:
+                      product.colorSwatches ??
+                      product.availableColors?.map((c) => c.color).toList(),
                   discountPill: true,
+                  onQuickAdd: () => _quickAdd(product),
                   tile: NuviTile.values[index % NuviTile.values.length],
                   onFavoriteToggle: () {
                     ref

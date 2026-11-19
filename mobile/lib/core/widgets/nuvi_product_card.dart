@@ -32,9 +32,13 @@ class NuviProductCard extends StatelessWidget {
   final VoidCallback? onAddToCart;
   final NuviTile tile;
 
-  /// Collection-page style: "x% Off" pill and a "Sale" badge when the
-  /// product is discounted and has no other badge.
+  /// Collection-page style: the whole photo fits on white (no cropping),
+  /// colour dots sit on the photo, an "x% Off" pill and a "Sale" badge show
+  /// when the product is discounted and has no other badge.
   final bool discountPill;
+
+  /// Shows a "+" button on the photo (e.g. to pick a size and add to bag).
+  final VoidCallback? onQuickAdd;
 
   const NuviProductCard({
     super.key,
@@ -54,6 +58,7 @@ class NuviProductCard extends StatelessWidget {
     this.onAddToCart,
     this.tile = NuviTile.sage,
     this.discountPill = false,
+    this.onQuickAdd,
   });
 
   @override
@@ -87,7 +92,37 @@ class NuviProductCard extends StatelessWidget {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  NuviImage(url: imageUrl, tile: tile),
+                  if (discountPill)
+                    ColoredBox(
+                      color: NuviColors.white,
+                      child: Padding(
+                        padding: const EdgeInsets.all(6),
+                        child: NuviImage(
+                          url: imageUrl,
+                          tile: tile,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                    )
+                  else
+                    NuviImage(url: imageUrl, tile: tile),
+                  if (discountPill &&
+                      colorSwatches != null &&
+                      colorSwatches!.isNotEmpty)
+                    Positioned(
+                      left: 10,
+                      bottom: 10,
+                      child: _SwatchRow(colors: colorSwatches!),
+                    ),
+                  if (onQuickAdd != null)
+                    Positioned(
+                      right: 4,
+                      bottom: 4,
+                      child: _QuickAddButton(
+                        onTap: onQuickAdd!,
+                        productTitle: title,
+                      ),
+                    ),
                   if (badge != null)
                     Positioned(
                       top: 10,
@@ -152,6 +187,88 @@ class NuviProductCard extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Up to four colour dots (with "+n") on a soft white pill.
+class _SwatchRow extends StatelessWidget {
+  final List<Color> colors;
+
+  const _SwatchRow({required this.colors});
+
+  @override
+  Widget build(BuildContext context) {
+    final shown = colors.take(4).toList();
+    final extra = colors.length - shown.length;
+    return Semantics(
+      label: '${colors.length} colours',
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 4),
+        decoration: BoxDecoration(
+          color: NuviColors.photoButton,
+          borderRadius: BorderRadius.circular(NuviRadii.pill),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final (i, c) in shown.indexed) ...[
+              if (i > 0) const SizedBox(width: 4),
+              Container(
+                width: 13,
+                height: 13,
+                decoration: BoxDecoration(
+                  color: c,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: NuviColors.borderStrong),
+                ),
+              ),
+            ],
+            if (extra > 0) ...[
+              const SizedBox(width: 4),
+              Text(
+                '+$extra',
+                style: context.nuvi.nunito(10.5, weight: FontWeight.w700),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _QuickAddButton extends StatelessWidget {
+  final VoidCallback onTap;
+  final String productTitle;
+
+  const _QuickAddButton({required this.onTap, required this.productTitle});
+
+  @override
+  Widget build(BuildContext context) {
+    return NuviPressable(
+      onTap: onTap,
+      semanticLabel: 'Add $productTitle to bag',
+      child: SizedBox(
+        width: 44,
+        height: 44,
+        child: Center(
+          child: Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: context.nuvi.leaf,
+              shape: BoxShape.circle,
+              boxShadow: NuviShadows.floating,
+            ),
+            child: const Icon(
+              Icons.add_rounded,
+              size: 20,
+              color: NuviColors.cream,
+            ),
+          ),
         ),
       ),
     );

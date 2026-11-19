@@ -77,6 +77,25 @@ void main() {
       expect(find.text('Apply'), findsOneWidget);
     });
 
+    testWidgets('Delivery Time opens the pincode checker', (tester) async {
+      await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Filter'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Delivery Time'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Check delivery time'), findsOneWidget);
+    });
+
+    testWidgets('product cards show a quick-add button', (tester) async {
+      await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.add_rounded), findsWidgets);
+    });
+
     testWidgets('opens sort bottom sheet on tap', (tester) async {
       await tester.pumpWidget(buildTestWidget());
       await tester.pumpAndSettle();

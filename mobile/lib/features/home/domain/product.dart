@@ -26,6 +26,9 @@ class Product {
   final List<String>? fabricAndCare;
   final List<ProductReview>? reviews;
 
+  /// Shopify product type, used as the collection Category filter.
+  final String? productType;
+
   const Product({
     required this.id,
     this.handle,
@@ -48,6 +51,7 @@ class Product {
     this.variants,
     this.fabricAndCare,
     this.reviews,
+    this.productType,
   });
 
   Product copyWith({
@@ -72,6 +76,7 @@ class Product {
     List<ProductVariant>? variants,
     List<String>? fabricAndCare,
     List<ProductReview>? reviews,
+    String? productType,
   }) {
     return Product(
       id: id ?? this.id,
@@ -95,6 +100,7 @@ class Product {
       variants: variants ?? this.variants,
       fabricAndCare: fabricAndCare ?? this.fabricAndCare,
       reviews: reviews ?? this.reviews,
+      productType: productType ?? this.productType,
     );
   }
 }
