@@ -249,7 +249,7 @@ void main() {
                         'collection_handle': 'coord-sets',
                         'badge_text': 'Sets',
                       }, image: 'https://cdn.test/coord.png'),
-                      tile({'title': 'No handle'}),
+                      tile({'title': 'Hidden tile', 'is_active': 'false'}),
                     ],
                   },
                 },
@@ -289,6 +289,37 @@ void main() {
       expect(girls.categories.single.imageUrl, 'https://cdn.test/coord.png');
       expect(girls.topPicks.single.offerText, 'Up to 70% off');
       expect(sections.last.topPicks, isEmpty);
+    });
+
+    test('keeps wardrobe tiles that have no collection handle', () async {
+      final repo = HomeSectionsRepository(
+        client: _FakeClient({
+          'wardrobe_section': [
+            {
+              'fields': [
+                {'key': 'title', 'value': "Girl's Wardrobe"},
+                {
+                  'key': 'top_picks',
+                  'value': '[]',
+                  'references': {
+                    'nodes': [
+                      {
+                        'fields': [
+                          {'key': 'title', 'value': 'Festive Fits'},
+                          {'key': 'offer_text', 'value': 'Up to 70% off'},
+                        ],
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          ],
+        }),
+      );
+      final tile = (await repo.getWardrobeSections()).single.topPicks.single;
+      expect(tile.title, 'Festive Fits');
+      expect(tile.collectionHandle, isNull);
     });
 
     test('category cards are empty when none are uploaded', () async {

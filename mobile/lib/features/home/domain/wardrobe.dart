@@ -3,13 +3,15 @@
 class WardrobeTile {
   final String title;
   final String? imageUrl;
-  final String collectionHandle;
+
+  /// Collection opened on tap; null when not set in Shopify (not tappable).
+  final String? collectionHandle;
   final String? badgeText;
   final String? offerText;
 
   const WardrobeTile({
     required this.title,
-    required this.collectionHandle,
+    this.collectionHandle,
     this.imageUrl,
     this.badgeText,
     this.offerText,

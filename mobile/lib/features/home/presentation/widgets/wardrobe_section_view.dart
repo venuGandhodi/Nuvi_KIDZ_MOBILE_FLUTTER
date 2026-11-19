@@ -23,6 +23,13 @@ class WardrobeSectionView extends StatelessWidget {
   });
 
   static const double _columnGap = 12;
+
+  /// Tap handler, or null when the tile has no collection set.
+  VoidCallback? _tap(WardrobeTile t) {
+    final handle = t.collectionHandle;
+    return handle == null ? null : () => onCollectionTap(handle);
+  }
+
   static const double _tileGap = 8;
 
   @override
@@ -58,7 +65,7 @@ class WardrobeSectionView extends StatelessWidget {
                           tile: t,
                           size: tile,
                           sparkle: i.isOdd,
-                          onTap: () => onCollectionTap(t.collectionHandle),
+                          onTap: _tap(t),
                         ),
                       ),
                     ],
@@ -89,11 +96,8 @@ class WardrobeSectionView extends StatelessWidget {
                       ),
                       _Grid(
                         tiles: section.topPicks,
-                        builder: (t, _) => _PickTile(
-                          tile: t,
-                          width: tile,
-                          onTap: () => onCollectionTap(t.collectionHandle),
-                        ),
+                        builder: (t, _) =>
+                            _PickTile(tile: t, width: tile, onTap: _tap(t)),
                       ),
                     ],
                   ),
@@ -175,7 +179,7 @@ class _CategoryTile extends StatelessWidget {
   final WardrobeTile tile;
   final double size;
   final bool sparkle;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   const _CategoryTile({
     required this.tile,
@@ -258,7 +262,7 @@ class _CategoryTile extends StatelessWidget {
 class _PickTile extends StatelessWidget {
   final WardrobeTile tile;
   final double width;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   const _PickTile({
     required this.tile,

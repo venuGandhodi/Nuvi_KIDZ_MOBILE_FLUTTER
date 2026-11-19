@@ -135,11 +135,11 @@ class HomeSectionsRepository {
 
   static WardrobeTile? _wardrobeTile(Map<String, _Field> f) {
     final title = f['title']?.value?.trim() ?? '';
-    final handle = f['collection_handle']?.value?.trim() ?? '';
-    if (!_isActive(f) || title.isEmpty || handle.isEmpty) return null;
+    // A tile without a collection still shows; it just isn't tappable.
+    if (!_isActive(f) || title.isEmpty) return null;
     return WardrobeTile(
       title: title,
-      collectionHandle: handle,
+      collectionHandle: _nonEmpty(f['collection_handle']?.value),
       imageUrl: f['image']?.imageUrl,
       badgeText: _nonEmpty(f['badge_text']?.value),
       offerText: _nonEmpty(f['offer_text']?.value),
