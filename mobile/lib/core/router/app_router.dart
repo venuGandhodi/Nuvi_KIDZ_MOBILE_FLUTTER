@@ -31,6 +31,11 @@ import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/onboarding/presentation/splash_screen.dart';
 import '../../features/search/presentation/search_screen.dart';
 import '../../features/wishlist/presentation/wishlist_screen.dart';
+import '../../features/world/domain/world_article.dart';
+import '../../features/world/domain/world_section.dart';
+import '../../features/world/presentation/world_article_screen.dart';
+import '../../features/world/presentation/world_screen.dart';
+import '../../features/world/presentation/world_section_screen.dart';
 
 // ---------------------------------------------------------------------------
 // RouterNotifier
@@ -217,7 +222,36 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/world',
-            builder: (context, state) => const ComingSoonScreen.world(),
+            builder: (context, state) => const WorldScreen(),
+            routes: [
+              GoRoute(
+                path: ':section',
+                redirect: (context, state) =>
+                    WorldSection.fromSlug(state.pathParameters['section']) ==
+                        null
+                    ? '/world'
+                    : null,
+                builder: (context, state) => WorldSectionScreen(
+                  section: WorldSection.fromSlug(
+                    state.pathParameters['section'],
+                  )!,
+                ),
+                routes: [
+                  GoRoute(
+                    path: ':article',
+                    builder: (context, state) => WorldArticleScreen(
+                      section: WorldSection.fromSlug(
+                        state.pathParameters['section'],
+                      )!,
+                      handle: state.pathParameters['article']!,
+                      initial: state.extra is WorldArticle
+                          ? state.extra as WorldArticle
+                          : null,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
           GoRoute(
             path: '/category/:categoryId',
