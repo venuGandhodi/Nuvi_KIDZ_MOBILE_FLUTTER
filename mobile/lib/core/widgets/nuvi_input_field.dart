@@ -20,6 +20,10 @@ class NuviInputField extends StatefulWidget {
   final VoidCallback? onSuffixIconPressed;
   final FormFieldValidator<String>? validator;
 
+  /// When false the label isn't drawn above the field; [hint] is the
+  /// visible placeholder and what screen readers announce.
+  final bool showLabel;
+
   const NuviInputField({
     super.key,
     required this.label,
@@ -36,6 +40,7 @@ class NuviInputField extends StatefulWidget {
     this.textInputAction = TextInputAction.next,
     this.onSuffixIconPressed,
     this.validator,
+    this.showLabel = true,
   });
 
   @override
@@ -83,15 +88,17 @@ class _NuviInputFieldState extends State<NuviInputField> {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          widget.label,
-          style: x.nunito(
-            13.5,
-            weight: FontWeight.w700,
-            color: widget.enabled ? NuviColors.ink : muted,
+        if (widget.showLabel) ...[
+          Text(
+            widget.label,
+            style: x.nunito(
+              13.5,
+              weight: FontWeight.w700,
+              color: widget.enabled ? NuviColors.ink : muted,
+            ),
           ),
-        ),
-        const SizedBox(height: 6),
+          const SizedBox(height: 6),
+        ],
         AnimatedContainer(
           duration: NuviMotion.of(context, NuviMotion.fast),
           decoration: BoxDecoration(

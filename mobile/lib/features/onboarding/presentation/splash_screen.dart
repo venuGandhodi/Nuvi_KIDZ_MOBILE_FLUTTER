@@ -4,8 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/nuvi_colors.dart';
-import '../../../core/theme/nuvi_spacing.dart';
-import '../../../core/theme/nuvi_typography.dart';
+import '../../../core/widgets/nuvi_welcome_backdrop.dart';
+import 'onboarding_assets.dart';
 import '../data/onboarding_storage.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
@@ -75,75 +75,37 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     return GestureDetector(
       onTap: _proceedToNextScreen,
       child: Scaffold(
-        backgroundColor: NuviColors.primary,
-        body: SafeArea(
-          child: SizedBox(
-            width: double.infinity,
-            height: double.infinity,
-            child: Stack(
-              children: [
-                // Center content
-                Center(
-                  child: AnimatedBuilder(
-                    animation: _controller,
-                    builder: (context, child) {
-                      return Opacity(
-                        opacity: _opacityAnimation.value,
-                        child: Transform.scale(
-                          scale: _scaleAnimation.value,
-                          child: child,
-                        ),
-                      );
-                    },
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Image.asset(
-                          'assets/images/brand/nuvi_elephant_mascot.png',
-                          width: 140,
-                          height: 140,
-                          fit: BoxFit.contain,
-                          errorBuilder: (context, error, stackTrace) =>
-                              const Icon(
-                                Icons.favorite,
-                                size: 80,
-                                color: NuviColors.accent,
-                              ),
-                        ),
-                        const SizedBox(height: NuviSpacing.lg),
-                        Text(
-                          'Tiny styles, big smiles ♡',
-                          style: NuviTypography.textTheme.headlineMedium
-                              ?.copyWith(
-                                color: NuviColors.moonCream,
-                                fontFamily: NuviTypography.headlineFont,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 22,
-                                letterSpacing: 0.5,
-                              ),
-                        ),
-                      ],
-                    ),
-                  ),
+        backgroundColor: NuviColors.cream,
+        body: NuviWelcomeBackdrop(
+          child: SafeArea(
+            child: AnimatedBuilder(
+              animation: _controller,
+              builder: (context, child) => Opacity(
+                opacity: _opacityAnimation.value,
+                child: Transform.scale(
+                  scale: _scaleAnimation.value,
+                  child: child,
                 ),
-
-                // Bottom prompt
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: NuviSpacing.xxl,
-                  child: Center(
-                    child: Text(
-                      'Tap to continue',
-                      style: NuviTypography.textTheme.bodySmall?.copyWith(
-                        color: NuviColors.white.withValues(alpha: 0.45),
-                        fontSize: 13,
-                        letterSpacing: 0.8,
-                      ),
+              ),
+              child: LayoutBuilder(
+                builder: (context, c) => Column(
+                  children: [
+                    SizedBox(height: c.maxHeight * 0.12),
+                    Image.asset(
+                      kNuviLogoAsset,
+                      width: (c.maxWidth * 0.6).clamp(180.0, 260.0),
+                      semanticLabel: 'NUVI KIDZ. Tiny styles, big smiles',
                     ),
-                  ),
+                    const Spacer(),
+                    Image.asset(
+                      kOnboardingBackpackAsset,
+                      width: (c.maxWidth * 0.78).clamp(240.0, 360.0),
+                      excludeFromSemantics: true,
+                    ),
+                    SizedBox(height: c.maxHeight * 0.08),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ),

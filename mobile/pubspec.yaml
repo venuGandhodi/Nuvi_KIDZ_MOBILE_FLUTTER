@@ -70,6 +70,7 @@ flutter:
   assets:
     - .env
     - assets/images/brand/
+    - assets/images/onboarding/
     - assets/fonts/licenses/
 
   fonts:

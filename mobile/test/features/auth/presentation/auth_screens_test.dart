@@ -78,8 +78,8 @@ void main() {
       ProviderScope(child: MaterialApp.router(routerConfig: router)),
     );
 
-    expect(find.text('Don\'t have an account? '), findsOneWidget);
-    expect(find.text('Sign Up'), findsWidgets);
+    expect(find.text('New to NUVI KIDZ? '), findsOneWidget);
+    expect(find.text('Create an Account'), findsOneWidget);
 
     // Need to scroll down to see the button. The mascot avatar has a
     // perpetual float animation, so pumpAndSettle would time out waiting
@@ -91,7 +91,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
 
-    await tester.tap(find.text('Sign Up').last);
+    await tester.tap(find.text('Create an Account'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
 

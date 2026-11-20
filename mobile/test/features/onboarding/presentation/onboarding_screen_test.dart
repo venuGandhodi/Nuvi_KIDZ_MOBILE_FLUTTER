@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:nuvi_kidz/features/onboarding/data/onboarding_storage.dart';
 import 'package:nuvi_kidz/features/onboarding/presentation/onboarding_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -27,68 +28,72 @@ void main() {
   });
 
   Widget buildTestWidget({required FakeOnboardingStorage storage}) {
+    final router = GoRouter(
+      initialLocation: '/onboarding',
+      routes: [
+        GoRoute(
+          path: '/onboarding',
+          builder: (context, state) => const OnboardingScreen(),
+        ),
+        GoRoute(
+          path: '/sign-in',
+          builder: (context, state) =>
+              const Scaffold(body: Text('Sign In Dummy')),
+        ),
+      ],
+    );
     return ProviderScope(
       overrides: [onboardingStorageProvider.overrideWithValue(storage)],
-      child: const MaterialApp(home: OnboardingScreen()),
+      child: MaterialApp.router(routerConfig: router),
     );
   }
 
+  Future<void> next(WidgetTester tester) async {
+    await tester.tap(find.bySemanticsLabel('Next'));
+    await tester.pumpAndSettle();
+  }
+
   group('OnboardingScreen Tests', () {
-    testWidgets('renders page 1 with tagline, headline, and next button', (
+    testWidgets('renders Discover with Skip and the next arrow', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        buildTestWidget(storage: FakeOnboardingStorage()),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Discover\nAdorable Styles'), findsOneWidget);
+      expect(find.text('Skip'), findsOneWidget);
+      expect(find.bySemanticsLabel('Next'), findsOneWidget);
+    });
+
+    testWidgets('moves to Shop & Explore, then Our Aim', (tester) async {
+      await tester.pumpWidget(
+        buildTestWidget(storage: FakeOnboardingStorage()),
+      );
+      await tester.pumpAndSettle();
+
+      await next(tester);
+      expect(find.text('Shop & Explore\nwith Ease'), findsOneWidget);
+
+      await next(tester);
+      expect(find.text('Our Aim'), findsOneWidget);
+      expect(find.text('Premium\nQuality'), findsOneWidget);
+      expect(find.bySemanticsLabel('Get started'), findsOneWidget);
+    });
+
+    testWidgets('finishing onboarding saves it and opens sign in', (
       tester,
     ) async {
       final storage = FakeOnboardingStorage();
-
       await tester.pumpWidget(buildTestWidget(storage: storage));
       await tester.pumpAndSettle();
 
-      expect(find.text('Welcome to the universe'), findsOneWidget);
-      expect(
-        find.text('Every festival is brighter in little celebrations.'),
-        findsOneWidget,
-      );
-      expect(find.text('Skip'), findsOneWidget);
-      expect(find.text('NEXT'), findsOneWidget);
-    });
-
-    testWidgets('advances to next page when tapping NEXT', (tester) async {
-      final storage = FakeOnboardingStorage();
-
-      await tester.pumpWidget(buildTestWidget(storage: storage));
+      await tester.tap(find.text('Skip'));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('NEXT'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Tiny styles, big smiles'), findsOneWidget);
-      expect(
-        find.text('Thoughtfully selected styles for every little moment.'),
-        findsOneWidget,
-      );
-    });
-
-    testWidgets('displays GET STARTED on the final page', (tester) async {
-      final storage = FakeOnboardingStorage();
-
-      await tester.pumpWidget(buildTestWidget(storage: storage));
-      await tester.pumpAndSettle();
-
-      // Page 1 -> 2
-      await tester.tap(find.text('NEXT'));
-      await tester.pumpAndSettle();
-
-      // Page 2 -> 3
-      await tester.tap(find.text('NEXT'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Made for little memories'), findsOneWidget);
-      expect(
-        find.text(
-          'Discover outfits made for festivals, playtime and everyday joy.',
-        ),
-        findsOneWidget,
-      );
-      expect(find.text('GET STARTED'), findsOneWidget);
+      expect(storage.completed, isTrue);
+      expect(find.text('Sign In Dummy'), findsOneWidget);
     });
   });
 }

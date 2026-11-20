@@ -34,16 +34,17 @@ void main() {
   }
 
   group('SplashScreen Tests', () {
-    testWidgets('renders dark green brand splash screen and tagline', (
-      tester,
-    ) async {
+    testWidgets('renders the logo and mascot splash', (tester) async {
       final storage = FakeOnboardingStorage();
 
       await tester.pumpWidget(buildTestWidget(storage: storage));
       await tester.pump(const Duration(milliseconds: 300));
 
-      expect(find.text('Tiny styles, big smiles ♡'), findsOneWidget);
-      expect(find.text('Tap to continue'), findsOneWidget);
+      expect(
+        find.bySemanticsLabel('NUVI KIDZ. Tiny styles, big smiles'),
+        findsOneWidget,
+      );
+      expect(find.byType(Image), findsNWidgets(2));
 
       await tester.pumpAndSettle();
     });
