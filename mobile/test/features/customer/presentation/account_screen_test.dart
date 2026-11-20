@@ -49,14 +49,14 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        expect(find.text('Guest User'), findsOneWidget);
-        expect(find.text('Welcome to the Store'), findsOneWidget);
-        expect(find.text('Push Notifications'), findsOneWidget);
-        expect(find.text('Unlock Premium Features'), findsOneWidget);
-        expect(find.text('Login / Register'), findsOneWidget);
+        expect(find.text('Hi there!'), findsOneWidget);
+        expect(find.text('LOGIN / REGISTER'), findsOneWidget);
         expect(find.text('WISHLIST'), findsOneWidget);
         expect(find.text('ORDERS'), findsOneWidget);
-        expect(find.text('ADDRESS'), findsOneWidget);
+        expect(find.text('ADDRESSES'), findsOneWidget);
+        expect(find.text('Account & Settings'), findsOneWidget);
+        expect(find.text('Help & Support'), findsOneWidget);
+        expect(find.text('Settings'), findsOneWidget);
         expect(find.text('LOG OUT'), findsNothing);
       },
     );
@@ -78,9 +78,12 @@ void main() {
 
         expect(find.text('Mokshith Nuvi'), findsOneWidget);
         expect(find.text('mokshith@example.com'), findsOneWidget);
-        expect(find.text('My Account'), findsOneWidget);
+        expect(find.text('Account & Settings'), findsOneWidget);
+        expect(find.text('My Orders'), findsOneWidget);
+        expect(find.text('Saved Addresses'), findsOneWidget);
+        expect(find.text('My Wishlist'), findsOneWidget);
         expect(find.text('LOG OUT'), findsOneWidget);
-        expect(find.text('Unlock Premium Features'), findsNothing);
+        expect(find.text('LOGIN / REGISTER'), findsNothing);
       },
     );
   });

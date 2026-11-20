@@ -25,6 +25,8 @@ import '../../features/customer/presentation/account_screen.dart';
 import '../../features/customer/presentation/my_orders_screen.dart';
 import '../../features/customer/presentation/order_details_screen.dart';
 import '../../features/customer/presentation/saved_addresses_screen.dart';
+import '../../features/settings/presentation/settings_screen.dart';
+import '../../features/support/presentation/help_support_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/onboarding/presentation/splash_screen.dart';
 import '../../features/search/presentation/search_screen.dart';
@@ -259,6 +261,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/addresses',
         builder: (context, state) => const SavedAddressesScreen(),
+      ),
+      GoRoute(
+        path: '/help',
+        builder: (context, state) => const HelpSupportScreen(),
+      ),
+      GoRoute(
+        path: '/settings',
+        builder: (context, state) => const SettingsScreen(),
       ),
       GoRoute(
         path: '/orders/:orderId',
