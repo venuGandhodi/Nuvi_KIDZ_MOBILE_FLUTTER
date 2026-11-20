@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../cart/domain/cart_item.dart';
 import '../../cart/presentation/cart_controller.dart';
 import '../../home/domain/product.dart';
 import '../data/product_repository.dart';
@@ -41,6 +42,27 @@ class ProductDetailState {
 
   bool get isSelectedVariantAvailable =>
       selectedVariant == null || selectedVariant!.availableForSale;
+
+  /// Whether the current colour/size selection is already in the bag.
+  bool isInBag(List<CartItem> items) {
+    final p = product;
+    if (p == null) return false;
+    final variantId = selectedVariant?.id;
+    for (final item in items) {
+      if (variantId != null &&
+          variantId.isNotEmpty &&
+          item.shopifyVariantId != null) {
+        if (item.shopifyVariantId == variantId) return true;
+        continue;
+      }
+      if (item.product.id == p.id &&
+          item.selectedSize == selectedSize &&
+          item.selectedColor?.name == selectedColor?.name) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   ProductDetailState copyWith({
     Product? product,
@@ -157,6 +179,11 @@ class ProductController extends Notifier<ProductDetailState> {
     }
 
     return variants.first;
+  }
+
+  /// Quantity to add, kept between 1 and 10.
+  void setQuantity(int quantity) {
+    state = state.copyWith(quantity: quantity.clamp(1, 10));
   }
 
   void toggleFavorite() {

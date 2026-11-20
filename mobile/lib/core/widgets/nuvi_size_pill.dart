@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/nuvi_colors.dart';
+import '../theme/nuvi_radii.dart';
 import '../theme/nuvi_motion.dart';
 import '../theme/nuvi_theme_ext.dart';
 import 'nuvi_pressable.dart';
@@ -29,7 +30,7 @@ class NuviSizePill extends StatelessWidget {
   Widget build(BuildContext context) {
     final x = context.nuvi;
     final borderColor = selected
-        ? NuviColors.ink
+        ? x.leaf
         : recommended
         ? x.gold
         : NuviColors.line;
@@ -41,8 +42,8 @@ class NuviSizePill extends StatelessWidget {
       ),
       padding: EdgeInsets.symmetric(horizontal: dense ? 7 : 12),
       decoration: BoxDecoration(
-        color: selected ? x.sageSoft : NuviColors.card,
-        borderRadius: BorderRadius.circular(dense ? 7 : 10),
+        color: selected ? x.leaf : NuviColors.card,
+        borderRadius: BorderRadius.circular(dense ? 7 : NuviRadii.pill),
         border: Border.all(
           color: borderColor,
           width: selected || recommended ? 2 : 1.2,
@@ -57,7 +58,11 @@ class NuviSizePill extends StatelessWidget {
           style: x.nunito(
             dense ? 11 : 13.5,
             weight: FontWeight.w700,
-            color: soldOut ? NuviColors.inkFaint : NuviColors.ink,
+            color: soldOut
+                ? NuviColors.inkFaint
+                : selected
+                ? NuviColors.cream
+                : NuviColors.ink,
           ),
         ),
       ),

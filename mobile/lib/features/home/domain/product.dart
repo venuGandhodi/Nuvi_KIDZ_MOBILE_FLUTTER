@@ -29,6 +29,9 @@ class Product {
   /// Shopify product type, used as the collection Category filter.
   final String? productType;
 
+  /// Public web page of the product (for sharing), when published online.
+  final String? onlineStoreUrl;
+
   const Product({
     required this.id,
     this.handle,
@@ -52,6 +55,7 @@ class Product {
     this.fabricAndCare,
     this.reviews,
     this.productType,
+    this.onlineStoreUrl,
   });
 
   Product copyWith({
@@ -77,6 +81,7 @@ class Product {
     List<String>? fabricAndCare,
     List<ProductReview>? reviews,
     String? productType,
+    String? onlineStoreUrl,
   }) {
     return Product(
       id: id ?? this.id,
@@ -101,6 +106,7 @@ class Product {
       fabricAndCare: fabricAndCare ?? this.fabricAndCare,
       reviews: reviews ?? this.reviews,
       productType: productType ?? this.productType,
+      onlineStoreUrl: onlineStoreUrl ?? this.onlineStoreUrl,
     );
   }
 }

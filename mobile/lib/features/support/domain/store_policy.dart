@@ -4,7 +4,45 @@ class StorePolicy {
   final String title;
   final String body;
 
-  const StorePolicy({required this.title, required this.body});
+  /// Original HTML from Shopify (kept for tables, e.g. the size chart).
+  final String html;
+
+  const StorePolicy({required this.title, required this.body, this.html = ''});
+
+  /// Rows of the first `<table>` in [html] (header row first), or empty.
+  List<List<String>> get firstTable {
+    final table = RegExp(
+      r'<table[^>]*>(.*?)</table>',
+      caseSensitive: false,
+      dotAll: true,
+    ).firstMatch(html);
+    if (table == null) return const [];
+    final rows = <List<String>>[];
+    for (final row in RegExp(
+      r'<tr[^>]*>(.*?)</tr>',
+      caseSensitive: false,
+      dotAll: true,
+    ).allMatches(table.group(1)!)) {
+      final cells = [
+        for (final cell in RegExp(
+          r'<t[hd][^>]*>(.*?)</t[hd]>',
+          caseSensitive: false,
+          dotAll: true,
+        ).allMatches(row.group(1)!))
+          plainText(cell.group(1)!).replaceAll('\n\n', ' '),
+      ];
+      if (cells.isNotEmpty) rows.add(cells);
+    }
+    return rows;
+  }
+
+  /// [body] without the table's text (to show around a rendered table).
+  String get bodyWithoutTable => plainText(
+    html.replaceAll(
+      RegExp(r'<table[^>]*>.*?</table>', caseSensitive: false, dotAll: true),
+      '',
+    ),
+  );
 
   /// Plain text from Shopify's HTML: block tags become line breaks, other
   /// tags are dropped and common entities decoded.

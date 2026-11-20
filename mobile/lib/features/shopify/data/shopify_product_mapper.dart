@@ -147,6 +147,7 @@ class ShopifyProductMapper {
       availableColors: availableColors.isNotEmpty ? availableColors : null,
       availableSizes: availableSizes.isNotEmpty ? availableSizes : null,
       variants: variantsList.isNotEmpty ? variantsList : null,
+      onlineStoreUrl: json['onlineStoreUrl'] as String?,
       productType: (json['productType'] as String?)?.trim().isNotEmpty == true
           ? (json['productType'] as String).trim()
           : null,

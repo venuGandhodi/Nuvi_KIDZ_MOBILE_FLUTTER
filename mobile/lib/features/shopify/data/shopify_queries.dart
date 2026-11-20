@@ -116,6 +116,7 @@ class ShopifyQueries {
         id
         title
         handle
+        onlineStoreUrl
         descriptionHtml
         vendor
         productType
@@ -160,6 +161,7 @@ class ShopifyQueries {
           id
           title
           handle
+          onlineStoreUrl
           descriptionHtml
           vendor
           productType

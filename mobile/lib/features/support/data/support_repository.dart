@@ -47,9 +47,10 @@ class SupportRepository {
   static StorePolicy? _toPolicy(Object? raw) {
     if (raw is! Map) return null;
     final title = (raw['title'] as String?)?.trim() ?? '';
-    final body = StorePolicy.plainText(raw['body'] as String? ?? '');
+    final html = raw['body'] as String? ?? '';
+    final body = StorePolicy.plainText(html);
     if (title.isEmpty || body.isEmpty) return null;
-    return StorePolicy(title: title, body: body);
+    return StorePolicy(title: title, body: body, html: html);
   }
 
   static const String _policiesQuery = '''

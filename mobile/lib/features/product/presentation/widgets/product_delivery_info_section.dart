@@ -285,6 +285,7 @@ class _ProductDeliveryInfoSectionState
 }
 
 /// One-line promises: returns, exchange, cash on delivery.
+/// Three store promises in a white card, icon above label.
 class ProductPromisesRow extends StatelessWidget {
   const ProductPromisesRow({super.key});
 
@@ -297,31 +298,39 @@ class ProductPromisesRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final x = context.nuvi;
-    return Row(
-      children: [
-        for (final (icon, label) in _items)
-          Expanded(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(icon, size: 17, color: NuviColors.pdpInk),
-                const SizedBox(width: 4),
-                Flexible(
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: x.nunito(
-                      11.5,
-                      weight: FontWeight.w700,
-                      color: NuviColors.pdpInk,
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 6),
+      decoration: BoxDecoration(
+        color: NuviColors.white,
+        borderRadius: BorderRadius.circular(NuviRadii.cardLarge),
+      ),
+      child: IntrinsicHeight(
+        child: Row(
+          children: [
+            for (final (i, (icon, label)) in _items.indexed) ...[
+              if (i > 0)
+                const VerticalDivider(width: 1, color: NuviColors.line),
+              Expanded(
+                child: Column(
+                  children: [
+                    Icon(icon, size: 26, color: x.leaf),
+                    const SizedBox(height: 6),
+                    Text(
+                      label,
+                      textAlign: TextAlign.center,
+                      style: x.nunito(
+                        13,
+                        weight: FontWeight.w800,
+                        color: NuviColors.nightGreen,
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
-            ),
-          ),
-      ],
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }
